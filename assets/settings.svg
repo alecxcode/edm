@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="94.375mm" height="94.094mm" version="1.1" viewBox="0 0 334.39912 333.40337" xmlns="http://www.w3.org/2000/svg">
+ <g transform="translate(-227.48 -315.58)">
+  <path d="m395 353.79c-35.307-7e-5 -67.271 14.311-90.409 37.448-23.138 23.138-37.449 55.102-37.448 90.409 7e-5 35.307 14.311 67.271 37.449 90.409s55.102 37.449 90.409 37.449c35.307 7e-5 67.271-14.311 90.409-37.448 23.138-23.138 37.449-55.102 37.449-90.409 7e-5 -35.307-14.311-67.271-37.448-90.409-23.14-23.14-55.1-37.45-90.41-37.45zm0 64.285c35.11-4.6e-4 63.573 28.462 63.572 63.572-6.2e-4 35.109-28.463 63.571-63.572 63.57-35.109 4.6e-4 -63.572-28.461-63.572-63.57-4.6e-4 -35.11 28.462-63.573 63.572-63.572z"/>
+  <rect x="376.12" y="322.77" width="37.043" height="32.947" stroke="#000" stroke-linejoin="round" stroke-width="14.385"/>
+  <rect transform="rotate(45)" x="601.93" y="-98.579" width="37.043" height="32.947" stroke="#000" stroke-linejoin="round" stroke-width="14.385"/>
+  <rect transform="rotate(90)" x="463.58" y="-554.69" width="37.043" height="32.947" stroke="#000" stroke-linejoin="round" stroke-width="14.385"/>
+  <rect transform="rotate(90)" x="463.62" y="-267.62" width="37.043" height="32.947" stroke="#000" stroke-linejoin="round" stroke-width="14.385"/>
+  <rect x="376.84" y="608.84" width="37.043" height="32.947" stroke="#000" stroke-linejoin="round" stroke-width="14.385"/>
+  <rect transform="rotate(45)" x="601.93" y="188.3" width="37.043" height="32.947" stroke="#000" stroke-linejoin="round" stroke-width="14.385"/>
+  <rect transform="rotate(135)" x="42.562" y="-493.74" width="37.043" height="32.947" stroke="#000" stroke-linejoin="round" stroke-width="14.385"/>
+  <rect transform="rotate(135)" x="41.49" y="-779.45" width="37.043" height="32.947" stroke="#000" stroke-linejoin="round" stroke-width="14.385"/>
+ </g>
+</svg>

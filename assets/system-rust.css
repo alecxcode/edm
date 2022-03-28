@@ -1,0 +1,241 @@
+:root {
+  font-size: 14px;
+  --elements-radius: 2px;
+  --standard-font: Roboto, "Segoe UI", Ubuntu, "-apple-system", BlinkMacSystemFont, Arial, sans-serif;
+  --defaultBackgroundColor: #ddc;
+  --darkerBackgroundColor: #a98;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: none;
+}
+* {
+  margin: 0;
+  box-sizing: border-box;
+}
+body {
+  margin: 10px;
+  background-color: var(--darkerBackgroundColor);
+  font-family: var(--standard-font);
+}
+pre, code {
+  font-family: 'Courier New', Courier, monospace;
+  overflow-x: auto;
+}
+  
+#container {
+  border: 1px solid #987;
+  border-radius: var(--elements-radius);
+  margin: 0 auto;
+  background-color: var(--defaultBackgroundColor);
+  -webkit-box-shadow: 0 0 15px 1px #556;
+  -moz-box-shadow: 0 0 15px 1px #556;
+  box-shadow: 0 0 15px 1px #556;
+  filter: progid:DXImageTransform.Microsoft.shadow(direction=0, color=#556, strength=10);
+  max-width: 1140px;
+  min-width: 320px;
+}
+#control {
+  padding: 40px 20px 0px 20px;
+  color: #444;
+  display: block;
+  margin: 0;
+  font-size: 14px;
+  text-align: left;
+}
+#main {
+  padding: 10px 20px 0px 20px;
+  color: #444;
+  display: block;
+  margin: 0;
+  font-size: 14px;
+  text-align: left;
+}
+a, a:visited {
+  text-decoration: none;
+  color: #500;
+}
+a:hover, a:focus {
+  text-decoration: underline;
+  color: #c80;
+  outline: 0;
+}
+.txtred {color: #f00;}
+.txtgreen {color: #0a0;}
+.txtblue {color: #55a;}
+.txtbw {color: #000;}
+.msgredfx {color: #f00;}
+.msgred {color: #f00; opacity: 0; animation: 8s linear fadeout;}
+.msgok {color: #0a0; opacity: 0; animation: 8s linear fadeout;}
+@keyframes fadeout {
+  0% {opacity: 1; transform: scale(1, 1);}
+  80% {opacity: 1; transform: scale(1, 1);}
+  99% {opacity: 0; transform: scale(1, 0.1);}
+}
+  
+#bottom {
+  padding: 20px;
+  color: #999;
+  display: block;
+  margin: 0;
+  font-size: 14px;
+  text-align: center;
+}
+#bottom a, #bottom a:visited {
+  text-decoration: none;
+  color: #89a;
+}
+#bottom a:hover, #bottom a:focus {
+  text-decoration: underline;
+  color: #456;
+  outline: 0;
+}
+h1 {
+  color: #605959;
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+h2 {
+  color: #555;
+  font-size: 18px;
+  font-weight: bold;
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+.afile, #control .afile, #main .afile {
+  color: #100;
+  background-color: #ca0;
+  display: block; 
+  margin: 1px; 
+  border-radius: 2px; 
+  border: 1px solid #b90;
+}
+.fit-content{max-width: fit-content;}
+.center {
+  display: block;
+  text-align: center;
+}
+.somemargins {
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+.margintop {
+  margin-top: 6px;
+}
+.marginbottom {
+  margin-top: 6px;
+}
+input[type=text], input[type=button], input[type=submit], button {
+  -webkit-appearance: none;
+  -webkit-border-radius: var(--elements-radius);
+  border-radius: var(--elements-radius);
+}
+/* all inputs */
+input, button {
+  font: inherit;
+  border: 1px solid #444;
+  border-radius: var(--elements-radius);
+}
+/* text fields */
+.field {
+  margin: 2px 0;
+  color: #000;
+  display: inline-block;
+  background-color: #a98;
+  border: 1px solid #444;
+  border-radius: var(--elements-radius);
+  padding: 5px 8px;
+  box-shadow: inset 1px 1px 3px 0px #987, 1px 1px 3px 0px #987;
+}
+.field:hover {
+  box-shadow: inset 1px 1px 4px 0px #544, 1px 1px 4px 0px #544;
+  border: 1px solid #fd0;
+}
+.field:focus, .field:active {
+  box-shadow: inset 1px 1px 4px 0px #544, 1px 1px 4px 0px #544;
+  border: 1px solid #fd0;
+  outline: 0;
+}
+  
+/* styled button */
+a.sbut, a.sbut:active, a.sbut:visited {
+  text-decoration: none;
+  color: #000;
+  display: inline-block;
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+}
+.sbut {
+  cursor: pointer;
+  text-decoration: none;
+  margin: 2px 0;
+  display: inline-block;
+  color: #000;
+  background-color: #d60;
+  border: 1px solid #111;
+  border-radius: var(--elements-radius);
+  padding: 5px 8px;
+  box-shadow: 1px 1px 2px 0px #444;
+}
+.sbut:hover, .sbut:focus, a.sbut:hover, a.sbut:focus {
+  color: #111;
+  background-color: #f80;
+  box-shadow: 1px 1px 2px 0px #222;
+  border: 1px solid #400;
+  outline: 0;
+}
+.greenish, a.greenish:visited {
+  color: #000;
+  background-color: #090;
+}
+.greenish:hover, .greenish:focus, a.greenish:hover, a.greenish:focus {
+  color: #111;
+  background-color: #1b1;
+  border: 1px solid #050;
+}
+.reddish, a.reddish:visited {
+  color: #000;
+  background-color: #900;
+}
+.reddish:hover, .reddish:focus, a.reddish:hover, a.reddish:focus {
+  color: #111;
+  background-color: #c22;
+  border: 1px solid #500;
+}
+.smaller {
+  padding: 2px 4px;
+}
+.nowrap {
+  white-space: nowrap;
+}
+/* panel */
+.panel, .panel:hover, .panel:focus {
+  text-decoration: none;
+  margin: 2px 0;
+  background-color: var(--defaultBackgroundColor);
+  color: #555;
+  border: 1px solid #999;
+  border-radius: var(--elements-radius);
+  padding: 5px 8px;
+  box-shadow: 1px 1px 2px 0px #444;
+}
+.inline-block {
+  display: inline-block;
+}
+
+/* other things */
+#stat {
+  font-size: 12px;
+  color: #777;
+}
+.highlight {
+  color: #000;
+  background-color: #fe0;
+}
+input:disabled, .numberbox:disabled, .sbut:disabled, .field:disabled {
+  color: #555 !important;
+  background-color: #333 !important;
+  border: 1px solid #555 !important;
+  box-shadow: none;
+}
