@@ -1,0 +1,86 @@
+{
+    "LangNameInt": "English",
+    "LangName": "English",
+    "LangCode": "en",
+    "AppTitle": "EDM",
+    "LoginPageTitle": "System entrance",
+    "LoninPrompt": "Please, enter your login and password",
+    "LoninFieldLabel": "Login",
+    "PasswordFieldLabel": "Password",
+    "LoginButton": "Log in",
+    "WrongLoginMsg": "Wrong login data",
+    "ConfigPageTitle": "Settings",
+    "DocsPageTitle": "Documents",
+    "Document": "Document",
+    "NewDocument": "New document",
+    "TeamPageTitle": "Team",
+    "Profile": "User profile",
+    "NewProfile": "New user profile",
+    "CompaniesPageTitle": "Companies",
+    "Company": "Company",
+    "NewCompany": "New company",
+    "Unit": "Unit",
+    "TasksPageTitle": "Tasks",
+    "Task": "Task",
+    "NewTask": "New task",
+    "Comment": "Comment",
+    "NewComment": "New comment",
+    "Categories": [
+        "None",
+        "Incoming",
+        "Outgoing",
+        "Internal"
+    ],
+    "DocTypes": [
+        "Other",
+        "Letter",
+        "Applicaton",
+        "Claim",
+        "Contract, addendum to it",
+        "Accounting, financical",
+        "Technical, engineering",
+        "Order, regulation",
+        "Corporate decision",
+        "Minutes, meeting notes",
+        "Power of Attorney",
+        "Pleading",
+        "Judicial (from a court)",
+        "Template"
+    ],
+    "TaskStatuses": [
+        "Created",
+        "Assigned",
+        "In progress",
+        "Stuck",
+        "Done",
+        "Cancelled"
+    ],
+    "Messages": {
+        "MailerName": "EDM System",
+        "DoNotReply": "Do not reply to this message, it was sent automatically",
+        "Subj": {
+            "AssigneeSet": "New assignee to the task",
+            "AssigneeToSet": "You have been assigned to do the task",
+            "NewTaskComment": "New comment to the task",
+            "TaskEdited": "Task has been edited",
+            "TaskStatusChanged": "Task status has been changed",
+            "ParticipantToAdded": "You have been added to the task participants list",
+            "ProfileRegistered": "EDM system access",
+            "SecurityAlert": "Security alert"
+        },
+        "Cont": {
+            "ProfileRegistered": "You can login to the system using the link below. Your login and password are: ",
+            "LoginPasswdChanged": "This is to notify you about your login or password change. If you know why is it happend, then no action required."
+        },
+        "Captions": {
+            "CreatedTime": "Created time",
+            "Creator": "Creator",
+            "Assignee": "Assignee",
+            "Open": "Open this in the system",
+            "TaskStatus": "Status",
+            "TaskStartDueTime": "Start and Due",
+            "TaskAssignee": "Assignee",
+            "FileList": "Files"
+        }
+    }
+}

@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{{.AppTitle}}: {{.PageTitle}}</title>
+  <link rel="shortcut icon" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/theme-{{.UserConfig.SystemTheme}}.css">
+</head>
+<body>
+
+<div id="headmenu">
+  <div class="boxinmenu">
+  <div id="evenly">
+    <div class="mobileMenuButton" id="mobileMenuButtonMenu" onclick="showMobileMenu();"><img class="vector" src="/assets/menu.svg" alt="Меню"></div>
+    <div class="textmenu" id="textmenu">
+    <a href="/docs/">Документы</a>
+    <a href="/tasks/?anyparticipants=my">Задачи</a>
+    <a href="/team/">Сотрудники</a>
+    </div>
+    <div class="graphicmenu">
+      <a href="/config" title="Настройки"><img class="vector" src="/assets/settings.svg" alt="Настройки"></a>
+      <a href="/team/profile/{{.LoggedinID}}" title="Профиль"><img class="vector" src="/assets/profile.svg" alt="Профиль"></a>
+      <a href="/logout" title="Выйти"><img class="vector" src="/assets/quit.svg" alt="Выйти"></a>
+    </div>
+  </div>
+  </div>
+</div>
+<div id="mobilemenu" style="display: none;"></div>
+
+<div id="container">
+  {{$vtsep := " \nв "}}
+  {{if eq .UserConfig.TimeFormat "12h am/pm"}}
+    {{$vtsep = " \n"}}
+  {{end}}
+
+  <div id="control">
+    <h1>{{.PageTitle}}</h1>
+
+  <form id="controlForm" action="/tasks/" method="POST" onsubmit="addSortingOnSubmut('controlForm');">
+    <div id="search">
+    <input id="showFilters" class ="sbut" type="button" value="Фильтры..." title="Показать или спрятать фильтры" onclick="showFilters();
+    /* This function shows or hides filters controls */
+    function showFilters() {
+    const d = document.getElementById('showhide');
+    d.style.display = (d.style.display == 'none') ? 'block' : 'none';
+    };">
+    <input id="searchText" type="text" class="field" name="searchText" size="15" placeholder="Слова для поиска">
+    <input id="searchButton" class ="sbut" type="submit" name="searchButton" value="Искать">
+    </div>
+
+    <div id="showhide" style="display: none;">
+
+      <div class="filter" id="firstFilter"><strong id="taskstatusesName">Статусы:</strong><br><br>
+        {{range $i, $v := .TaskStatuses}}<input type="checkbox" id="ts{{$i}}" name="taskstatuses" value="{{$i}}">
+        <label for="ts{{$i}}">{{$v}}</label><br>
+        {{end}}
+      </div>
+
+      <div class="filter"><strong id="createdDatesName">Время создания:</strong><br><br>
+        <label for="createdDatesSingle">Одно значение:</label><br>
+        <select id="createdDatesRelation" class="numberbox" name="createdDatesRelation">
+          <option value="eq">Равно</option>
+          <option value="gteq">После (вкл.)</option>
+          <option value="lteq">До (вкл.)</option>
+          <option value="noteq">Исключая</option>
+        </select><span class="dropdown"></span><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="createdDatesSingle" class="numberbox" name="createdDates" value=""
+        placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18"><br><br>
+        <label for="createdDatesDiapason">Диапазон:</label>
+        <label class="switch"><input type="checkbox" class="hidden" 
+          id="createdDatesDiapason" name="createdDatesDiapason" value="true" 
+          onchange="handleNumericFilterChkBox(this, 'createdDates');
+          handleNumericOption(this, 'createdDates')"><div class="slider"></div></label><br>
+        <label for="createdDatesStart">От:</label><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="createdDatesStart" class="numberbox" name="createdDates" 
+        placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" disabled><br>
+        <label for="createdDatesFinish">До:</label><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="createdDatesFinish" class="numberbox" name="createdDates" 
+        placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" disabled><br>
+      </div>
+
+      <div class="filter"><strong id="planStartDatesName">Начать (план):</strong><br><br>
+        <label for="planStartDatesSingle">Одно значение:</label><br>
+        <select id="planStartDatesRelation" class="numberbox" name="planStartDatesRelation">
+          <option value="eq">Равно</option>
+          <option value="gteq">После (вкл.)</option>
+          <option value="lteq">До (вкл.)</option>
+          <option value="noteq">Исключая</option>
+        </select><span class="dropdown"></span><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="planStartDatesSingle" class="numberbox" name="planStartDates" value=""
+        placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18"><br><br>
+        <label for="planStartDatesDiapason">Диапазон:</label>
+        <label class="switch"><input type="checkbox" class="hidden" 
+          id="planStartDatesDiapason" name="planStartDatesDiapason" value="true" 
+          onchange="handleNumericFilterChkBox(this, 'planStartDates');
+          handleNumericOption(this, 'planStartDates')"><div class="slider"></div></label><br>
+        <label for="planStartDatesStart">От:</label><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="planStartDatesStart" class="numberbox" name="planStartDates" 
+        placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" disabled><br>
+        <label for="planStartDatesFinish">До:</label><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="planStartDatesFinish" class="numberbox" name="planStartDates" 
+        placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" disabled><br>
+      </div>
+
+      <div class="filter"><strong id="planDueDatesName">Завершить (план):</strong><br><br>
+        <label for="planDueDatesSingle">Одно значение:</label><br>
+        <select id="planDueDatesRelation" class="numberbox" name="planDueDatesRelation">
+          <option value="eq">Равно</option>
+          <option value="gteq">После (вкл.)</option>
+          <option value="lteq">До (вкл.)</option>
+          <option value="noteq">Исключая</option>
+        </select><span class="dropdown"></span><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="planDueDatesSingle" class="numberbox" name="planDueDates" value=""
+        placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18"><br><br>
+        <label for="planDueDatesDiapason">Диапазон:</label>
+        <label class="switch"><input type="checkbox" class="hidden" 
+          id="planDueDatesDiapason" name="planDueDatesDiapason" value="true" 
+          onchange="handleNumericFilterChkBox(this, 'planDueDates');
+          handleNumericOption(this, 'planDueDates')"><div class="slider"></div></label><br>
+        <label for="planDueDatesStart">От:</label><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="planDueDatesStart" class="numberbox" name="planDueDates" 
+        placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" disabled><br>
+        <label for="planDueDatesFinish">До:</label><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="planDueDatesFinish" class="numberbox" name="planDueDates" 
+        placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" disabled><br>
+      </div>
+
+      <div class="filter"><strong id="statusSetDatesName">Статус установлен:</strong><br><br>
+        <label for="statusSetDatesSingle">Одно значение:</label><br>
+        <select id="statusSetDatesRelation" class="numberbox" name="statusSetDatesRelation">
+          <option value="eq">Равно</option>
+          <option value="gteq">После (вкл.)</option>
+          <option value="lteq">До (вкл.)</option>
+          <option value="noteq">Исключая</option>
+        </select><span class="dropdown"></span><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="statusSetDatesSingle" class="numberbox" name="statusSetDates" value=""
+        placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18"><br><br>
+        <label for="statusSetDatesDiapason">Диапазон:</label>
+        <label class="switch"><input type="checkbox" class="hidden" 
+          id="statusSetDatesDiapason" name="statusSetDatesDiapason" value="true" 
+          onchange="handleNumericFilterChkBox(this, 'statusSetDates');
+          handleNumericOption(this, 'statusSetDates')"><div class="slider"></div></label><br>
+        <label for="statusSetDatesStart">От:</label><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="statusSetDatesStart" class="numberbox" name="statusSetDates" 
+        placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" disabled><br>
+        <label for="statusSetDatesFinish">До:</label><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="statusSetDatesFinish" class="numberbox" name="statusSetDates" 
+        placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" disabled><br>
+      </div>
+
+
+
+      <div class="margintop"><strong id="userSelectorName">Фильтр по сотруднику:</strong><br>
+       <select id="userSelector" class="numberbox">
+          <option value="">Выберите сотрудника</option>
+          {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
+          {{end}}
+        </select><span class="dropdown"></span><br>Выберите вид участия:<br>
+        <input type="button" class ="sbut pg smaller" value="Создатель"
+        onclick="addUserProfile(document.getElementById('userSelector').value, 'creators', 'userSelector');">
+        <input type="button" class ="sbut pg smaller" value="Исполнитель"
+        onclick="addUserProfile(document.getElementById('userSelector').value, 'assignees', 'userSelector');">
+        <input type="button" class ="sbut pg smaller" value="Участник"
+        onclick="addUserProfile(document.getElementById('userSelector').value, 'participants', 'userSelector');">
+        <input type="button" class ="sbut pg smaller" value="Создатель или исполнитель"
+        onclick="addUserProfile(document.getElementById('userSelector').value, 'creatorsORassignees', 'userSelector');">
+        <input type="button" class ="sbut pg smaller" value="Создатель или исполнитель или участник"
+        onclick="addUserProfile(document.getElementById('userSelector').value, 'anyparticipants', 'userSelector');">
+        <br><input type="button" class ="sbut reddish smaller" value="Очистить выборку" onclick="resetUserSelectors();">
+      </div>
+
+      <div id="creators"><div class="margintop"><strong id="creatorsName">Создатели:</strong></div>
+      </div>
+      <div id="assignees"><div class="margintop"><strong id="assigneesName">Исполнители:</strong></div>
+      </div>
+      <div id="participants"><div class="margintop" id="participantsName"><strong>Участники:</strong></div>
+      </div>
+      <div id="creatorsORassignees"><div class="margintop" id="creatorsORassigneesName"><strong>Создатели или исполнители:</strong></div>
+      </div>
+      <div id="anyparticipants"><div class="margintop" id="anyparticipantsName"><strong>Создатели или исполнители или участники:</strong></div>
+      </div>
+
+      <br>
+
+
+
+      <div id="filterButtonsControls">
+      <input type="submit" class ="sbut" name="filterButton" value="Применить фильтры">
+      <input type="button" class ="sbut" name="filterReset" onclick="resetUserSelectors();
+      resetFilter();" value="Сбросить все фильтры">
+      </div>
+    </div>
+  </form>
+
+  <p id="appliedFilters"></p>
+  
+  <div id="controlButtons">
+    <span class="panel"><a href="/tasks/?anyparticipants=my" title="Задачи, в которых я создатель или исполнитель или участник">Мои задачи</a></span>
+    <span class="panel"><a href="/tasks/?creators=my" title="Задачи, в которых я создатель">Созданные мной</a></span>
+    <span class="panel"><a href="/tasks/?assignees=my" title="Задачи, в которых я исполнитель">На исполнение мне</a></span>
+    <span class="panel"><a href="/tasks/" title="Задачи любых сотрудников">Все задачи</a></span><br>
+
+    <a href="/tasks/task/new" class ="sbut greenish">+ Новая задача</a>
+
+    <input type="button" class ="sbut statusMultiControl" value="В работе" title="Сделать статус выбранных задач - в работе" onclick="
+    addSortingOnSubmut('datagridForm'); addFiltersOnSubmut('datagridForm'); addPaginationOnSubmut('datagridForm');
+    const frm = document.getElementById('datagridForm');
+    addHiddenElem(frm, 'taskStatus', 'inprogress');
+    frm.submit();" disabled>
+    <input type="button" class ="sbut statusMultiControl" value="Застряли" title="Приостановить выбранные в связи с проблемой" onclick="
+    addSortingOnSubmut('datagridForm'); addFiltersOnSubmut('datagridForm'); addPaginationOnSubmut('datagridForm');
+    const frm = document.getElementById('datagridForm');
+    addHiddenElem(frm, 'taskStatus', 'stuck');
+    frm.submit();" disabled>
+    <input type="button" class ="sbut statusMultiControl" value="Завершить" title="Завершить выбранные задачи" onclick="
+    addSortingOnSubmut('datagridForm'); addFiltersOnSubmut('datagridForm'); addPaginationOnSubmut('datagridForm');
+    const frm = document.getElementById('datagridForm');
+    addHiddenElem(frm, 'taskStatus', 'done');
+    frm.submit();" disabled>
+    <input type="button" class ="sbut statusMultiControl" value="Отменить" title="Отменить выбранные задачи" onclick="
+    addSortingOnSubmut('datagridForm'); addFiltersOnSubmut('datagridForm'); addPaginationOnSubmut('datagridForm');
+    const frm = document.getElementById('datagridForm');
+    addHiddenElem(frm, 'taskStatus', 'cancelled');
+    frm.submit();" disabled>
+
+    <input type="button" class ="sbut reddish" id="deleteButton" name="deleteButton" value="× Удалить выбранные" onclick="
+    this.parentNode.lastElementChild.style.display = 'block'; document.getElementById('yesDeleteButton').disabled = false;" disabled>
+    <div style="display: none;">
+    <div class="msgredfx">Данное действие необратимо! Действительно удалить?</div>
+    <input type="button" class="sbut" name="cancelButton" value="Отмена" onclick="this.parentNode.style.display = 'none'; document.getElementById('yesDeleteButton').disabled = true;">
+    <input type="button" class ="sbut reddish" id="yesDeleteButton" name="deleteButton" value="Да, удалить" onclick="
+    addSortingOnSubmut('datagridForm'); addFiltersOnSubmut('datagridForm'); addPaginationOnSubmut('datagridForm');
+    const frm = document.getElementById('datagridForm');
+    addHiddenElem(frm, 'deleteButton', 'Delete selected');
+    frm.submit();" disabled>
+    </div>
+  </div>
+
+  {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred">Действие отклонено: нет полномочий для всех или некоторых объектов. {{if .RemoveAllowed}}Удалять вправе только создатель объекта или администратор.{{else}}Удалять вправе только администратор.{{end}}</p>{{end}}
+  {{if eq .Message "notAllorSomeElemsAllowedtoModify"}}<p class="msgred">Действие отклонено: нет полномочий для всех или некоторых объектов.</p>{{end}}
+  {{if eq .Message "removedElems"}}<p class="msgok">Удалено объектов: {{.RemovedNum}}.</p>{{end}}
+  {{if eq .Message "removalError"}}<p class="msgred">Ошибка удаления объектов.</p>{{end}}
+  {{if eq .Message "statusUpdated"}}<p class="msgok">Изменено объектов: {{.UpdatedNum}}.</p>{{end}}
+  {{if eq .Message "statusUpdateError"}}<p class="msgred">Ошибка изменения значений.</p>{{end}}
+
+  <form id="sortingForm" action="/tasks/" method="POST" onsubmit="addFiltersOnSubmut('sortingForm');">
+    <div class="mobilesorting"><label>Сортировка:</label>
+    <select class="numberbox" id="sortedByMobile" onchange="sortBy(this.value, document.getElementById('sortedHow').value);">
+      <option value="ID">№ задачи</option>
+      <option value="Topic">Тема и содержание</option>
+      <option value="Created">Создана</option>
+      <option value="PlanStart">Начать (план)</option>
+      <option value="PlanDue">Завершить (план)</option>
+      <option value="StatusSet">Статус установлен</option>
+    </select><span class="dropdown"></span>
+    <select class="numberbox" id="sortedHowMobile" onchange="sortBy(document.getElementById('sortedBy').value, this.value);">
+      <option value="0">По убыванию</option>
+      <option value="1">По возрастанию</option>
+    </select><span class="dropdown"></span>
+    <script>
+      document.getElementById('sortedByMobile').value = "{{.SortedBy}}";
+      document.getElementById('sortedHowMobile').value = "{{.SortedHow}}";
+    </script>
+    </div>
+    <input type="hidden" id="sortedBy" name="sortedBy" value="{{.SortedBy}}">
+    <input type="hidden" id="sortedHow" name="sortedHow" value="{{.SortedHow}}">
+  </form>
+
+  </div>
+
+  <div class="main" id="main">
+    {{if not .Tasks}}<div class="center"><br><br>Объекты по заданным критериям не найдены или отсутствуют.<br><br></div>{{else}}
+    <div id="pagination">
+      <form id="paginationForm" action="/tasks/" method="POST" onsubmit="addFiltersOnSubmut('paginationForm');addSortingOnSubmut('paginationForm');">
+        <span class="nowrap">
+          <label for="pageNumber">Страница {{.PageNumber}} из </label>
+          <input class ="sbut pg" type="button" title="Первая" value="|&lt;" onclick="paginate('min');"> <input class ="sbut pg" type="button" title="Предыдущая"value="&lt;-" onclick="paginate(-1);">
+          <input type="number" class="field" size="8" id="pageNumber" name="pageNumber" value="{{.PageNumber}}" min="1" max="" onchange="paginate(0);">
+          <input class ="sbut pg" type="button" title="Следующая" value="-&gt;" onclick="paginate(1);"> <input class ="sbut pg" type="button" title="Последняя" value="&gt;|" onclick="paginate('max');">
+        </span>
+      <span class="nowrap">
+      <label for="elemsOnPage">Элементов на страницу:</label>
+      <select class="numberbox" id="elemsOnPage" name="elemsOnPage" onchange="document.getElementById('elemsOnPageChanged').value='true';
+      paginate('min');">
+        <option value="20">20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="200">200</option>
+        <option value="500">500</option>
+      </select><span class="dropdown"></span>
+      <input type="hidden" id="elemsOnPageChanged" name="elemsOnPageChanged" value="false">
+      </span>
+      <script>
+        document.getElementById('elemsOnPage').value = "{{.UserConfig.ElemsOnPage}}";
+      </script>
+      </form>
+    </div>
+
+    <form id="datagridForm" name="datagridForm" action="/tasks/" method="POST" onsubmit="addSortingOnSubmut('datagridForm');
+    addFiltersOnSubmut('datagridForm');addPaginationOnSubmut('datagridForm');">
+    <table id="mainTable">
+      <tr class="thead">
+        <th align="center" id="Chooser"><input type="checkbox" class="chead" id="chead"></th>
+        <th align="left" id="ID" title="Номер задачи">№<span class="sort" title="По возрастанию" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="По убыванию" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="Topic">Тема и содержание<span class="sort" title="По возрастанию" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="По убыванию" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="Created" title="Время создания">Создана<span class="sort" title="По возрастанию" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="По убыванию" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="PlanStart" title="Плановый срок начала">Начать<span class="sort" title="По возрастанию" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="По убыванию" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="PlanDue" title="Плановый срок завершения">Завершить<span class="sort" title="По возрастанию" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="По убыванию" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="Creator">Создатель</th>
+        <th align="left" id="Assignee">Исполнитель</th>
+        <th align="left" id="TaskStatus">Статус</th>
+        <th align="left" id="StatusSet" title="Время присвоения текущего статуса">Статус уст.<span class="sort" title="По возрастанию" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="По убыванию" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+      </tr>
+      {{range .Tasks}}{{$ci := .GiveCreatorID}}{{$ai := .GiveAssigneeID}}
+      <tr>
+        <td label="Выбрать" align="center"><input type="checkbox" class="chbox" id="{{.ID}}" name="ids" value="{{.ID}}"></td>
+        <td label="№ задачи" align="left"><a href="/tasks/task/{{.ID}}">{{.ID}}</a></td>
+        <td label="Тема и содержание" align="left"><a href="/tasks/task/{{.ID}}">{{.Topic}}</a> <div class="clamp taskcontent">{{.Content}}</div></td>
+        <td label="Создана" align="left"><span class="dt">{{.GiveDateTime "Created" $.UserConfig.DateFormat $.UserConfig.TimeFormat $vtsep}}</span></td>
+        <td label="Начать" align="left"><span class="dt">{{.GiveDateTime "PlanStart" $.UserConfig.DateFormat $.UserConfig.TimeFormat $vtsep}}</span></td>
+        <td label="Завершить" align="left"><span class="dt">{{.GiveDateTime "PlanDue" $.UserConfig.DateFormat $.UserConfig.TimeFormat $vtsep}}</span></td>
+        <td label="Создатель" align="left">{{if $ci}}<a href="/team/profile/{{$ci}}">{{.Creator.GiveSelfNameJob}}</a>{{end}}</td>
+        <td label="Исполнитель" align="left">{{if $ai}}<a href="/team/profile/{{$ai}}">{{.Assignee.GiveSelfNameJob}}</a>{{end}}</td>
+        <td label="Статус" align="left"><span class="statusIndicator">{{.GiveStatus $.TaskStatuses "Неизвестно"}}</span></td>
+        <td label="Статус установлен" align="left"><span class="dt">{{.GiveDateTime "StatusSet" $.UserConfig.DateFormat $.UserConfig.TimeFormat $vtsep}}</span></td>
+
+      </tr>
+      {{end}}
+    </table>
+    </form>
+
+    <div id="stat"><br>Всего объектов по критериям поиска: {{.FilteredNum}}</div>
+    {{end}}
+
+  </div>
+
+  <div id="bottom">© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></div>
+
+  
+</div>
+
+<script src="/assets/functions.js"></script>
+
+<script>
+
+  /* Functions to add inputs values from different forms on submit */
+  function addSortingOnSubmut(formID) {
+    const frm = document.getElementById(formID);
+    addHiddenElem(frm, 'sortedBy', document.getElementById('sortedBy').value);
+    addHiddenElem(frm, 'sortedHow', document.getElementById('sortedHow').value);
+  }
+  function addPaginationOnSubmut(formID) {
+    const frm = document.getElementById(formID);
+    let pageNumber = document.getElementById('pageNumber').value;
+    let elemsOnPage = document.getElementById('elemsOnPage').value;
+    let elemsOnCurrentPage = getElemsOnCurrentPage();
+    addHiddenElem(frm, 'elemsOnCurrentPage', elemsOnCurrentPage);
+    addHiddenElem(frm, 'pageNumber', pageNumber);
+    addHiddenElem(frm, 'elemsOnPage', elemsOnPage);
+
+    addHiddenElem(frm, 'filteredNum', {{.FilteredNum}});
+    addHiddenElem(frm, 'previousPage', pageNumber);
+    const mainTable = document.getElementById('mainTable');
+    addHiddenElem(frm, 'firstElemOnPage', mainTable.rows[1].cells[1].innerText);
+    addHiddenElem(frm, 'lastElemOnPage', mainTable.rows[mainTable.rows.length-1].cells[1].innerText);
+  }
+  function addFiltersOnSubmut(formID) {
+
+    const frm = document.getElementById(formID);
+
+    let classFilter = {{.Filters.ClassFilter}};
+    let classFilterOR = {{.Filters.ClassFilterOR}};
+    let dateFilter = {{.Filters.DateFilter}};
+    let sumFilter = {{.Filters.SumFilter}};
+    let textFilter = "{{.Filters.TextFilter}}";
+
+    if (classFilter) {
+      for (let eachF of classFilter) {
+        for (let i = 0; i < eachF.List.length; i++) {
+          addHiddenElem(frm, eachF.Name, eachF.List[i]);
+        }
+      }
+    }
+
+    if (classFilterOR) {
+      let currentCFORName;
+      for (let eachF of classFilterOR) {
+        if (eachF.Name != currentCFORName) {
+          currentCFORName = eachF.Name;
+          for (let i = 0; i < eachF.List.length; i++) {
+            addHiddenElem(frm, eachF.Name, eachF.List[i]);
+          }
+        }
+      }
+    }
+
+    if (dateFilter) {
+      for (let eachF of dateFilter) {
+        addHiddenElem(frm, eachF.Name+'Relation', eachF.Relation);
+        for (let i = 0; i < eachF.Dates.length; i++) {
+          addHiddenElem(frm, eachF.Name, eachF.Dates[i]);
+        }
+      }
+    }
+
+    if (sumFilter) {
+      for (let eachF of sumFilter) {
+        addHiddenElem(frm, eachF.Name+'CurrencyCode', eachF.CurrencyCode);
+        addHiddenElem(frm, eachF.Name+'Relation', eachF.Relation);
+        for (let i = 0; i < eachF.SumsStr.length; i++) {
+          addHiddenElem(frm, eachF.Name, eachF.SumsStr[i]);
+        }
+      }
+    }
+
+    if (textFilter) {
+      addHiddenElem(frm, 'searchText', textFilter);
+    }
+
+  }
+
+  function resetUserSelectors() {
+    document.querySelectorAll('input[name="creators"]').forEach(e => e.remove());
+    document.querySelectorAll('input[name="assignees"]').forEach(e => e.remove());
+    document.querySelectorAll('input[name="participants"]').forEach(e => e.remove());
+    document.querySelectorAll('input[name="creatorsORassignees"]').forEach(e => e.remove());
+    document.querySelectorAll('input[name="anyparticipants"]').forEach(e => e.remove());
+    document.getElementById('creators').innerHTML = '<div class="margintop"><strong id="creatorsName">Создатели:</strong></div>';
+    document.getElementById('assignees').innerHTML = '<div class="margintop"><strong id="assigneesName">Исполнители:</strong></div>';
+    document.getElementById('participants').innerHTML = '<div class="margintop"><strong id="creatorsName">Участники:</strong></div>';
+    document.getElementById('creatorsORassignees').innerHTML = '<div class="margintop" id="creatorsORassigneesName"><strong>Создатели или исполнители:</strong></div>';
+    document.getElementById('anyparticipants').innerHTML = '<div class="margintop"><strong id="assigneesName">Создатели или исполнители или участники:</strong></div>';
+  }
+  
+  /* Main page loading function */
+  (function() {
+
+    //console.time('Main Function');
+
+    let mainTablePresent = false;
+    if (document.getElementById('mainTable')) {
+      mainTablePresent = true;
+    }
+
+    let removeAllowed = {{.RemoveAllowed}};
+    if (removeAllowed == false) {
+      document.getElementById('deleteButton').style.display = 'none';
+    }
+
+    let classFilterArr = [];
+    let dateFilterArr = [];
+    let sumFilterArr = [];
+
+    let classFilter = {{.Filters.ClassFilter}};
+    let classFilterOR = {{.Filters.ClassFilterOR}};
+    let dateFilter = {{.Filters.DateFilter}};
+    let sumFilter = {{.Filters.SumFilter}};
+    let textFilter = "{{.Filters.TextFilter}}";
+
+    if (classFilter) classFilter.forEach((e) => classFilterArr.push(e));
+    if (classFilterOR) classFilterOR.forEach((e) => {
+      if (!classFilterArr.some(v => v.Name == e.Name)) {
+        classFilterArr.push(e);
+      }
+    });
+
+    if (classFilterArr) {
+      for (let eachF of classFilterArr) {
+        if (eachF.Selector) {
+          applyTypeFilterSelector(eachF.List, eachF.Name, eachF.Selector);
+        } else {
+          applyTypeFilter(eachF.List, eachF.Name);
+        }
+      }
+    }
+
+    if (dateFilter) {
+      for (let eachF of dateFilter) {
+        applyDateFilter(eachF);
+        dateFilterArr.push(eachF);
+      }
+    }
+
+    if (sumFilter) {
+      for (let eachF of sumFilter) {
+        applySumFilter(eachF);
+        sumFilterArr.push(eachF);
+      }
+    }
+
+    if (textFilter) {
+      applyTextFilter(textFilter);
+    }
+
+    if (textFilter && mainTablePresent) {
+      highlightSearchResults(textFilter, [2]);
+    }
+
+    printAppliedFilters("Примененные фильтры: ", "Фильтры не применены.", "Диапазон", classFilterArr, dateFilterArr, sumFilterArr, textFilter);
+    
+
+
+    if (mainTablePresent) {
+      const mainTable = document.getElementById('mainTable');
+      addHiddenElem(document.getElementById('paginationForm'), 'firstElemOnPage', mainTable.rows[1].cells[1].innerText);
+      addHiddenElem(document.getElementById('paginationForm'), 'lastElemOnPage', mainTable.rows[mainTable.rows.length-1].cells[1].innerText);
+      addHiddenElem(document.getElementById('paginationForm'), 'filteredNum', {{.FilteredNum}});
+      addHiddenElem(document.getElementById('paginationForm'), 'previousPage', document.getElementById('pageNumber').value);
+
+      processTableSelection(removeAllowed);
+      applySortingSelection();
+      processPagesCalculations("Всего объектов по критериям поиска", "На этой странице", "Всего страниц", {{.UserConfig.ElemsOnPage}}, {{.FilteredNum}});
+
+      let TaskStatusesArr = {{.TaskStatuses}};
+      let statusesArr = document.getElementsByClassName('statusIndicator');
+      Array.prototype.forEach.call(statusesArr, elem => {
+        const CREATED = 0, ASSIGNED = 1, INPROGRESS = 2, STUCK = 3, DONE = 4, CANCELLED = 5;
+        let className = '';
+        let taskStatus = TaskStatusesArr.indexOf(elem.innerText);
+        if (taskStatus == CREATED || taskStatus == ASSIGNED || taskStatus == INPROGRESS) className = 'txtblue';
+        if (taskStatus == STUCK) className = 'txtred';
+        if (taskStatus == DONE) className = 'txtgreen';
+        if (taskStatus == CANCELLED) className = 'txtbw';
+        elem.classList.add(className);
+      });
+
+      let dtArr = document.getElementsByClassName('dt');
+      Array.prototype.forEach.call(dtArr, elem => {
+        elem.innerHTML = elem.innerHTML.replace('\n', '<br>')
+      });
+
+      clearBBCode('div.taskcontent');
+
+    }
+        
+    //console.timeEnd('Main Function');
+
+  })();
+
+</script>
+
+</body>
+</html>

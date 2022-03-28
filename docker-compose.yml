@@ -1,0 +1,21 @@
+version: '3.6'
+services:
+  app:
+    build: .
+    image: edm
+    restart: always
+    ports:
+      - 8090:8090
+    depends_on:
+      - postgres
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: edm
+      POSTGRES_DB: edm
+    ports:
+      - 5435:5432
+    volumes:
+      - ./sqlscripts/postgresql-create.sql:/docker-entrypoint-initdb.d/postgresql-create.sql
+      - ./testfiles/xadmin.sql:/docker-entrypoint-initdb.d/xadmin.sql
