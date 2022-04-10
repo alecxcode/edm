@@ -3,7 +3,7 @@ module edm
 go 1.17
 
 require (
-	github.com/alecxcode/sqla v0.0.0-20220327184558-c1b7e33e7b8e
+	github.com/alecxcode/sqla v0.1.3
 	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df
 	github.com/gofrs/uuid v4.2.0+incompatible
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897

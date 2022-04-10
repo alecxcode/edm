@@ -126,7 +126,6 @@ func (t *Task) create(db *sql.DB, DBType byte) (lastid int, rowsaff int) {
 	if t.Assignee != nil {
 		args = args.AppendInt("Assignee", t.Assignee.ID)
 	}
-	//args = args.AppendJSONListInt("Participants", t.Participants)
 	args = args.AppendNonEmptyString("Topic", t.Topic)
 	args = args.AppendNonEmptyString("Content", t.Content)
 	args = args.AppendInt("TaskStatus", t.TaskStatus)

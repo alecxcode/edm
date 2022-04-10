@@ -65,7 +65,7 @@ func (m *ProfilesInMemory) delCookie(cookval string) {
 	idForClearCheck = m.Cjar[cookval]
 	delete(m.Cjar, cookval)
 	m.Unlock()
-	// Next code removes completely-logout user
+	// Below code removes completely-logout user
 	var remove = true
 	m.RLock()
 	for _, fid := range m.Cjar {

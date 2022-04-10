@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"fmt"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -66,7 +65,6 @@ func (bs *BaseStruct) companiesHandler(w http.ResponseWriter, r *http.Request) {
 			if allowedToRemove {
 				removed := sqla.DeleteObjects(bs.db, bs.dbt, "companies", "ID", ids)
 				if removed > 0 {
-					//deleteObjects(bs.db, bs.dbt, "units", "Company", ids)
 					bs.team.constructCorpList(bs.db, bs.dbt)
 					bs.team.constructUnitList(bs.db, bs.dbt)
 					Page.Message = "removedElems"
@@ -100,7 +98,6 @@ ORDER BY c.ShortName ASC, c.FullName ASC, c.ForeignName ASC`)
 		var ShortName sql.NullString
 		var FullName sql.NullString
 		var ForeignName sql.NullString
-		//var CompleteName sql.NullString
 		var Contacts sql.NullString
 		var CompanyHead sql.NullInt64
 		var RegNo sql.NullString
@@ -142,7 +139,7 @@ ORDER BY c.ShortName ASC, c.FullName ASC, c.ForeignName ASC`)
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to an user
+		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
 	}
 
@@ -160,7 +157,7 @@ ORDER BY c.ShortName ASC, c.FullName ASC, c.ForeignName ASC`)
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to an user
+		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
 	}
 }

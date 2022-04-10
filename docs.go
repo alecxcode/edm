@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"fmt"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -83,29 +82,6 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 		Page.LoggedinAdmin = true
 		Page.RemoveAllowed = true
 	}
-
-	// JSON Accept and parsing feature
-	// headerContentTtype := r.Header.Get("Content-Type")
-	// if headerContentTtype == "application/json" {
-	// 	jdec := json.NewDecoder(r.Body)
-	// 	var jsonInput struct {
-	//      // strcuct content required
-	// 	}
-	// 	err := jdec.Decode(&jsonInput)
-	// 	if err != nil {
-	// log.Println(currentFunction()+":", err)
-	// 	}
-	// 	log.Println(jsonInput)
-	// }
-
-	// // Parsing Filters
-	// Page.Filters.getFilterfromForm(r,
-	// 	[]string{"categories", "doctypes"}, []string{"Category", "DocType"},
-	// 	[]string{}, []string{},
-	// 	[]string{"regDates", "incDates", "endDates"}, []string{"RegDate", "IncDate", "EndDate"},
-	// 	[]string{"sums"}, []string{"DocSum"}, []string{"Currency"},
-	// 	"searchText", []string{"RegNo", "IncNo", "About", "Authors", "Addressee", "Note", "FileList"},
-	// )
 
 	Page.Filters.GetFilterFromForm(r,
 		convDateStrToInt64, convDateTimeStrToInt64,
@@ -214,8 +190,6 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		defer rows.Close()
 
-		//log.Println("::: after query before scan :::")
-
 		var RegNo sql.NullString
 		var RegDate sql.NullInt64
 		var IncNo sql.NullString
@@ -259,8 +233,6 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 			Page.Docs = append(Page.Docs, d)
 		}
 
-		//log.Println("::: after scan before count :::")
-
 		var FilteredNum sql.NullInt64
 		row := bs.db.QueryRow(sqcount, argscount...)
 		err = row.Scan(&FilteredNum)
@@ -269,15 +241,13 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		Page.FilteredNum = int(FilteredNum.Int64)
 
-		//log.Println("::: after count :::")
-
 		return nil
 	}()
 
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to an user
+		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
 	}
 
@@ -299,7 +269,7 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to an user
+		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
 	}
 }

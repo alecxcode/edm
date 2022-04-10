@@ -1,22 +1,20 @@
 package main
 
 import (
-	//"fmt"
-
 	"database/sql"
 	"strconv"
 	"strings"
 	"time"
 )
 
-//Date defines date in format: (year, month, day)
+// Date defines date in format: (year, month, day)
 type Date struct {
 	Year  int
 	Month byte
 	Day   byte
 }
 
-//DateTime defines time in format: (year, month, day, hour, minute)
+// DateTime defines time in format: (year, month, day, hour, minute)
 type DateTime struct {
 	Year   int
 	Month  byte

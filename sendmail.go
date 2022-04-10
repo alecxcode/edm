@@ -162,7 +162,7 @@ func mailerMonitor(ch chan EmailMessage, host string, port int, user string, pas
 			}
 			writeMessage(em, gm, from)
 			if open {
-				err := gomail.Send(sc, gm)
+				err = gomail.Send(sc, gm)
 				if err != nil {
 					errsending = true
 					log.Println("Error sending mail message:", err)

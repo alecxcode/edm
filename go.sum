@@ -1,8 +1,8 @@
 github.com/Azure/azure-sdk-for-go/sdk/azcore v0.19.0/go.mod h1:h6H6c8enJmmocHUbLiiGY6sx7f9i+X3m1CHdd5c6Rdw=
 github.com/Azure/azure-sdk-for-go/sdk/azidentity v0.11.0/go.mod h1:HcM1YX14R7CJcghJGOYCgdezslRSVzqwLf/q+4Y2r/0=
 github.com/Azure/azure-sdk-for-go/sdk/internal v0.7.0/go.mod h1:yqy467j36fJxcRV2TzfVZ1pCb5vxm4BtZPUdYWe/Xo8=
-github.com/alecxcode/sqla v0.0.0-20220327184558-c1b7e33e7b8e h1:CL/El1iyxf/x0jhz2YCG/Bk+gmc7YsjQMZq7Xw/WvtM=
-github.com/alecxcode/sqla v0.0.0-20220327184558-c1b7e33e7b8e/go.mod h1:ljEhLJYPq8arWdZiggTpCPkfa4Dt2JSyRuR+V/aAdxo=
+github.com/alecxcode/sqla v0.1.3 h1:cvA9058so7hGbTnwsJHnn2N4sPV//TOdymHN06RIlA8=
+github.com/alecxcode/sqla v0.1.3/go.mod h1:MsZeX2a+SC6mQT/H69uC1uM6k8LxZqH9q+UXj74PTD0=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/denisenkom/go-mssqldb v0.12.0 h1:VtrkII767ttSPNRfFekePK3sctr+joXgO58stqQbtUA=

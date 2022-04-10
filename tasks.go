@@ -1,8 +1,6 @@
 package main
 
 import (
-	//"fmt"
-
 	"bytes"
 	"database/sql"
 	"encoding/json"
@@ -156,7 +154,6 @@ func (bs *BaseStruct) tasksHandler(w http.ResponseWriter, r *http.Request) {
 		} else if r.FormValue("taskStatus") == "cancelled" {
 			statusCode = CANCELLED
 		}
-		//log.Println("StatusCode:", statusCode)
 		if statusCode > 0 && statusCode < 6 {
 			r.ParseForm()
 			ids := []int{}
@@ -299,18 +296,6 @@ LEFT JOIN profiles assignee ON assignee.ID = Assignee`
 		SEEK.UseSeek = true
 	}
 
-	// SEEK = (Page.PageNumber - 1) * Page.UserConfig.ElemsOnPage
-	// if Page.SortedHow == 0 {
-	// 	//lastElemOnPage, _ := strconv.Atoi(r.FormValue("lastElemOnPage"))
-	// 	//firstElemOnPage, _ := strconv.Atoi(r.FormValue("firstElemOnPage"))
-	// 	if Page.PageNumber == 1 {
-	// 		useSeek = false
-	// 	} else {
-	// 		Page.FilteredNum, _ = strconv.Atoi(r.FormValue("filteredNum"))
-	// 		SEEK = Page.FilteredNum - ((Page.PageNumber - 1) * Page.UserConfig.ElemsOnPage) + 1
-	// 	}
-	// }
-
 	if SEEK.UseSeek {
 		previousPageNumber, _ := strconv.Atoi(r.FormValue("previousPage"))
 		filteredNum, _ := strconv.Atoi(r.FormValue("filteredNum"))
@@ -343,11 +328,7 @@ LEFT JOIN profiles assignee ON assignee.ID = Assignee`
 			}
 			OFFSET = (-pageDifference - 1) * Page.UserConfig.ElemsOnPage
 		} else {
-			//if Page.SortedHow == 0 {
-			//SEEK.Value, _ = strconv.Atoi(r.FormValue("firstElemOnPage"))
-			//} else {
 			SEEK.Value, _ = strconv.Atoi(r.FormValue("firstElemOnPage"))
-			//}
 			SEEK.ValueInclude = true
 			OFFSET = 0
 		}
@@ -420,8 +401,6 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 				return err
 			}
 
-			//log.Println(t.ID, CommContent.String, CommFileList.String)
-
 			t.Created = int64ToDateTime(Created.Int64)
 			t.PlanStart = int64ToDateTime(PlanStart.Int64)
 			t.PlanDue = int64ToDateTime(PlanDue.Int64)
@@ -455,8 +434,6 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 			Page.Tasks = append(Page.Tasks, t)
 		}
 
-		//log.Println("::: before count :::")
-
 		var FilteredNum sql.NullInt64
 		row := bs.db.QueryRow(sqcount, argscount...)
 		err = row.Scan(&FilteredNum)
@@ -464,8 +441,6 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 			return err
 		}
 		Page.FilteredNum = int(FilteredNum.Int64)
-
-		//log.Println("::: after count :::")
 
 		return nil
 	}()
@@ -521,7 +496,7 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to an user
+		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
 	}
 }
@@ -608,8 +583,6 @@ func loadTasks(db *sql.DB, sq string, sqcount string, args []interface{}) (Tasks
 		if err != nil {
 			return Tasks, FilteredNumRes, err
 		}
-
-		//log.Println(t.ID, CommContent.String, CommFileList.String)
 
 		t.Created = int64ToDateTime(Created.Int64)
 		t.PlanStart = int64ToDateTime(PlanStart.Int64)

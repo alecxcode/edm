@@ -175,9 +175,6 @@ func newLangStruct(pathToLngFile string) Lang {
 		},
 	}
 
-	// x, _ := json.Marshal(lng)
-	// log.Println(string(x))
-
 	content, err := ioutil.ReadFile(pathToLngFile)
 	if err != nil {
 		log.Println(currentFunction()+":", err)

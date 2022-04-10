@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"fmt"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -245,7 +244,7 @@ LEFT JOIN companies ON companies.ID = units.Company`,
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to an user
+		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
 	}
 
@@ -271,7 +270,7 @@ LEFT JOIN companies ON companies.ID = units.Company`,
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to an user
+		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
 	}
 }

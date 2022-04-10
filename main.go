@@ -44,7 +44,7 @@ type BaseStruct struct {
 	mailchan     chan EmailMessage
 	uploads      http.Handler
 	db           *sql.DB
-	dbt          byte // DB type as defined by constants in sql.go
+	dbt          byte // DB type as defined by constants in sqla package
 	team         ProfilesInMemory
 	templates    *template.Template
 	logintmpl    *template.Template
@@ -57,8 +57,6 @@ type BaseStruct struct {
 		TimeFormats []string
 	}
 }
-
-//var validElemID = regexp.MustCompile("/[0-9]+/?$")
 
 func main() {
 
@@ -110,9 +108,13 @@ func main() {
 
 	// Reading command-line arguments
 	consolelog := false
+	filldb := false
 	for _, a := range os.Args {
 		if a == "--createdb" {
 			cfg.CreateDB = "true"
+		}
+		if a == "--filldb" {
+			filldb = true
 		}
 		if a == "--nobrowser" {
 			cfg.RunBrowser = "false"
@@ -154,8 +156,6 @@ func main() {
 	}
 	DBT = sqla.ReturnDBType(cfg.DBType)
 	sqlscriptsPath = filepath.Join(cfg.ServerSystem, "sqlscripts")
-
-	//log.Printf("%#v\n", cfg)
 
 	if cfg.CreateDB == "fulldatabase" && DBT == sqla.POSTGRESQL {
 		log.Println("Creating Database...")
@@ -268,13 +268,11 @@ func main() {
 		log.Println(currentFunction()+": constructCorpList", err)
 	}
 
-	// Reading command-line arguments again
-	for _, a := range os.Args {
-		if a == "--filldb" {
-			log.Println("Populating DB with test data...")
-			fillDBwithTestData(bs.db, bs.dbt)
-			return
-		}
+	// Filling database with test data
+	if filldb {
+		log.Println("Populating DB with test data...")
+		fillDBwithTestData(bs.db, bs.dbt)
+		return
 	}
 
 	// Server code:

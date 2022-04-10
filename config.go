@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-//Config struct defines server-side config of the app which is in cfg file
+// Config struct defines server-side config of the app which is in cfg file
 type Config struct {
 	ServerSystem  string
 	ServerRoot    string
@@ -109,7 +109,6 @@ func (cfg *Config) readConfig(configPath string, serverRoot string) error {
 
 		// Reading Config from a map to a struct
 		readMapToCfgStruct(mapOfConfig, cfg)
-		//fmt.Printf("%#v\n", cfg)
 
 	}
 	return nil

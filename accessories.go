@@ -45,7 +45,7 @@ func runClient(UseTLS string, addr string, MSecToWait int, retries int) {
 		protocol = "https"
 	}
 	client := http.Client{Timeout: 1 * time.Second}
-	//Before launching a browser we check if the server is running
+	// Before launching a browser we check if the server is running
 	for i := 0; i < retries; i++ {
 		time.Sleep(time.Duration(MSecToWait) * time.Millisecond)
 		resp, err := client.Get(protocol + "://" + addr + "/assets/")

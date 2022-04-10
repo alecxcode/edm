@@ -315,10 +315,8 @@ func (p *Profile) isLoginUniqueorBlank(db *sql.DB, DBType byte) (res bool, err e
 		return false, err
 	}
 	defer rows.Close()
-	//var ID sql.NullInt64
 	var Login sql.NullString
 	for rows.Next() {
-		//err = rows.Scan(&ID, &Login)
 		err = rows.Scan(&Login)
 		if err != nil {
 			return false, err
