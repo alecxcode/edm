@@ -8,9 +8,9 @@ The application has the following functions:
 * User profiles, companies, departments: create, edit, delete
 * Tasks: create, edit, upload files, assign, forward, change status (mark as done, cancel, etc.), add comments with files attached
 * Notifications by e-mail: about user creation to that user, about changes in a task to related users
-* Some basic bruteforce protection and other features
 * Themes and localization support
 * UX/UI features bb-code, search results highlighting, etc.
+* Some basic bruteforce protection and other features
 
 ## How to build and run
 To build use Go (Golang) programming language, run `go build`, and then you can run `./edm` app in the current directory. If you build the application and run locally, by default it immediately opens the browser, so you can start using it. Default login: admin, default password: no password.  
@@ -24,4 +24,4 @@ The application supports the following RDBMS:
 * Oracle
 * PostgreSQL
 
-Config file, logs, uploads, sqlite database are stored in `./edm` directory of user home directory.  
+Config file, logs, uploads, sqlite database are stored in `.edm` directory of user home directory.  
