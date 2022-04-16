@@ -7,7 +7,7 @@ services:
     ports:
       - 8090:8090
     depends_on:
-      - postgres
+      - db
   db:
     image: postgres
     environment:
