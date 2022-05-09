@@ -265,7 +265,7 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// HTML output
-	err = bs.templates.ExecuteTemplate(w, "docs.html", Page)
+	err = bs.templates.ExecuteTemplate(w, "docs.tmpl", Page)
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

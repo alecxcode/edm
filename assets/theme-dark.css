@@ -69,7 +69,7 @@ pre, code {
 }
 #textmenu .chosenmenu, #mobilemenu .chosenmenu {
   color: #eed;
-  border: 1px solid #000;
+  border: 1px solid #303040;
   background-color: #303040;
   border-radius: var(--elements-radius);
 }
@@ -737,43 +737,5 @@ h3 a:focus {
     display: block;
     margin-top: 0.7em;
   }
-  /* html, body {
-    height: 100%;
-  } */
-  /* #showFilters {
-    display: none;
-  } */
-  #showFilters {
-    position: absolute;
-    left: 0;
-    top: 0;
-  }
-  #searchButton {
-    position: absolute;
-    right: 0;
-    top: 0;
-  }
-  #search {
-    position: relative;
-    width: 100%;
-    display: block;
-    padding-left: 92px;
-    padding-right: 68px;
-  }
-  #searchText {
-    width: 100%;
-  }
-  /* #showhide {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    padding: 60px 10px 10px 10px;
-    width: 100%;
-    z-index: 32000;
-    background-color: #fff;
-  }
-  #filterButtonsControls {
-    padding-bottom: 50px;
-  } */
   
 }

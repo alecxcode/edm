@@ -920,7 +920,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// HTML output
-	err = bs.templates.ExecuteTemplate(w, "task.html", Page)
+	err = bs.templates.ExecuteTemplate(w, "task.tmpl", Page)
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		throwServerError(w, "executing task template", Page.LoggedinID, Page.Task.ID)

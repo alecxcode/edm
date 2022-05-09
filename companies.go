@@ -153,7 +153,7 @@ ORDER BY c.ShortName ASC, c.FullName ASC, c.ForeignName ASC`)
 	}
 
 	// HTML output
-	err = bs.templates.ExecuteTemplate(w, "companies.html", Page)
+	err = bs.templates.ExecuteTemplate(w, "companies.tmpl", Page)
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

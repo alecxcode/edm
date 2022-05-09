@@ -266,7 +266,7 @@ LEFT JOIN companies ON companies.ID = units.Company`,
 	}
 
 	// HTML output
-	err = bs.templates.ExecuteTemplate(w, "team.html", Page)
+	err = bs.templates.ExecuteTemplate(w, "team.tmpl", Page)
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

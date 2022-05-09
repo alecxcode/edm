@@ -485,14 +485,14 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 	}
 
 	// HTML output
-	// tempTemplates, err := template.ParseFiles(filepath.Join(bs.cfg.ServerSystem, "templates", bs.cfg.DefaultLang, "tasks.html"))
+	// tempTemplates, err := template.ParseFiles(filepath.Join(bs.cfg.ServerSystem, "templates", bs.cfg.DefaultLang, "tasks.tmpl"))
 	// if err != nil {
 	// 	log.Println(currentFunction()+":", err)
 	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	// 	return
 	// }
-	// err = tempTemplates.ExecuteTemplate(w, "tasks.html", Page)
-	err = bs.templates.ExecuteTemplate(w, "tasks.html", Page)
+	// err = tempTemplates.ExecuteTemplate(w, "tasks.tmpl", Page)
+	err = bs.templates.ExecuteTemplate(w, "tasks.tmpl", Page)
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

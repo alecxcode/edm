@@ -442,7 +442,7 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// HTML output
-	err = bs.templates.ExecuteTemplate(w, "company.html", Page)
+	err = bs.templates.ExecuteTemplate(w, "company.tmpl", Page)
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		throwServerError(w, "executing company template", Page.LoggedinID, Page.Company.ID)

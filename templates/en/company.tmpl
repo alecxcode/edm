@@ -68,8 +68,8 @@
       <p><span class="ofname">Other contacts:</span><span class="ofval">{{.Company.Contacts.Other}}</span></p>
       <h2>Other:</h2>
       <p><span class="ofname">CEO or head:</span><span class="ofval">{{if $bi}}<a href="/team/profile/{{$bi}}">{{.Company.GiveHeadNameJob}}</a>{{end}}</span></p>
-      <p><span class="ofname">Reg. No:</span><span class="ofval">{{.Company.RegNo}}</span></p>
-      <p><span class="ofname">Tax (VAT) No:</span><span class="ofval">{{.Company.TaxNo}}</span></p>
+      <p><span class="ofname">Reg. No.:</span><span class="ofval">{{.Company.RegNo}}</span></p>
+      <p><span class="ofname">Tax (VAT) No.:</span><span class="ofval">{{.Company.TaxNo}}</span></p>
       <p><span class="ofname">Bank details:</span><span class="ofval" id="BankDetails">{{.Company.BankDetails}}</span></p>
       <div class="panel"><a href="/team/?companies={{.Company.ID}}">Company employee list</a></div>
       <br>
@@ -126,8 +126,8 @@
         {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
         {{end}}
       </select><span class="dropdown"></span></p>
-      <p><span class="ofname">Reg. No:</span> <input type="text" class="field ofval" name="regNo" size="30" maxlength="127" value="{{.Company.RegNo}}"></p>
-      <p><span class="ofname">Tax (VAT) No:</span> <input type="text" class="field ofval" name="taxNo" size="30" maxlength="127" value="{{.Company.TaxNo}}"></p>
+      <p><span class="ofname">Reg. No.:</span> <input type="text" class="field ofval" name="regNo" size="30" maxlength="127" value="{{.Company.RegNo}}"></p>
+      <p><span class="ofname">Tax (VAT) No.:</span> <input type="text" class="field ofval" name="taxNo" size="30" maxlength="127" value="{{.Company.TaxNo}}"></p>
       <p><span class="ofname" style="vertical-align: top;">Bank details:</span> <textarea class="multiline ofval" name="bankDetails" maxlength="2000" rows="4" cols="30">{{.Company.BankDetails}}</textarea></p>
     {{if .New}}<input type="submit" class ="sbut" name="createButton" value="Create">
                <input type="button" class ="sbut" name="cancelButton" value="Cancel" 

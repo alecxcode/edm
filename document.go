@@ -407,7 +407,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// HTML output
-	err = bs.templates.ExecuteTemplate(w, "document.html", Page)
+	err = bs.templates.ExecuteTemplate(w, "document.tmpl", Page)
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		throwServerError(w, "executing document template", Page.LoggedinID, Page.Document.ID)

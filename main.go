@@ -210,7 +210,7 @@ func main() {
 			DateFormats []string
 			TimeFormats []string
 		}{
-			Themes:      []string{"dark", "light"},
+			Themes:      []string{"dark", "light", "monochrome-dark", "monochrome-light"},
 			DateFormats: []string{"yyyy-mm-dd", "yyyy.mm.dd", "dd.mm.yyyy", "dd/mm/yyyy", "Mon dd, yyyy", "mm/dd/yyyy"},
 			TimeFormats: []string{"12h am/pm", "24h"},
 		},
@@ -239,15 +239,15 @@ func main() {
 
 	templatesPath = filepath.Join(cfg.ServerSystem, "templates", bs.cfg.DefaultLang)
 	bs.templates = template.Must(template.ParseFiles(
-		filepath.Join(templatesPath, "config.html"),
-		filepath.Join(templatesPath, "docs.html"),
-		filepath.Join(templatesPath, "document.html"),
-		filepath.Join(templatesPath, "tasks.html"),
-		filepath.Join(templatesPath, "task.html"),
-		filepath.Join(templatesPath, "team.html"),
-		filepath.Join(templatesPath, "profile.html"),
-		filepath.Join(templatesPath, "companies.html"),
-		filepath.Join(templatesPath, "company.html"),
+		filepath.Join(templatesPath, "config.tmpl"),
+		filepath.Join(templatesPath, "docs.tmpl"),
+		filepath.Join(templatesPath, "document.tmpl"),
+		filepath.Join(templatesPath, "tasks.tmpl"),
+		filepath.Join(templatesPath, "task.tmpl"),
+		filepath.Join(templatesPath, "team.tmpl"),
+		filepath.Join(templatesPath, "profile.tmpl"),
+		filepath.Join(templatesPath, "companies.tmpl"),
+		filepath.Join(templatesPath, "company.tmpl"),
 	))
 	bs.logintmpl = getLoginTemplate()
 	bs.anymailtmpl = getAnyMailTemplate()

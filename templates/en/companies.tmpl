@@ -58,8 +58,8 @@
         {{$bi := .GiveHeadID}}
         <div class="panel"><a href="/companies/company/{{.ID}}">{{if and (not .ShortName) (not .FullName) (not .ForeignName)}}ID: {{.ID}}{{end}}
           {{if .ShortName}}{{.ShortName}}{{end}}{{if .FullName}}, ({{.FullName}}){{end}}{{if .ForeignName}}, ({{.ForeignName}}){{end}}</a>;
-        {{if .RegNo}}Reg. No: {{.RegNo}};{{end}}
-        {{if .TaxNo}}Tax (VAT) No: {{.TaxNo}};{{end}}
+        {{if .RegNo}}Reg. No.: {{.RegNo}};{{end}}
+        {{if .TaxNo}}Tax (VAT) No.: {{.TaxNo}};{{end}}
         {{if .Contacts.AddressReg}}Registered office address: {{.Contacts.AddressReg}};{{end}}
         {{if $bi}}CEO or head: <a href="/team/profile/{{$bi}}">{{.GiveHeadNameJob}}</a>;{{end}}
         See also: <a href="/team/?companies={{.ID}}">Company employee list</a>.</div><br>

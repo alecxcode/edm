@@ -745,7 +745,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// HTML output
-	err = bs.templates.ExecuteTemplate(w, "profile.html", Page)
+	err = bs.templates.ExecuteTemplate(w, "profile.tmpl", Page)
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		throwServerError(w, "executing profile template", Page.LoggedinID, Page.Profile.ID)
@@ -819,7 +819,7 @@ func (bs *BaseStruct) userConfigHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// HTML output
-	err = bs.templates.ExecuteTemplate(w, "config.html", Page)
+	err = bs.templates.ExecuteTemplate(w, "config.tmpl", Page)
 	if err != nil {
 		log.Println(currentFunction()+":", err)
 		throwServerError(w, "executing profile template", Page.LoggedinID, Page.LoggedinID)
