@@ -566,7 +566,6 @@ input:disabled, .numberbox:disabled, .sbut:disabled {
   display: inline-block;
   width: 160px;
   padding: 4px;
-  border-right: 1px dotted #b7b7b7;
 }
 .ofval {
   display: inline-block;
@@ -574,14 +573,13 @@ input:disabled, .numberbox:disabled, .sbut:disabled {
   max-width: calc(100% - 160px);
 }
 #main p {
-  margin-bottom: 6px;
-  border: 1px solid #eeeeee;
-  background-color: #f8f8f8;
-  border-radius: var(--elements-radius);
+  margin-bottom: 2px;
+  border-bottom: 1px solid #b7b7b7;
   min-width: 168px;
   max-width: fit-content;
   padding-left: 2px;
   padding-right: 2px;
+  padding-bottom: 2px;
 }
 .wideelem {
   margin-bottom: 6px;

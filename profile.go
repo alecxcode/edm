@@ -414,9 +414,15 @@ func (p Profile) GiveBirthDay(dateFmt string) string {
 	switch dateFmt {
 	case "yyyy-mm-dd":
 		return dateToStringWOY(p.BirthDate, true)
+	case "yyyy.mm.dd":
+		return dateToStringWOY(p.BirthDate, true)
 	case "dd.mm.yyyy":
 		return dateToStringWOY(p.BirthDate, false)
+	case "dd/mm/yyyy":
+		return dateToStringWOY(p.BirthDate, false)
 	case "Mon dd, yyyy":
+		return dateToStringWOY(p.BirthDate, true)
+	case "mm/dd/yyyy":
 		return dateToStringWOY(p.BirthDate, true)
 	default:
 		return dateToStringWOY(p.BirthDate, false)

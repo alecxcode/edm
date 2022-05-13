@@ -95,7 +95,7 @@
       <p><span class="ofname">Other contacts:</span><span class="ofval">{{.Profile.Contacts.Other}}</span></p>
       <h2>Other:</h2>
       <p><span class="ofname">Birthday:</span><span class="ofval monthday">{{.Profile.GiveBirthDay .UserConfig.DateFormat}}</span></p>
-      <p><span class="ofname">Position:</span><span class="ofval">{{.Profile.JobTitle}}</span></p>
+      <p><span class="ofname">Job title:</span><span class="ofval">{{.Profile.JobTitle}}</span></p>
       <p><span class="ofname">Unit:</span><span class="ofval">{{if $ui}}<a href="/companies/company/{{.Profile.JobUnit.Company.ID}}#unit{{$ui}}">{{.Profile.GiveUnitName}}</a>{{end}}</span></p>
       <p><span class="ofname">Reporting to:</span><span class="ofval">{{if $bi}}<a href="/team/profile/{{$bi}}">{{.Profile.GiveBossNameJob}}</a>{{end}}</span></p>
       <p><span class="ofname">Role:</span><span class="ofval">{{if eq .Profile.UserRole 1}}administrator{{else}}no{{end}}</span></p>

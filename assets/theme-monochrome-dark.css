@@ -582,7 +582,7 @@ a.sbut, a.sbut:active, a.sbut:visited {
 
 input:disabled, .numberbox:disabled, .sbut:disabled, .field:disabled {
   color: #555 !important;
-  background-color: #111 !important;
+  background-color: #000 !important;
   border: 1px dotted #555 !important;
   box-shadow: none;
 }
@@ -596,7 +596,6 @@ input:disabled, .numberbox:disabled, .sbut:disabled, .field:disabled {
   display: inline-block;
   width: 160px;
   padding: 4px;
-  border-right: 1px dotted #999;
 }
 .ofval {
   display: inline-block;
@@ -604,14 +603,13 @@ input:disabled, .numberbox:disabled, .sbut:disabled, .field:disabled {
   max-width: calc(100% - 160px);
 }
 #main p {
-  margin-bottom: 6px;
-  border: 1px dotted #999;
-  background-color: #000;
-  border-radius: var(--elements-radius);
+  margin-bottom: 2px;
+  border-bottom: 1px dashed #999;
   min-width: 168px;
   max-width: fit-content;
   padding-left: 2px;
   padding-right: 2px;
+  padding-bottom: 2px;
 }
 .wideelem {
   margin-bottom: 6px;
