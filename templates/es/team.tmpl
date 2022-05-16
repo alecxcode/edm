@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{{.AppTitle}}: {{.PageTitle}}</title>
+  <link rel="shortcut icon" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/theme-{{.UserConfig.SystemTheme}}.css">
+</head>
+<body>
+
+<div id="headmenu">
+  <div class="boxinmenu">
+  <div id="evenly">
+    <div class="mobileMenuButton" id="mobileMenuButtonMenu" onclick="showMobileMenu();"><img class="vector" src="/assets/menu.svg" alt="Menú"></div>
+    <div class="textmenu" id="textmenu">
+    <a href="/docs/">Documentos</a>
+    <a href="/tasks/?anyparticipants=my">Tareas</a>
+    <a href="/team/" class="chosenmenu">Equipo</a>
+    </div>
+    <div class="graphicmenu">
+      <a href="/config" title="Ajustes"><img class="vector" src="/assets/settings.svg" alt="Ajustes"></a>
+      <a href="/team/profile/{{.LoggedinID}}" title="Perfil"><img class="vector" src="/assets/profile.svg" alt="Perfil"></a>
+      <a href="/logout" title="Cerrar sesión"><img class="vector" src="/assets/quit.svg" alt="Cerrar sesión"></a>
+    </div>
+  </div>
+  </div>
+</div>
+<div id="mobilemenu" style="display: none;"></div>
+
+<div id="container">
+
+  <div id="control">
+    <h1>{{.PageTitle}}</h1>
+
+  <form id="controlForm" action="/team/" method="POST" onsubmit="addSortingOnSubmut('controlForm');">
+    <div id="search">
+    <input id="showFilters" class ="sbut" type="button" value="Filtros..." title="Mostrar u ocultar filtros" onclick="showFilters();
+    /* This function shows or hides filters controls */
+    function showFilters() {
+    const d = document.getElementById('showhide');
+    d.style.display = (d.style.display == 'none') ? 'block' : 'none';
+    };">
+    <input id="searchText" type="text" class="field" name="searchText" size="15" placeholder="Buscar texto">
+    <input id="searchButton" class ="sbut" type="submit" name="searchButton" value="Búsqueda">
+    </div>
+
+    <div id="showhide" style="display: none;">
+
+      <div class="filter" id="firstFilter"><strong id="jobunitsName">Unidades (departamentos):</strong><br>
+        <div class="scroller">
+        {{range .UnitList}}
+        <input type="checkbox" id="ju{{.ID}}" name="jobunits" value="{{.ID}}">
+        <label for="ju{{.ID}}">{{.UnitNameComp}}</label><br>{{end}}
+        </div>
+      </div>
+    
+      <div class="filter"><strong id="companies" title="by company unit related to a company">Compañías:</strong><br>
+        <div class="scroller">
+        {{range .CorpList}}
+        <input type="checkbox" id="com{{.ID}}" name="companies" value="{{.ID}}">
+        <label for="com{{.ID}}">{{.CompanyName}}</label><br>{{end}}
+        </div>
+      </div>
+
+      <div class="filter"><strong id="userrole">Rol:</strong><br>
+        <input type="checkbox" id="rl0" name="userrole" value="0"><label for="rl0">Sin rol</label><br>
+        <input type="checkbox" id="rl1" name="userrole" value="1"><label for="rl1">Administrador</label><br>
+      </div>
+
+      <div class="filter"><strong id="userlock">Bloqueo:</strong><br>
+        <input type="checkbox" id="lo0" name="userlock" value="0"><label for="lo0">Sin bloqueo</label><br>
+        <input type="checkbox" id="lo1" name="userlock" value="1"><label for="lo1">Bloqueado</label><br>
+      </div>
+
+      <div id="filterButtonsControls">
+      <input type="submit" class ="sbut" name="filterButton" value="Aplicar filtros">
+      <input type="button" class ="sbut" name="filterReset" onclick="resetFilter();" value="Restablecer todos los filtros">
+      </div>
+    </div>
+  </form>
+
+  <p id="appliedFilters"></p>
+
+  <div class="panel"><a href="/companies/">Ir a la lista de compañías</a></div>
+  <div id="controlButtons">
+    <a href="/team/profile/new" class ="sbut greenish">+ Nuevo usuario</a>
+    <input type="button" class ="sbut reddish" id="deleteButton" name="deleteButton" value="× Eliminar seleccionado" onclick="
+    this.parentNode.lastElementChild.style.display = 'block'; document.getElementById('yesDeleteButton').disabled = false;" disabled>
+    <div style="display: none;">
+    <div class="msgredfx">¡Esta acción no se puede deshacer! ¿Confirmar la eliminación?</div>
+    <input type="button" class="sbut" name="cancelButton" value="Cancelar" onclick="this.parentNode.style.display = 'none'; document.getElementById('yesDeleteButton').disabled = true;">
+    <input type="button" class ="sbut reddish" id="yesDeleteButton" name="deleteButton" value="Si, eliminar" onclick="
+    addSortingOnSubmut('datagridForm'); addFiltersOnSubmut('datagridForm'); addPaginationOnSubmut('datagridForm');
+    const frm = document.getElementById('datagridForm');
+    addHiddenElem(frm, 'deleteButton', 'Delete selected');
+    frm.submit();" disabled>
+    </div>
+  </div>
+
+  {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred">Acción rechazada: no hay permisos para todos o algunos de los objetos. Solo el administrador puede eliminar.</p>{{end}}
+  {{if eq .Message "removedElems"}}<p class="msgok">Objetos eliminados: {{.RemovedNum}}.</p>{{end}}
+  {{if eq .Message "removalError"}}<p class="msgred">Error al eliminar objetos.</p>{{end}}
+  {{if eq .Message "LastAdminRejection"}}<div class="msgred">Acción rechazada: intento de eliminar al último administrador.</div>{{end}}
+  
+  <form id="sortingForm" action="/team/" method="POST" onsubmit="addFiltersOnSubmut('sortingForm');">
+    <div class="mobilesorting"><label>Ordenar:</label>
+    <select class="numberbox" id="sortedByMobile" onchange="sortBy(this.value, document.getElementById('sortedHow').value);">
+      <option value="FullName">Nombre completo</option>
+      <option value="JobTitle">Título de trabajo</option>
+      <option value="Unit">Unidad</option>
+    </select><span class="dropdown"></span>
+    <select class="numberbox" id="sortedHowMobile" onchange="sortBy(document.getElementById('sortedBy').value, this.value);">
+      <option value="0">Descendente</option>
+      <option value="1">Ascendente</option>
+    </select><span class="dropdown"></span>
+    <script>
+      document.getElementById('sortedByMobile').value = "{{.SortedBy}}";
+      document.getElementById('sortedHowMobile').value = "{{.SortedHow}}";
+    </script>
+    </div>
+    <input type="hidden" id="sortedBy" name="sortedBy" value="{{.SortedBy}}">
+    <input type="hidden" id="sortedHow" name="sortedHow" value="{{.SortedHow}}">
+  </form>
+
+  </div>
+
+  <div class="main" id="main">
+    {{if not .Team}}<div class="center"><br><br>No se encontraron objetos que coincidan con los criterios especificados o no hay objetos.<br><br></div>{{else}}
+    <div id="pagination">
+      <form id="paginationForm" action="/team/" method="POST">
+        <span class="nowrap">
+          <label for="pageNumber">Página {{.PageNumber}} de </label>
+          <input class ="sbut pg" type="button" title="Primera" value="|&lt;" onclick="paginate('min');"> <input class ="sbut pg" type="button" title="Previa"value="&lt;-" onclick="paginate(-1);">
+          <input type="number" class="field" size="8" id="pageNumber" name="pageNumber" value="{{.PageNumber}}" min="1" max="" onchange="paginate(0);">
+          <input class ="sbut pg" type="button" title="Próxima" value="-&gt;" onclick="paginate(1);"> <input class ="sbut pg" type="button" title="Última" value="&gt;|" onclick="paginate('max');">
+       </span>
+      <span class="nowrap">
+      <label for="elemsOnPage">Elementos en la página:</label>
+      <select class="numberbox" id="elemsOnPage" name="elemsOnPage" onchange="document.getElementById('elemsOnPageChanged').value='true';
+      paginate('min');">
+        <option value="20">20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="200">200</option>
+        <option value="500">500</option>
+      </select><span class="dropdown"></span>
+      <input type="hidden" id="elemsOnPageChanged" name="elemsOnPageChanged" value="false">
+      </span>
+      <script>
+        document.getElementById('elemsOnPage').value = "{{.UserConfig.ElemsOnPageTeam}}";
+      </script>
+      </form>
+    </div>
+
+    <form id="datagridForm" name="datagridForm" action="/team/" method="POST" onsubmit="addSortingOnSubmut('datagridForm');
+    addFiltersOnSubmut('datagridForm');addPaginationOnSubmut('datagridForm');">
+    <table id="mainTable">
+      <tr class="thead">
+        <th align="center" id="Chooser"><input type="checkbox" class="chead" id="chead"></th>
+        <th align="left" id="FullName">Nombre completo<span class="sort" title="Ascendente" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descendente" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="JobTitle">Título de trabajo<span class="sort" title="Ascendente" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descendente" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="Unit">Unidad (departamento)<span class="sort" title="Ascendente" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descendente" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="Contacts">Contactos</th>
+      </tr>
+      {{range .Team}}
+      <tr>
+        {{$ui := .GiveUnitID}}
+        {{$fn := (print .Surname .FirstName .OtherName)}}
+        <td label="Seleccionar" align="center"><input type="checkbox" class="chbox" id="{{.ID}}" name="ids" value="{{.ID}}"></td>
+        <td label="Full name" align="left"><a href="/team/profile/{{.ID}}">{{if $fn}}{{.Surname}} {{.FirstName}} {{.OtherName}}{{else}}ID: {{.ID}}{{end}}</a></td>
+        <td label="Job title" align="left">{{.JobTitle}}</td>
+        <td label="Unit (dept.)" align="left">{{if $ui}}<a href="/companies/company/{{.JobUnit.Company.ID}}#unit{{$ui}}">{{.GiveUnitName}}</a>{{end}}</td>
+        <td label="Contacts" align="left">
+          {{if .Contacts.TelOffice}}<span class="afile">Teléfono de oficina: {{.Contacts.TelOffice}}</span>{{end}}
+          {{if .Contacts.TelMobile}}<span class="afile">Teléfono móvil: {{.Contacts.TelMobile}}</span>{{end}}
+          {{if .Contacts.Email}}<span class="afile"><a href="mailto:{{.Contacts.Email}}">{{.Contacts.Email}}</a></span>{{end}}
+          {{if .Contacts.Other}}<span class="afile">{{.Contacts.Other}}</span>{{end}}
+        </td>
+      </tr>
+      {{end}}
+    </table>
+    </form>
+
+    <div id="stat"><br>Total de objetos por criterio de búsqueda: {{.FilteredNum}}</div>
+    {{end}}
+
+  </div>
+
+  <div id="bottom">© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></div>
+
+  
+</div>
+
+<script src="/assets/functions.js"></script>
+
+<script>
+
+  /* Functions to add inputs values from different forms on submit */
+  function addSortingOnSubmut(formID) {
+    const frm = document.getElementById(formID);
+    addHiddenElem(frm, 'sortedBy', document.getElementById('sortedBy').value);
+    addHiddenElem(frm, 'sortedHow', document.getElementById('sortedHow').value);
+  }
+  function addPaginationOnSubmut(formID) {
+    const frm = document.getElementById(formID);
+    let pageNumber = document.getElementById('pageNumber').value;
+    let elemsOnPage = document.getElementById('elemsOnPage').value;
+    let elemsOnCurrentPage = getElemsOnCurrentPage();
+    addHiddenElem(frm, 'elemsOnCurrentPage', elemsOnCurrentPage);
+    addHiddenElem(frm, 'pageNumber', pageNumber);
+    addHiddenElem(frm, 'elemsOnPage', elemsOnPage);
+  }
+  function addFiltersOnSubmut(formID) {
+
+    const frm = document.getElementById(formID);
+
+    let classFilter = {{.Filters.ClassFilter}};
+    let dateFilter = {{.Filters.DateFilter}};
+    let sumFilter = {{.Filters.SumFilter}};
+    let textFilter = "{{.Filters.TextFilter}}";
+
+    if (classFilter) {
+      for (let eachF of classFilter) {
+        for (let i = 0; i < eachF.List.length; i++) {
+          addHiddenElem(frm, eachF.Name, eachF.List[i]);
+        }
+      }
+    }
+
+    if (dateFilter) {
+      for (let eachF of dateFilter) {
+        addHiddenElem(frm, eachF.Name+'Relation', eachF.Relation);
+        for (let i = 0; i < eachF.Dates.length; i++) {
+          addHiddenElem(frm, eachF.Name, eachF.Dates[i]);
+        }
+      }
+    }
+
+    if (sumFilter) {
+      for (let eachF of sumFilter) {
+        addHiddenElem(frm, eachF.Name+'CurrencyCode', eachF.CurrencyCode);
+        addHiddenElem(frm, eachF.Name+'Relation', eachF.Relation);
+        for (let i = 0; i < eachF.SumsStr.length; i++) {
+          addHiddenElem(frm, eachF.Name, eachF.SumsStr[i]);
+        }
+      }
+    }
+
+    if (textFilter) {
+      addHiddenElem(frm, 'searchText', textFilter);
+    }
+
+  }
+ 
+  /* Main page loading function */
+  (function() {
+
+    //console.time('Main Function');
+
+    let mainTablePresent = false;
+    if (document.getElementById('mainTable')) {
+      mainTablePresent = true;
+    }
+
+    let loggedinAdmin = {{.LoggedinAdmin}};
+    if (!loggedinAdmin) {
+      document.getElementById('controlButtons').style.display = 'none';
+      if (mainTablePresent) {
+        const checkhead = document.getElementById('chead');
+        const checkboxes = document.querySelectorAll('input[class="chbox"]');
+        checkhead.disabled = true;
+        checkboxes.forEach(cb => cb.disabled = true);
+      }
+    }
+
+    let classFilterArr = [];
+    let dateFilterArr = [];
+    let sumFilterArr = [];
+
+    let classFilter = {{.Filters.ClassFilter}};
+    let dateFilter = {{.Filters.DateFilter}};
+    let sumFilter = {{.Filters.SumFilter}};
+    let textFilter = "{{.Filters.TextFilter}}";
+
+    if (classFilter) {
+      for (let eachF of classFilter) {
+        applyTypeFilter(eachF.List, eachF.Name);
+        classFilterArr.push(eachF);
+      }
+    }
+
+    if (dateFilter) {
+      for (let eachF of dateFilter) {
+        applyDateFilter(eachF);
+        dateFilterArr.push(eachF);
+      }
+    }
+
+    if (sumFilter) {
+      for (let eachF of sumFilter) {
+        applySumFilter(eachF);
+        sumFilterArr.push(eachF);
+      }
+    }
+
+    if (textFilter) {
+      applyTextFilter(textFilter);
+    }
+
+    if (textFilter && mainTablePresent) {
+      highlightSearchResults(textFilter, [1, 2, 3, 4]);
+    }
+
+    printAppliedFilters("Filtros aplicados: ", "No se aplicaron filtros.", "Intervalo", classFilterArr, dateFilterArr, sumFilterArr, textFilter);
+    
+    if (mainTablePresent) {
+      let removeAllowed = {{.LoggedinAdmin}};
+      processTableSelection(removeAllowed);
+      applySortingSelection();
+      processPagesCalculations("Total de objetos por criterio de búsqueda", "En esta página", "Total de páginas", {{.UserConfig.ElemsOnPageTeam}}, {{.FilteredNum}});
+    }
+        
+    //console.timeEnd('Main Function');
+
+  })();
+
+</script>
+
+</body>
+</html>

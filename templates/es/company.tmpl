@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{{.AppTitle}}: {{.PageTitle}}</title>
+  <link rel="shortcut icon" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/theme-{{.UserConfig.SystemTheme}}.css">
+</head>
+<body>
+
+<div id="headmenu">
+  <div class="boxinmenu">
+  <div id="evenly">
+    <div class="mobileMenuButton" id="mobileMenuButtonMenu" onclick="showMobileMenu();"><img class="vector" src="/assets/menu.svg" alt="Menú"></div>
+    <div class="textmenu" id="textmenu">
+    <a href="/docs/">Documentos</a>
+    <a href="/tasks/?anyparticipants=my">Tareas</a>
+    <a href="/team/">Equipo</a>
+    </div>
+    <div class="graphicmenu">
+      <a href="/config" title="Ajustes"><img class="vector" src="/assets/settings.svg" alt="Ajustes"></a>
+      <a href="/team/profile/{{.LoggedinID}}" title="Perfil"><img class="vector" src="/assets/profile.svg" alt="Perfil"></a>
+      <a href="/logout" title="Cerrar sesión"><img class="vector" src="/assets/quit.svg" alt="Cerrar sesión"></a>
+    </div>
+  </div>
+  </div>
+</div>
+<div id="mobilemenu" style="display: none;"></div>
+
+<div id="container">
+
+  <div id="control">
+    <h1>{{.PageTitle}}</h1>
+    <p class="breadcrumbs"><a href="/companies/">todas las compañias</a> / página de la compañía</p>
+    {{if and .Editable (not .New)}}
+      <input type="button" class ="sbut" name="showButton" value="Editar" onclick="showEditForm('edit');">
+      <input type="button" class ="sbut reddish" name="showDelete" value="Eliminar" onclick="showEditForm('removal');">
+      <form id="removal" action="/companies/" method="POST" style="display: none;">
+      <div class="msgredfx">¡Esta acción no se puede deshacer! ¿Confirmar la eliminación?</div>
+      <input type="hidden" name="ids" value="{{.Company.ID}}">
+      <input type="button" class="sbut" name="cancelButton" value="Cancelar" onclick="showEditForm('view');">
+      <input type="submit" class ="sbut reddish" name="deleteButton" value="Si, eliminar">
+      </form>
+    {{end}}
+    {{if and .New (not .Editable)}}<div class="msgred">No tiene permiso para agregar una empresa.</div>{{end}}
+    {{if eq .Message "dataWritten"}}<div class="msgok">Datos escritos con éxito.</div>{{end}}
+    {{if eq .Message "dataNotWritten"}}<div class="msgred">Error al escribir datos.</div>{{end}}
+  </div>
+
+  <div id="main">
+    {{$bi := .Company.GiveHeadID}}
+
+    {{if not .New}}
+    <div id="view">
+      <h2>Nombre:</h2>
+      <p><span class="ofname">Breve:</span><span class="ofval">{{.Company.ShortName}}</span></p>
+      <p><span class="ofname">Completo:</span><span class="ofval">{{.Company.FullName}}</span></p>
+      <p><span class="ofname">En un idioma extranjero:</span><span class="ofval">{{.Company.ForeignName}}</span></p>
+      <h2>Contactos:</h2>
+      <p><span class="ofname">Domicilio social:</span><span class="ofval">{{.Company.Contacts.AddressReg}}</span></p>
+      <p><span class="ofname">Otra dirección de la empresa:</span><span class="ofval">{{.Company.Contacts.AddressFact}}</span></p>
+      <p><span class="ofname">Teléfono:</span><span class="ofval">{{.Company.Contacts.Phone}}</span></p>
+      <p><span class="ofname">E-mail:</span><span class="ofval">{{if .Company.Contacts.Email}}<a href="mailto:{{.Company.Contacts.Email}}">{{.Company.Contacts.Email}}</a>{{end}}</span></p>
+      <p><span class="ofname">Sitio web:</span><span class="ofval">{{if .Company.Contacts.WebSite}}<a href="{{.Company.Contacts.WebSite}}">{{.Company.Contacts.WebSite}}</a>{{end}}</span></p>
+      <p><span class="ofname">Otros contactos:</span><span class="ofval">{{.Company.Contacts.Other}}</span></p>
+      <h2>Otro:</h2>
+      <p><span class="ofname">CEO o jefe:</span><span class="ofval">{{if $bi}}<a href="/team/profile/{{$bi}}">{{.Company.GiveHeadNameJob}}</a>{{end}}</span></p>
+      <p><span class="ofname">Reg. n.<sup>o</sup>:</span><span class="ofval">{{.Company.RegNo}}</span></p>
+      <p><span class="ofname">Impuesto (IVA) n.<sup>o</sup>:</span><span class="ofval">{{.Company.TaxNo}}</span></p>
+      <p><span class="ofname">Datos bancarios:</span><span class="ofval" id="BankDetails">{{.Company.BankDetails}}</span></p>
+      <div class="panel"><a href="/team/?companies={{.Company.ID}}">Lista de empleados de la compañía</a></div>
+      <br>
+      <br>
+
+      <h2>Unidades (departamentos):</h2>
+      {{range .Units}}
+        <div class="elem unit" id="unit{{.ID}}">
+        <h3><a href="#unit{{.ID}}">{{if .UnitName}}{{.UnitName}}{{else}}ID: {{.ID}}{{end}}</a></h3>
+        <span class="subelem">Jefe: {{if .GiveHeadID}}<a href="/team/profile/{{.GiveHeadID}}">{{.GiveHeadNameJob}}</a>{{end}}</span>
+        <span class="subelem"><a href="/team/?jobunits={{.ID}}">Lista de empleados de la unidad</a></span>
+        {{if $.Editable}}
+        <span class="subelem">
+          <input type="button" class ="sbut" name="editUnit" value="Editar" onclick="restoreUnitHTMLs(); showUnitEditForm('{{.ID}}', '{{.UnitName}}', '{{$.Company.ID}}', '{{.GiveHeadID}}');">
+          <input type="button" class ="sbut reddish" name="deleteUnit" value="Eliminar" onclick="
+          this.parentNode.parentNode.lastElementChild.style.display = 'block';">
+        </span>
+        <form class="subelem" action="/companies/company/{{$.Company.ID}}" method="POST" style="display: none;">
+          <div class="msgredfx">¡Esta acción no se puede deshacer! ¿Confirmar la eliminación?</div>
+          <input type="hidden" name="unitID" value="{{.ID}}">
+          <input type="button" class ="sbut" name="cancelButton" value="Cancelar" onclick="this.parentNode.reset(); this.parentNode.style.display = 'none';">
+          <input type="submit" class ="sbut reddish" name="deleteUnit" value="Si, eliminar">
+        </form>
+        {{end}}
+        </div>
+      {{end}}
+
+      {{if .Editable}}
+      <div class="elem unit" id="newUnit"><span class="subelem">
+      <input type="button" class ="sbut greenish" name="createUnit" value="Crear unidad" onclick="restoreUnitHTMLs(); showUnitCreateForm('newUnit', '{{$.Company.ID}}');">
+      </span></div>
+      {{end}}
+
+    </div>
+    {{end}}
+
+  {{if .Editable}}
+    {{if .New}}<div id="create"><form id="createForm" action="/companies/company/new" method="POST" onsubmit="checkAndCorrectForm(); localStorage.setItem('new', 'company');">
+    {{else}}<div id="edit" style="display: none;"><form id="editForm" action="/companies/company/{{.Company.ID}}" method="POST" onsubmit="checkAndCorrectForm();">{{end}}
+      <h2>Nombre:</h2>
+      <p><span class="ofname">Breve*:</span> <input type="text" class="field ofval" name="shortName" size="30" maxlength="127" value="{{.Company.ShortName}}" required></p>
+      <p><span class="ofname">Completo:</span> <input type="text" class="field ofval" name="fullName" size="30" maxlength="255" value="{{.Company.FullName}}"></p>
+      <p><span class="ofname">En un idioma extranjero:</span> <input type="text" class="field ofval" name="foreignName" size="30" maxlength="255" value="{{.Company.ForeignName}}"></p>
+      <h2>Contactos:</h2>
+      <p><span class="ofname">Domicilio social:</span> <input type="text" class="field ofval" name="addressReg" size="30" maxlength="500" value="{{.Company.Contacts.AddressReg}}"></p>
+      <p><span class="ofname">Otra dirección de la empresa:</span> <input type="text" class="field ofval" name="addressFact" size="30" maxlength="500" value="{{.Company.Contacts.AddressFact}}"></p>
+      <p><span class="ofname">Teléfono:</span> <input type="text" class="field ofval" name="phone" size="30" maxlength="127" value="{{.Company.Contacts.Phone}}"></p>
+      <p><span class="ofname">E-mail:</span> <input type="text" class="field ofval" pattern=".+@.+" name="email" size="30" maxlength="127" value="{{.Company.Contacts.Email}}"></p>
+      <p><span class="ofname">Sitio web:</span> <input type="text" class="field ofval" name="website" id="website" size="30" maxlength="255" value="{{.Company.Contacts.WebSite}}"></p>
+      <p><span class="ofname">Otros contactos:</span> <input type="text" class="field ofval" name="otherContacts" size="30" maxlength="255" value="{{.Company.Contacts.Other}}"></p>
+      <h2>Otro:</h2>
+      <p><span class="ofname">CEO o jefe:</span> <select name="companyHead" id="companyHead" class="numberbox">
+        <option value="0">no</option>
+        {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
+        {{end}}
+      </select><span class="dropdown"></span></p>
+      <p><span class="ofname">Reg. n.<sup>o</sup>:</span> <input type="text" class="field ofval" name="regNo" size="30" maxlength="127" value="{{.Company.RegNo}}"></p>
+      <p><span class="ofname">Impuesto (IVA) n.<sup>o</sup>:</span> <input type="text" class="field ofval" name="taxNo" size="30" maxlength="127" value="{{.Company.TaxNo}}"></p>
+      <p><span class="ofname" style="vertical-align: top;">Datos bancarios:</span> <textarea class="multiline ofval" name="bankDetails" maxlength="2000" rows="4" cols="30">{{.Company.BankDetails}}</textarea></p>
+    {{if .New}}<input type="submit" class ="sbut" name="createButton" value="Crear">
+               <input type="button" class ="sbut" name="cancelButton" value="Cancelar" 
+               onclick="if (history.length > 1) {history.back()} else {window.location.href = '/companies/'}">
+    </form>{{else}}
+      <input type="submit" class ="sbut" name="updateButton" value="Guardar">
+      <input type="button" class ="sbut" name="hideButton" value="Cancelar" onclick="this.parentNode.reset(); showEditForm('view');">
+    </form>{{end}}
+    </div>
+  {{end}}
+
+</div>
+
+<div id="bottom">© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></div>
+
+
+</div>
+
+<script src="/assets/functions.js"></script>
+
+<script>
+/* Page loading function for read */
+(function() {
+  const multiLineLabel = document.getElementById('BankDetails');
+  if (multiLineLabel) multiLineLabel.innerHTML = multiLineLabel.innerHTML.replace(/\n/g, "<br>");
+})();
+</script>
+
+{{if .Editable}}
+<script>
+
+/* Page loading function for edit */
+let unitElems = document.getElementsByClassName('unit');
+let unitHTMLs = [];
+(function() {
+
+  document.getElementById('companyHead').value = "{{$bi}}";
+
+  for (let e = 0; e < unitElems.length; e++) {
+    unitHTMLs.push(unitElems[e].innerHTML);
+  }
+
+  let result = localStorage.getItem('new');
+  if (result) {
+    localStorage.removeItem('new');
+    if (!window.location.href.endsWith('new')) {
+      let msgnew = document.createElement('div');
+      msgnew.className = "msgok";
+      msgnew.innerHTML = "Creación completada.";
+      document.getElementById('control').appendChild(msgnew);
+    }
+  }
+
+})();
+
+/* This function checks the form and corrects values if necessary */
+function checkAndCorrectForm() {
+  const webinput = document.getElementById('website');
+  if (!webinput.value.startsWith("http") && webinput.value) {
+    webinput.value = "http://" + webinput.value;
+  }
+}
+
+/* This function shows or hides edit controls */
+function showEditForm(what) {
+  const view = document.getElementById('view');
+  const edit = document.getElementById('edit');
+  const removal = document.getElementById('removal');
+  if (what == 'edit') {
+    view.style.display = 'none';
+    edit.style.display = 'block';
+    removal.style.display = 'none';
+  } else if (what == 'removal') {
+    view.style.display = 'block';
+    edit.style.display = 'none';
+    removal.style.display = 'block';
+  } else {
+    view.style.display = 'block';
+    edit.style.display = 'none';
+    removal.style.display = 'none';
+  }
+}
+
+/* Unit control functions */
+function restoreUnitHTMLs() {
+  for (let e = 0; e < unitElems.length; e++) {
+    unitElems[e].innerHTML = unitHTMLs[e];
+  }
+}
+
+function showUnitEditForm(elemID, unitName, companyID, unitHeadID) {
+  const unitDiv = document.getElementById('unit'+elemID);
+  let newHTML = `<h3>Editar unidad</h3>
+  <form class="subelem" id="unitEditForm" action="/companies/company/${companyID}" method="POST">
+  <input type="hidden" name="unitID" value="${elemID}">
+  <div><span class="ofname">Nombre*:</span> <input type="text" class="field ofval" name="unitName" size="30" maxlength="512" value="${unitName}" required></div>
+  <div><span class="ofname">Jefe:</span> <select name="unitHead" id="unitHead" class="numberbox">
+    <option value='0'>no</option>
+    {{range .UserList}}<option value='{{.ID}}'>{{.FullNameJob}}</option>
+    {{end}}
+  </select><span class="dropdown"></span></div>
+  <div class="margintop"><input type="submit" class ="sbut" name="updateUnit" value="Guardar">
+  <input type="button" class ="sbut" name="hideUnitEdit" value="Cancelar" onclick="restoreUnitHTMLs();"></div>
+  </form>`;
+  unitDiv.innerHTML = newHTML;
+  document.getElementById('unitHead').value = unitHeadID;
+}
+
+function showUnitCreateForm(elemID, companyID) {
+  const unitDiv = document.getElementById(elemID);
+  let newHTML = `<h3>Nueva unidad</h3>
+  <form class="subelem" id="unitCreateForm" action="/companies/company/${companyID}" method="POST">
+  <div><span class="ofname">Nombre*:</span> <input type="text" class="field ofval" name="unitName" size="30" maxlength="512" required></div>
+  <div><span class="ofname">Jefe:</span> <select name="unitHead" id="unitHead" class="numberbox">
+    <option value='0'>no</option>
+    {{range .UserList}}<option value='{{.ID}}'>{{.FullNameJob}}</option>
+    {{end}}
+  </select><span class="dropdown"></span></div>
+  <div class="margintop"><input type="submit" class ="sbut" name="createUnit" value="Guardar">
+  <input type="button" class ="sbut" name="hideUnitEdit" value="Cancelar" onclick="restoreUnitHTMLs();"></div>
+  </form>`;
+  unitDiv.innerHTML = newHTML;
+}
+
+</script>
+{{end}}
+
+</body>
+</html>

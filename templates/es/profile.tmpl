@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{{.AppTitle}}: {{.PageTitle}}</title>
+  <link rel="shortcut icon" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/theme-{{.UserConfig.SystemTheme}}.css">
+</head>
+<body>
+
+<div id="headmenu">
+  <div class="boxinmenu">
+  <div id="evenly">
+    <div class="mobileMenuButton" id="mobileMenuButtonMenu" onclick="showMobileMenu();"><img class="vector" src="/assets/menu.svg" alt="Menú"></div>
+    <div class="textmenu" id="textmenu">
+    <a href="/docs/">Documentos</a>
+    <a href="/tasks/?anyparticipants=my">Tareas</a>
+    <a href="/team/" class="chosenmenu">Equipo</a>
+    </div>
+    <div class="graphicmenu">
+      <a href="/config" title="Ajustes"><img class="vector" src="/assets/settings.svg" alt="Ajustes"></a>
+      <a href="/team/profile/{{.LoggedinID}}" title="Perfil"><img class="vector" src="/assets/profile.svg" alt="Perfil"></a>
+      <a href="/logout" title="Cerrar sesión"><img class="vector" src="/assets/quit.svg" alt="Cerrar sesión"></a>
+    </div>
+  </div>
+  </div>
+</div>
+<div id="mobilemenu" style="display: none;"></div>
+
+<div id="container">
+
+  <div id="control">
+  <h1>{{.PageTitle}}</h1>
+  <p class="breadcrumbs"><a href="/team/">todos los usuarios</a> / página de usuario</p>
+  {{if and .Editable (not .New)}}
+    <input type="button" class ="sbut" name="showButton" value="Editar" onclick="showEditForm('edit');">
+    <input type="button" class ="sbut" name="showButton" value="Cambiar login del usuario, contraseña" onclick="showEditForm('passwd');">
+
+    {{if .LoggedinAdmin}}
+      {{if .Profile.UserLock}}<input type="button" class ="sbut" name="unlockUser" value="Desbloquear" onclick="processLock('0', 'Desbloquear');">
+      {{else}}<input type="button" class ="sbut" name="lockUser" value="Bloquear" onclick="processLock('1', 'Bloquear');">{{end}}
+      {{if eq .Profile.UserRole 1}}<input type="button" class ="sbut" name="roleNone" value="Revocar rol de administrador" onclick="processRole('0', 'Revocar rol de administrador');">
+      {{else}}<input type="button" class ="sbut" name="roleAdmin" value="Hacer administrador" onclick="processRole('1', 'Hacer administrador');">{{end}}
+      <input type="button" class ="sbut reddish" name="showDelete" value="Eliminar" onclick="showEditForm('removal');">
+
+      <form id="userStatuses" action="/team/profile/{{.Profile.ID}}" method="POST" style="display: none;">
+        <div class="msgredfx">¡Tenga cuidado al aplicar estas opciones!</div>
+        <input type="hidden" id="userStatusValue" name="" value="">
+        <input type="button" class="sbut" name="cancelButton" value="Cancelar" onclick="
+        document.getElementById('userStatuses').reset();
+        this.parentNode.style.display = 'none';">
+        <input type="submit" id="userStatusSubmit" class ="sbut reddish" name="" value="">
+      </form>
+
+      <form id="removal" action="/team/" method="POST" style="display: none;">
+        <div class="msgredfx">¡Esta acción no se puede deshacer! ¿Confirmar la eliminación?</div>
+        <input type="hidden" name="ids" value="{{.Profile.ID}}">
+        <input type="button" class="sbut" name="cancelButton" value="Cancelar" onclick="showEditForm('view');">
+        <input type="submit" class ="sbut reddish" name="deleteButton" value="Si, eliminar">
+      </form>
+    {{end}}
+
+  {{end}}
+
+  {{if and .New (not .LoggedinAdmin)}}<div class="msgred">No tienes permiso para crear un usuario.</div>{{end}}
+  {{if eq .Message "dataWritten"}}<div class="msgok">Datos escritos con éxito.</div>{{end}}
+  {{if eq .Message "dataNotWritten"}}<div class="msgred">Error al escribir datos.</div>{{end}}
+  {{if eq .Message "LastAdminRejection"}}<div class="msgred">Acción rechazada: intento de desactivar al último administrador.</div>{{end}}
+  {{if not .New}}
+    {{if eq .Message "loginNotUnique"}}<div class="msgred">Este inicio de sesión ya está en uso.</div>{{end}}
+    {{if eq .Message "passwdTooShort"}}<div class="msgred">La longitud de la contraseña es menor que la permitida.</div>{{end}}
+  {{end}}  
+  </div>
+
+  {{$ui := .Profile.GiveUnitID}}
+  {{$bi := .Profile.GiveBossID}}
+  <div id="main">
+
+    {{if not .New}}
+    <div id="view">
+      <h2>Nombre:</h2>
+      <p><span class="ofname">Apellido:</span><span class="ofval">{{.Profile.Surname}}</span></p>
+      <p><span class="ofname">Nombre de pila:</span><span class="ofval">{{.Profile.FirstName}}</span></p>
+      <p><span class="ofname">Otro nombre:</span><span class="ofval">{{.Profile.OtherName}}</span></p>
+      {{if .Editable}}
+      <p><span class="ofname">Login del usuario:</span><span class="ofval">{{.Profile.Login}}</span></p>
+      {{end}}
+      <h2>Contactos:</h2>
+      <p><span class="ofname">Teléfono de oficina:</span><span class="ofval">{{.Profile.Contacts.TelOffice}}</span></p>
+      <p><span class="ofname">Teléfono móvil:</span><span class="ofval">{{.Profile.Contacts.TelMobile}}</span></p>
+      <p><span class="ofname">E-mail:</span><span class="ofval">{{if .Profile.Contacts.Email}}<a href="mailto:{{.Profile.Contacts.Email}}">{{.Profile.Contacts.Email}}</a>{{end}}</span></p>
+      <p><span class="ofname">Otros contactos:</span><span class="ofval">{{.Profile.Contacts.Other}}</span></p>
+      <h2>Otro:</h2>
+      <p><span class="ofname">Cumpleaños:</span><span class="ofval monthday">{{.Profile.GiveBirthDay .UserConfig.DateFormat}}</span></p>
+      <p><span class="ofname">Título de trabajo:</span><span class="ofval">{{.Profile.JobTitle}}</span></p>
+      <p><span class="ofname">Unidad:</span><span class="ofval">{{if $ui}}<a href="/companies/company/{{.Profile.JobUnit.Company.ID}}#unit{{$ui}}">{{.Profile.GiveUnitName}}</a>{{end}}</span></p>
+      <p><span class="ofname">Responde ante:</span><span class="ofval">{{if $bi}}<a href="/team/profile/{{$bi}}">{{.Profile.GiveBossNameJob}}</a>{{end}}</span></p>
+      <p><span class="ofname">Rol:</span><span class="ofval">{{if eq .Profile.UserRole 1}}administrador{{else}}no{{end}}</span></p>
+      <p><span class="ofname">Bloqueo:</span><span class="ofval">{{if eq .Profile.UserLock 1}}bloqueado{{else}}no{{end}}</span></p>
+    </div>
+    {{end}}
+
+    {{if .Editable}}
+    {{if .New}}<div id="create"><form id="createForm" action="/team/profile/new" method="POST" onsubmit="localStorage.setItem('new', 'profile');">{{else}}
+      <div id="edit" style="display: none;"><form id="editForm" action="/team/profile/{{.Profile.ID}}" method="POST">{{end}}
+      <h2>Nombre:</h2>
+      <p><span class="ofname">Apellido:</span> <input type="text" class="field ofval" name="surname" size="30" maxlength="127" value="{{.Profile.Surname}}"></p>
+      <p><span class="ofname">Nombre de pila*:</span> <input type="text" class="field ofval" name="firstName" size="30" maxlength="127" value="{{.Profile.FirstName}}" required></p>
+      <p><span class="ofname">Otro nombre:</span> <input type="text" class="field ofval" name="otherName" size="30" maxlength="127" value="{{.Profile.OtherName}}"></p>
+      <h2>Contactos:</h2>
+      <p><span class="ofname">Teléfono de oficina:</span> <input type="text" class="field ofval" name="telOffice" size="30" maxlength="127" value="{{.Profile.Contacts.TelOffice}}"></p>
+      <p><span class="ofname">Teléfono móvil:</span> <input type="text" class="field ofval" name="telMobile" size="30" maxlength="127" value="{{.Profile.Contacts.TelMobile}}"></p>
+      <p><span class="ofname">E-mail:</span> <input type="text" class="field ofval" pattern=".+@.+" name="email" size="30" maxlength="127" value="{{.Profile.Contacts.Email}}"></p>
+      {{if .New}}<p> <input type="checkbox" id="notifyCreatedUser" name="notifyCreatedUser" value="true" checked> <label for="notifyCreatedUser" title="In order notification to happen the login and e-mail should be specified.">Notify the user about creating user profile.</label></p>{{end}}
+      <p><span class="ofname">Otros contactos:</span> <input type="text" class="field ofval" name="otherContacts" size="30" maxlength="255" value="{{.Profile.Contacts.Other}}"></p>
+      <h2>Otro:</h2>
+      <p><span class="ofname">Cumpleaños:</span> <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} class="numberbox" 
+        name="birthDate" value="{{.Profile.GiveBirthDate}}" placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" maxlength="32"></p>
+      <p><span class="ofname">Título de trabajo:</span> <input type="text" class="field ofval" name="jobTitle" size="30" maxlength="255" value="{{.Profile.JobTitle}}"></p>
+      <p><span class="ofname">Unidad:</span> <select name="jobUnit" id="jobUnit" class="numberbox">
+        <option value="0">no</option>
+        {{range .UnitList}}<option value="{{.ID}}">{{.UnitNameComp}}</option>
+        {{end}}
+      </select><span class="dropdown"></span></p>
+      <p><span class="ofname">Responde ante:</span> <select name="boss" id="boss" class="numberbox">
+        <option value="0">no</option>
+        {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
+        {{end}}
+      </select><span class="dropdown"></span></p>
+      {{if .New}}<h2>Login del usuario, contraseña:</h2>
+        {{if eq .Message "loginNotUnique"}}<div class="msgred">Este login de usuario ya está en uso.</div>{{end}}
+        {{if eq .Message "passwdTooShort"}}<div class="msgred">La longitud de la contraseña es inferior a la permitida.</div>{{end}}
+        <p><span class="ofname">Login del usuario:</span> <input type="text" class="field ofval" name="login" size="30" maxlength="32" value="{{.Profile.Login}}"></p>
+        <p><input type="checkbox" id="loginSameEmail" name="loginSameEmail" value="true" checked> <label for="loginSameEmail" title="El usuario podrá cambiar el login a otro más adelante">Hacer que el login de usuario sea el mismo que el correo electrónico.</label></p>
+        <p><span class="ofname">Contraseña*:</span> <input type="password" class="field ofval" name="passwd" size="30" minlength="6" maxlength="72" value="" required> 6 caracteres mínimo</p>
+        <script>
+          (function() {
+            document.getElementsByName('email')[0].addEventListener('input', () => {
+              if (document.getElementById('loginSameEmail').checked) {
+                document.getElementsByName('login')[0].value = document.getElementsByName('email')[0].value;
+              }
+            });
+            document.getElementsByName('login')[0].disabled = (document.getElementById('loginSameEmail').checked) ?  true : false;
+            document.getElementById('loginSameEmail').addEventListener('change', () => {
+              document.getElementsByName('login')[0].disabled = (document.getElementById('loginSameEmail').checked) ?  true : false;
+            });
+          })();
+        </script>
+        <input type="submit" class ="sbut" name="createButton" value="Crear">
+        <input type="button" class ="sbut" name="cancelButton" value="Cancelar" 
+        onclick="if (history.length > 1) {history.back()} else {window.location.href = '/team/'}">
+      </form>{{else}}
+        <input type="submit" class ="sbut" name="updateButton" value="Guardar">
+        <input type="button" class ="sbut" name="hideButton" value="Cancelar" onclick="this.parentNode.reset(); showEditForm('view');">
+      </form>{{end}}
+
+    </div>
+    {{end}}
+
+    {{if and .Editable (not .New)}}
+    <div id="passwd" style="display: none;">
+    <h2>Login del usuario, contraseña:</h2>
+    <form id="passwdForm" action="/team/profile/{{.Profile.ID}}" method="POST">
+      <p><span class="ofname">Login del usuario:</span> <input type="text" class="field ofval" name="login" size="30" maxlength="127" value="{{.Profile.Login}}"></p>
+      <p><span class="ofname">Contraseña*:</span> <input type="password" class="field ofval" name="passwd" size="30" minlength="6" maxlength="72" value="" required> 6 caracteres mínimo</p>
+      <input type="submit" class ="sbut" name="updatePasswd" value="Guardar">
+      <input type="button" class ="sbut" name="hideButton" value="Cancelar" onclick="this.parentNode.reset(); showEditForm('view');
+      let msgp = document.getElementById('msgemptypass');
+      if (msgp) {msgp.parentNode.removeChild(msgp);}">
+    </form>
+    </div>
+    {{end}}
+
+  </div>
+
+  <div id="bottom">© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></div>
+
+  
+</div>
+
+<script src="/assets/functions.js"></script>
+
+<script>
+(function() {
+  const dayElem = document.getElementsByClassName('monthday');
+  if (dayElem.length > 0) {
+    dayElem[0].innerHTML = dayElem[0].innerHTML
+    .replace('Jan', 'Ene.').replace('Feb', 'Feb.').replace('Mar', 'Mar.')
+    .replace('Apr', 'Abr.').replace('May', 'May.').replace('Jun', 'Jun.')
+    .replace('Jul', 'Jul.').replace('Aug', 'Ago.').replace('Sep', 'Sep.')
+    .replace('Oct', 'Oct.').replace('Nov', 'Nov.').replace('Dec', 'Dic.');
+  }
+})();
+</script>
+
+{{if .Editable}}
+<script>
+  /* Main page loading function creation-related part */
+  (function() {
+    let result = localStorage.getItem('new');
+    if (result) {
+      localStorage.removeItem('new');
+      if (!window.location.href.endsWith('new')) {
+        let msgnew = document.createElement('div');
+        msgnew.className = "msgok";
+        msgnew.innerHTML = "Creación completada.";
+        document.getElementById('control').appendChild(msgnew);
+      }
+    }
+  })();
+</script>
+{{end}}
+
+{{if and .Editable (not .New)}}
+<script>
+
+  /* Main page loading function */
+  (function() {
+    document.getElementById('jobUnit').value = "{{$ui}}";
+    document.getElementById('boss').value = "{{$bi}}";
+    let pageMessage = "{{.Message}}";
+    if (pageMessage == "loginNotUnique" || pageMessage == "passwdTooShort") {
+      showEditForm('passwd');
+    }
+  })();
+
+  /* This function shows or hides edit controls */
+  function showEditForm(what) {
+    const view = document.getElementById('view');
+    const edit = document.getElementById('edit');
+    const passwd = document.getElementById('passwd');
+    const removal = document.getElementById('removal');
+    const statuses = document.getElementById('userStatuses');
+    if (what == 'edit') {
+      view.style.display = 'none';
+      edit.style.display = 'block';
+      passwd.style.display = 'none';
+      if (removal) removal.style.display = 'none';
+      if (statuses) statuses.style.display = 'none';
+    } else if (what == 'passwd') {
+      view.style.display = 'none';
+      edit.style.display = 'none';
+      passwd.style.display = 'block';
+      if (removal) removal.style.display = 'none';
+      if (statuses) statuses.style.display = 'none';
+    } else if (what == 'removal') {
+      view.style.display = 'block';
+      edit.style.display = 'none';
+      passwd.style.display = 'none';
+      if (removal) removal.style.display = 'block';
+      if (statuses) statuses.style.display = 'none';
+    } else {
+      view.style.display = 'block';
+      edit.style.display = 'none';
+      passwd.style.display = 'none';
+      if (removal) removal.style.display = 'none';
+      if (statuses) statuses.style.display = 'none';
+    }
+  }
+
+  function checkPasswdIfEmpty() {
+
+    let res = false;
+    const frm = document.getElementById('passwdForm');
+    let passwd = frm.elements.passwd.value;
+
+    if (passwd == "" && !document.getElementById('msgemptypass')) {
+      let msgnew = document.createElement('div');
+      msgnew.id = "msgemptypass";
+      msgnew.className = "msgredfx";
+      msgnew.innerHTML = "¿Confirmar guardar contraseña vacía?";
+      frm.insertBefore(msgnew, frm.elements.updatePasswd);
+      res = false;
+    } else {
+      res = true;
+    }
+
+    if (res == false) {
+      if (event.preventDefault) {
+        event.preventDefault();
+      } else {
+        event.returnValue = false;
+      }
+    }
+
+    return res;
+  }
+
+</script>
+{{end}}
+
+{{if and .LoggedinAdmin (not .New)}}
+<script>
+function processLock(v, btnVal) {
+  showEditForm('view');
+  const frm = document.getElementById('userStatuses');
+  const inp = document.getElementById('userStatusValue');
+  const btn = document.getElementById('userStatusSubmit');
+  inp.setAttribute("name", "userLock");
+  btn.setAttribute("name", "updateLock");
+  inp.value = v;
+  btn.value = btnVal;
+  frm.style.display = "block";
+}
+function processRole(v, btnVal) {
+  showEditForm('view');
+  const frm = document.getElementById('userStatuses');
+  const inp = document.getElementById('userStatusValue');
+  const btn = document.getElementById('userStatusSubmit');
+  inp.setAttribute("name", "userRole");
+  btn.setAttribute("name", "updateRole");
+  inp.value = v;
+  btn.value = btnVal;
+  frm.style.display = "block";
+}
+</script>
+{{end}}
+
+</body>
+</html>

@@ -1,0 +1,86 @@
+{
+    "LangNameInt": "Spanish",
+    "LangName": "Español",
+    "LangCode": "es",
+    "AppTitle": "GDE",
+    "LoginPageTitle": "Entrada del sistema",
+    "LoninPrompt": "Por favor, introduce tu usuario y contraseña",
+    "LoninFieldLabel": "Usuario",
+    "PasswordFieldLabel": "Contraseña",
+    "LoginButton": "Iniciar sesión",
+    "WrongLoginMsg": "Datos de inicio de sesión incorrectos",
+    "ConfigPageTitle": "Ajustes",
+    "DocsPageTitle": "Documentos",
+    "Document": "Documento",
+    "NewDocument": "Nuevo documento",
+    "TeamPageTitle": "Equipo",
+    "Profile": "Perfil del usuario",
+    "NewProfile": "Nuevo perfil de usuario",
+    "CompaniesPageTitle": "Compañías",
+    "Company": "Compañía",
+    "NewCompany": "Nueva compañia",
+    "Unit": "Unidad",
+    "TasksPageTitle": "Tareas",
+    "Task": "Tarea",
+    "NewTask": "Nueva tarea",
+    "Comment": "Comentario",
+    "NewComment": "Nuevo comentario",
+    "Categories": [
+        "Ninguno",
+        "Entrante",
+        "Saliente",
+        "Interno"
+    ],
+    "DocTypes": [
+        "Otro",
+        "Carta",
+        "Solicitud",
+        "Reclamación",
+        "Contrato, adenda a él",
+        "Contabilidad, financiera",
+        "Técnica, ingeniería",
+        "Decreto, acto legal",
+        "Decisión corporativa",
+        "Notas de reuniones",
+        "Poder legal",
+        "Escrito judicial",
+        "Judicial (de una corte)",
+        "Plantilla"
+    ],
+    "TaskStatuses": [
+        "Creado",
+        "Asignado",
+        "En curso",
+        "Atascado",
+        "Hecho",
+        "Cancelado"
+    ],
+    "Messages": {
+        "MailerName": "Sistema de GDE",
+        "DoNotReply": "No responda a este mensaje, fue enviado automáticamente",
+        "Subj": {
+            "AssigneeSet": "Nuevo asignado a la tarea",
+            "AssigneeToSet": "Se le ha asignado para hacer la tarea",
+            "NewTaskComment": "Nuevo comentario a la tarea.",
+            "TaskEdited": "La tarea ha sido editada",
+            "TaskStatusChanged": "El estado de la tarea ha sido cambiado",
+            "ParticipantToAdded": "Ha sido agregado a la lista de participantes de la tarea",
+            "ProfileRegistered": "Acceso al Sistema de GDE",
+            "SecurityAlert": "Alerta de seguridad"
+        },
+        "Cont": {
+            "ProfileRegistered": "Puede iniciar sesión en el sistema utilizando el siguiente enlace. Su nombre de usuario y contraseña son: ",
+            "LoginPasswdChanged": "Esto es para notificarle sobre su nombre de usuario o cambio de contraseña. Si sabe por qué sucedió, entonces no se requiere ninguna acción."
+        },
+        "Captions": {
+            "CreatedTime": "Tiempo creado",
+            "Creator": "Creador",
+            "Assignee": "Asignado",
+            "Open": "Abre esto en el sistema.",
+            "TaskStatus": "Estado",
+            "TaskStartDueTime": "Inicio y vencimiento",
+            "TaskAssignee": "Asignado",
+            "FileList": "Archivos"
+        }
+    }
+}

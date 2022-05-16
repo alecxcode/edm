@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{{.AppTitle}}: {{.PageTitle}}</title>
+  <link rel="shortcut icon" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/theme-{{.UserConfig.SystemTheme}}.css">
+</head>
+<body>
+
+<div id="headmenu">
+  <div class="boxinmenu">
+  <div id="evenly">
+    <div class="mobileMenuButton" id="mobileMenuButtonMenu" onclick="showMobileMenu();"><img class="vector" src="/assets/menu.svg" alt="Menú"></div>
+    <div class="textmenu" id="textmenu">
+    <a href="/docs/">Documentos</a>
+    <a href="/tasks/?anyparticipants=my" class="chosenmenu">Tareas</a>
+    <a href="/team/">Equipo</a>
+    </div>
+    <div class="graphicmenu">
+      <a href="/config" title="Ajustes"><img class="vector" src="/assets/settings.svg" alt="Ajustes"></a>
+      <a href="/team/profile/{{.LoggedinID}}" title="Perfil"><img class="vector" src="/assets/profile.svg" alt="Perfil"></a>
+      <a href="/logout" title="Cerrar sesión"><img class="vector" src="/assets/quit.svg" alt="Cerrar sesión"></a>
+    </div>
+  </div>
+  </div>
+</div>
+<div id="mobilemenu" style="display: none;"></div>
+
+<div id="container">
+  {{$ci := .Task.GiveCreatorID}}
+  {{$ai := .Task.GiveAssigneeID}}
+  {{$vtsep := " a las "}}
+  {{if eq .UserConfig.TimeFormat "12h am/pm"}}
+    {{$vtsep = " "}}
+  {{end}}
+
+  <div id="control">
+    <h1>{{.PageTitle}}</h1>
+    <p class="breadcrumbs"><a href="/tasks/">todas las tareas</a> / pagina de tarea</p>
+
+    {{if and (not .New) (or .Editable .IamAssignee)}}
+    <form id="statuses" action="/tasks/task/{{.Task.ID}}" method="POST">
+      <input type="hidden" name="taskStatus" value="" id="taskStatus">
+      <input type="submit" class ="sbut" id="inprogress" name="statusButton" value="En curso" title="Establecer el estado de la tarea: en curso" onclick="document.getElementById('taskStatus').value = 'inprogress';">
+      <input type="submit" class ="sbut" id="stuck" name="statusButton" value="Atascado" title="Suspender por algún problema" onclick="document.getElementById('taskStatus').value = 'stuck';">
+      <input type="submit" class ="sbut" id="done" name="statusButton" value="Hecho" title="Completa la tarea" onclick="document.getElementById('taskStatus').value = 'done';">
+      <input type="submit" class ="sbut" id="cancelled" name="statusButton" value="Cancelar" title="Cancelar la tarea" onclick="document.getElementById('taskStatus').value = 'cancelled';">
+    </form>
+    <script>
+      (function() {
+        const CREATED = 0, ASSIGNED = 1, INPROGRESS = 2, STUCK = 3, DONE = 4, CANCELLED = 5;
+        let textStatus = '';
+        let taskStatus = {{.Task.TaskStatus}};
+        if (taskStatus == INPROGRESS) textStatus = 'inprogress';
+        if (taskStatus == STUCK) textStatus = 'stuck';
+        if (taskStatus == DONE) textStatus = 'done';
+        if (taskStatus == CANCELLED) textStatus = 'cancelled';
+        if (textStatus) document.getElementById(textStatus).disabled = true;
+      })();
+    </script>
+    {{end}}
+
+    {{if and .Editable (not .New)}}
+      <input type="button" class ="sbut" name="showButton" value="Editar" onclick="showEditForm('edit');">
+      <input type="button"{{if not .RemoveAllowed}}style="display: none;"{{end}} class="sbut reddish" name="showDelete" value="Eliminar" onclick="showEditForm('removal');">
+      <form id="removal" action="/tasks/" method="POST" style="display: none;">
+      <div class="msgredfx">¡Esta acción no se puede deshacer! ¿Confirmar la eliminación?</div>
+      <input type="hidden" name="ids" value="{{.Task.ID}}">
+      <input type="button" class="sbut" name="cancelButton" value="Cancelar" onclick="showEditForm('view');">
+      <input type="submit" class ="sbut reddish" name="deleteButton" value="Si, eliminar">
+      </form>
+    {{end}}
+
+    {{if eq .Message "dataWritten"}}<div class="msgok">Datos escritos con éxito.</div>{{end}}
+    {{if eq .Message "dataNotWritten"}}<div class="msgred">Error al escribir datos.</div>{{end}}
+    {{if eq .Message "commentWritten"}}<div class="msgok">Comentario guardado con éxito.</div>{{end}}
+    {{if eq .Message "commentNotWritten"}}<div class="msgred">Error al escribir el comentario.</div>{{end}}
+    {{if eq .Message "uploadError"}}<div class="msgred">Error al cargar archivos.</div>{{end}}
+    {{if eq .Message "removalError"}}<div class="msgred">Error al eliminar archivos.</div>{{end}}
+    {{if eq .Message "participantAlreadyInList"}}<div class="msgok">Este participante ya está en la lista.</div>{{end}}
+  </div>
+
+  <div id="main">
+
+  {{if not .New}}
+    <div id="view">
+      <h2>Parámetros:</h2>
+      <p><span class="ofname">Estado:</span><span class="ofval" id="about"><span id="statusIndicator" class="txtbw">{{.Task.GiveStatus .TaskStatuses "Unknown"}}</span>;
+        estado establecido: {{.Task.GiveDateTime "StatusSet" .UserConfig.DateFormat .UserConfig.TimeFormat $vtsep}}</span></p>
+        <script>
+          (function() {
+            const CREATED = 0, ASSIGNED = 1, INPROGRESS = 2, STUCK = 3, DONE = 4, CANCELLED = 5;
+            let className = '';
+            let taskStatus = {{.Task.TaskStatus}};
+            if (taskStatus == CREATED || taskStatus == ASSIGNED || taskStatus == INPROGRESS) className = 'txtblue';
+            if (taskStatus == STUCK) className = 'txtred';
+            if (taskStatus == DONE) className = 'txtgreen';
+            if (taskStatus == CANCELLED) className = 'txtbw';
+            if (className) document.getElementById('statusIndicator').className = className;
+          })();
+        </script>
+      <p><span class="ofname">Fechas planificadas:</span><span class="ofval">{{if .Task.PlanStart.Day}}<span class="nowrap">empezar: {{.Task.GiveDateTime "PlanStart" .UserConfig.DateFormat .UserConfig.TimeFormat $vtsep}}</span>{{end}}
+        {{if and .Task.PlanStart.Day .Task.PlanDue.Day}}-{{end}}
+        {{if .Task.PlanDue.Day}}<span class="nowrap">completar: {{.Task.GiveDateTime "PlanDue" .UserConfig.DateFormat .UserConfig.TimeFormat $vtsep}}</span>{{end}}</span></p>
+      <p><span class="ofname">Creado:</span><span class="ofval">{{.Task.GiveDateTime "Created" .UserConfig.DateFormat .UserConfig.TimeFormat $vtsep}}{{if $ci}}, creador (proprietario): <a href="/team/profile/{{$ci}}">{{.Task.Creator.GiveSelfNameJob}}</a>{{end}}</span></p>
+      <p><span class="ofname">Asignado:</span><span class="ofval">{{if $ai}}<a href="/team/profile/{{$ai}}">{{.Task.Assignee.GiveSelfNameJob}}</a>{{end}} {{if or .Editable .IamAssignee}}<span class="someaction" onclick="document.getElementById('forwardControls').style.display = 'block';">{{if $ai}}Reenviar a otro usuario{{else}}Seleccione un usuario para asignar{{end}}</span>{{end}}</span></p>
+      {{if or .Editable .IamAssignee}}<div id="forwardControls" style="display: none;">
+        <span class="nowrap"><select id="selectedAssignee" class="numberbox">
+          <option value="">Seleccionar nuevo asignado</option>
+          {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
+          {{end}}
+        </select><span class="dropdown"></span></span> <span class="nowrap">
+        <input type="button" class="sbut greenish smaller" value="Reenviar"
+        onclick="makeFormAndSubmit(document.getElementById('selectedAssignee').value, 'assigneeForward', '/tasks/task/{{.Task.ID}}');">
+        <input type="button" class ="sbut smaller" value="Cancelar" onclick="document.getElementById('forwardControls').style.display = 'none';">
+        </span>
+      </div>{{end}}
+      <h2>Contenido:</h2>
+      <div class="elem"><div class="subelem multilineContent">{{.Task.Content}}</div></div>
+
+      <div id="appliedElems">Participantes:
+        {{range .Participants}}<a class="chosen-withrm" href="/team/profile/{{.ID}}">{{.GiveSelfNameJob}}</a>{{if or $.Editable $.IamAssignee}}<span class="rm" title="Delete" onclick="makeFormAndSubmit('{{.ID}}', 'participantRemove', '/tasks/task/{{$.Task.ID}}');">×</span>{{end}} {{end}}
+      </div>
+      {{if or .Editable .IamAssignee}}<div>
+        <span class="nowrap"><select id="selectedParticipant" class="numberbox">
+          <option value="">Seleccione un participante para agregar</option>
+          {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
+          {{end}}
+        </select><span class="dropdown"></span></span>
+        <input type="button" class ="sbut greenish smaller" value="Añada participante"
+        onclick="makeFormAndSubmit(document.getElementById('selectedParticipant').value, 'participantAdd', '/tasks/task/{{.Task.ID}}');">
+      </div>{{end}}
+
+      <h2>Archivos de la tarea:</h2>
+      {{if not .Task.FileList}}<div class="afile-inline-block">No hay archivos</div>{{else}}
+        {{range .Task.FileList}}<span class="afile-inline-block">
+          {{if $.Editable}}<input type="checkbox" class="fchbox" name="filesToRemove" value="{{.}}">{{end}}
+          <a href="/files/tasks/{{$.Task.ID}}/{{.}}">{{.}}</a></span>
+        <br>{{end}}
+      {{end}}
+      {{if and .Editable .Task.FileList (not .New)}}
+        Archivos seleccionados: <input type="button" class ="sbut reddish" name="showDeleteFiles" value="Eliminar" onclick="showEditForm('removalFiles');">
+        <form id="removalFiles" action="/tasks/task/{{.Task.ID}}" method="POST" onsubmit="addFileElems(this);" style="display: none;">
+        <div class="msgredfx">¡Esta acción no se puede deshacer! ¿Confirmar la eliminación?</div>
+        <input type="button" class="sbut" name="cancelButton" value="Cancelar" onclick="showEditForm('view');">
+        <input type="submit" class ="sbut reddish" name="deleteFiles" value="Si, eliminar">
+        </form>
+      {{end}}
+      <br>
+      <br>
+
+      <h2>Comentarios:</h2>
+      {{range $i, $c := .Comments}}
+        {{$cc := .GiveCreatorID}}
+        {{$comID := .ID}}
+        <div class="elem" id="comment{{.Inci $i}}">
+        <h3><a href="#comment{{.Inci $i}}">#{{.Inci $i}}</a>: {{.GiveDateTime $.UserConfig.DateFormat $.UserConfig.TimeFormat $vtsep}} por:
+          {{if $cc}}<a href="/team/profile/{{$cc}}">{{.Creator.GiveSelfNameJob}}</a>{{end}}</h3>
+        <span class="subelem multilineContent">{{.Content}}</span>
+        {{if .FileList}} <div class="subelem">Archivos adjuntos:<br>
+        {{range .FileList}}<span class="afile-inline-block">
+          <a href="/files/tasks/{{$.Task.ID}}/{{$comID}}/{{.}}">{{.}}</a></span>
+        <br>{{end}}</div>
+        {{end}}
+        </div>
+      {{end}}
+      
+      {{if or .Editable .IamAssignee .IamParticipant}}
+      <br><br><br>
+      <div class="elem" id="newComment"><h3>Nuevo comentario</h3>
+        <form id="taskCreateComment" action="/tasks/task/{{.Task.ID}}" method="POST" enctype="multipart/form-data">
+          <div class="subelem"><div class="nowrap">
+            <input type="button" class="sbut pg smaller" value="N" title="Negrita" onclick="insertBBCode('b', 'textAreaComm')">
+            <input type="button" class="sbut pg smaller" value="C" title="Cursiva" onclick="insertBBCode('i', 'textAreaComm')">
+            <input type="button" class="sbut pg smaller" value="S" title="Subrayar" onclick="insertBBCode('u', 'textAreaComm')">
+            <input type="button" class="sbut pg smaller" value="Código" title="Fuente monoespaciada, sigue formateando" onclick="insertBBCode('code', 'textAreaComm')">
+          </div>
+          <textarea class="multiline" id="textAreaComm" name="content" maxlength="8000" style="width: 100%; height: 8em; margin-bottom: 0.4em;"></textarea>
+          <div class="filedrop">
+              <div id="fileDisplayComm"><br></div>
+              <label id="fileDisplayMsgComm" class="center" for="fileListComm">Arrastre y suelte archivos aquí o haga clic para seleccionar.<br>Hasta 10 archivos. Hasta 100 megabytes de tamaño de carga total.</label>
+              <input type="file" multiple id="fileListComm" name="fileListComm" onchange="displaySelectedFiles(
+                this,
+                document.getElementById('fileDisplayComm'),
+                document.getElementById('fileDisplayMsgComm'),
+                'La cantidad de archivos seleccionados supera el límite. Se rechazan archivos.',
+                'El tamaño de los archivos seleccionados supera el límite. Se rechazan archivos.'
+                );">
+            </div>
+            <input type="button" class ="sbut" value="Limpiar archivos seleccionados" onclick="clearInputFiles(
+              document.getElementById('fileListComm'),
+              document.getElementById('fileDisplayComm'),
+              document.getElementById('fileDisplayMsgComm'),
+              'Limpiado.'
+              );"></div>
+          <div class="subelem"><input type="submit" class ="sbut greenish" name="createComment" value="Agregar comentario"></div>
+        </form>
+      </div>
+      {{end}}
+
+    </div>
+  {{end}}
+
+  {{if .Editable}}
+    {{if .New}}<div id="create"><form id="createForm" action="/tasks/task/new" method="POST" enctype="multipart/form-data" onsubmit="localStorage.setItem('new', 'task');">
+    {{else}}<div id="edit" style="display: none;"><form id="editForm" action="/tasks/task/{{.Task.ID}}" method="POST" enctype="multipart/form-data">{{end}}
+     
+      <h2>Parámetros:</h2>
+      <p><span class="ofname">Fechas planificadas:</span>
+        {{$tsep := " "}}
+        {{$inpt := "text"}}
+        {{if .UserConfig.UseCalendarInConrols}}
+          {{$tsep = "T"}}
+          {{$inpt = "datetime-local"}}
+        {{end}}
+        <span class="nowrap">comienzo: <input type="{{$inpt}}" class="numberbox" name="planStart" value="{{.Task.GiveDateTime "PlanStart" "yyyy-mm-dd" "24h" $tsep}}" placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" maxlength="32"></span>
+        <span class="nowrap">completar: <input type="{{$inpt}}" class="numberbox" name="planDue" value="{{.Task.GiveDateTime "PlanDue" "yyyy-mm-dd" "24h" $tsep}}" placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" maxlength="32"></span>
+      </p>
+      <p><span class="ofname">Asignado:</span> <span class="nowrap">
+        <select name="assignee" id="assignee" class="numberbox">
+        <option value="0">no</option>
+        {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
+        {{end}}
+      </select><span class="dropdown"></span></span></p>
+      <h2>Content:</h2>
+      <p><span class="ofname">Tema*:</span> <input type="text" class="field ofval" name="topic" size="30" maxlength="127" value="{{.Task.Topic}}" required></p>
+      <div class="wideelem"><span class="ofname">Contenido:</span> <span class="ofval nowrap">
+        <input type="button" class="sbut pg smaller" value="N" title="Negrita" onclick="insertBBCode('b', 'textAreaMain')">
+        <input type="button" class="sbut pg smaller" value="C" title="Cursiva" onclick="insertBBCode('i', 'textAreaMain')">
+        <input type="button" class="sbut pg smaller" value="S" title="Subrayar" onclick="insertBBCode('u', 'textAreaMain')">
+        <input type="button" class="sbut pg smaller" value="Código" title="Fuente monoespaciada, sigue formateando" onclick="insertBBCode('code', 'textAreaMain')">
+        </span><br>
+        <textarea class="multiline" id="textAreaMain" name="content" maxlength="8000" style="width: 100%; height: 8em; margin-bottom: 0.4em;">{{.Task.Content}}</textarea>
+      </div>
+      <h2>Cargar archivos:</h2>
+      <div class="filedrop">
+        <div id="fileDisplay"><br></div>
+        <label id="fileDisplayMsg" class="center" for="fileList">Arrastre y suelte archivos aquí o haga clic para seleccionar.<br>Hasta 10 archivos. Hasta 100 megabytes de tamaño de carga total.</label>
+        <input type="file" multiple id="fileList" name="fileList" onchange="displaySelectedFiles(
+          this,
+          document.getElementById('fileDisplay'),
+          document.getElementById('fileDisplayMsg'),
+          'La cantidad de archivos seleccionados supera el límite. Se rechazan archivos.',
+          'El tamaño de los archivos seleccionados supera el límite. Se rechazan archivos.'
+          );">
+      </div>
+      <input type="button" class ="sbut" value="Limpiar archivos seleccionados" onclick="clearInputFiles(
+        document.getElementById('fileList'),
+        document.getElementById('fileDisplay'),
+        document.getElementById('fileDisplayMsg'),
+        'Limpiado.'
+        );">
+      <br>
+      <br>
+
+    {{if .New}}<input type="submit" class ="sbut" name="createButton" value="Crear">
+               <input type="button" class ="sbut" name="cancelButton" value="Cancelar" 
+               onclick="if (history.length > 1) {history.back()} else {window.location.href = '/tasks/'}">
+    </form>{{else}}
+      <input type="submit" class ="sbut" name="updateButton" value="Guardar">
+      <input type="button" class ="sbut" name="hideButton" value="Cancelar" onclick="this.parentNode.reset(); showEditForm('view');">
+    </form>{{end}}
+    </div>
+  {{end}}
+
+</div>
+
+<div id="bottom">© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></div>
+
+
+</div>
+
+<script src="/assets/functions.js"></script>
+
+
+
+<script>
+/* Page loading function for read */
+(function() {
+  updateMultilines('multilineContent');
+})();
+</script>
+
+
+
+{{if .Editable}}
+<script>
+/* Page loading function for edit */
+(function() {
+  document.getElementById('assignee').value = "{{$ai}}";
+
+  let result = localStorage.getItem('new');
+  if (result) {
+    localStorage.removeItem('new');
+    if (!window.location.href.endsWith('new')) {
+      let msgnew = document.createElement('div');
+      msgnew.className = "msgok";
+      msgnew.innerHTML = "Creación completada.";
+      document.getElementById('control').appendChild(msgnew);
+    }
+  }
+})();
+
+/* This function shows or hides edit controls */
+function showEditForm(what) {
+  const view = document.getElementById('view');
+  const edit = document.getElementById('edit');
+  const removal = document.getElementById('removal');
+  const removalFiles = document.getElementById('removalFiles');
+  if (what == 'edit') {
+    view.style.display = 'none';
+    edit.style.display = 'block';
+    removal.style.display = 'none';
+    if (removalFiles) removalFiles.style.display = 'none'
+  } else if (what == 'removal') {
+    view.style.display = 'block';
+    edit.style.display = 'none';
+    removal.style.display = 'block';
+    if (removalFiles) removalFiles.style.display = 'none'
+  } else if (what == 'removalFiles') {
+    view.style.display = 'block';
+    edit.style.display = 'none';
+    removal.style.display = 'none';
+    if (removalFiles) removalFiles.style.display = 'block'
+  } else {
+    view.style.display = 'block';
+    edit.style.display = 'none';
+    removal.style.display = 'none';
+    if (removalFiles) removalFiles.style.display = 'none'
+  }
+}
+
+</script>
+{{end}}
+
+</body>
+</html>

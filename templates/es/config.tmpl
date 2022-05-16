@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{{.AppTitle}}: {{.PageTitle}}</title>
+  <link rel="shortcut icon" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/theme-{{.UserConfig.SystemTheme}}.css">
+</head>
+<body>
+
+<div id="headmenu">
+  <div class="boxinmenu">
+  <div id="evenly">
+    <div class="mobileMenuButton" id="mobileMenuButtonMenu" onclick="showMobileMenu();"><img class="vector" src="/assets/menu.svg" alt="Menú"></div>
+    <div class="textmenu" id="textmenu">
+    <a href="/docs/">Documentos</a>
+    <a href="/tasks/?anyparticipants=my">Tareas</a>
+    <a href="/team/">Equipo</a>
+    </div>
+    <div class="graphicmenu">
+      <a href="/config" title="Ajustes"><img class="vector" src="/assets/settings.svg" alt="Ajustes"></a>
+      <a href="/team/profile/{{.LoggedinID}}" title="Perfil"><img class="vector" src="/assets/profile.svg" alt="Perfil"></a>
+      <a href="/logout" title="Cerrar sesión"><img class="vector" src="/assets/quit.svg" alt="Cerrar sesión"></a>
+    </div>
+  </div>
+  </div>
+</div>
+<div id="mobilemenu" style="display: none;"></div>
+
+<div id="container">
+
+  <div id="control">
+  <h1>{{.PageTitle}}</h1>
+
+  {{if eq .Message "dataWritten"}}<div class="msgok">Ajustes guardados.</div>{{end}}
+  {{if eq .Message "dataNotWritten"}}<div class="msgred">Error al escribir datos.</div>{{end}}
+
+  </div>
+
+  <div id="main">
+
+    <div id="user">
+      <form id="configUser" action="/config" method="POST">
+        <h2>Apariencia:</h2>
+        <p><span class="ofname">Tema del sistema:</span> <select name="systemTheme" id="systemTheme" class="numberbox" 
+          onchange="document.getElementById('configUser').submit();">
+          {{range .Themes}}<option value="{{.}}">{{.}}</option>
+          {{end}}
+        </select><span class="dropdown"></span></p>
+
+        <p><span class="ofname">Elementos en la página:</span> <select name="elemsOnPage" id="elemsOnPage" class="numberbox"
+          onchange="document.getElementById('configUser').submit();">
+          <option value="20">20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+          <option value="500">500</option>
+        </select><span class="dropdown"></span></p>
+
+        <p><span class="ofname">Elementos en la página del equipo:</span> <select name="elemsOnPageTeam" id="elemsOnPageTeam" class="numberbox"
+          onchange="document.getElementById('configUser').submit();">
+          <option value="20">20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+          <option value="500">500</option>
+        </select><span class="dropdown"></span></p>
+
+        <p><span class="ofname">Formato de fecha en tablas:</span> <select name="dateFormat" id="dateFormat" class="numberbox"
+          onchange="document.getElementById('configUser').submit();">
+          {{range .DateFormats}}<option value="{{.}}">{{.}}</option>
+          {{end}}
+        </select><span class="dropdown"></span></p>
+
+        <p><span class="ofname">Formato de tiempo en tablas:</span> <select name="timeFormat" id="timeFormat" class="numberbox"
+          onchange="document.getElementById('configUser').submit();">
+          {{range .TimeFormats}}<option value="{{.}}">{{.}}</option>
+          {{end}}
+        </select><span class="dropdown"></span></p>
+
+        <p><label for="useCalendarInConrols" class="ofname" 
+          title="Si está desactivada, estas entradas se convertirán en campos de texto.">Usar entradas de calendario para la fecha y la hora:</label>
+          <label class="switch"><input type="checkbox" class="hidden" 
+          id="useCalendarInConrols" name="useCalendarInConrols" value="true"
+          onchange="document.getElementById('configUser').submit();">
+        <span class="slider"></span></label></p>
+
+        <p><label for="currencyBeforeAmount" class="ofname">Mostrar moneda antes de cantidad:</label>
+          <label class="switch"><input type="checkbox" class="hidden" 
+          id="currencyBeforeAmount" name="currencyBeforeAmount" value="true"
+          onchange="document.getElementById('configUser').submit();">
+        <span class="slider"></span></label></p>
+
+        <br>
+        <input type="hidden" name="updateButton" value="saveConfig">
+
+      </form>
+    </div>
+
+  </div>
+
+  <div id="bottom">© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></div>
+
+  
+</div>
+
+<script src="/assets/functions.js"></script>
+
+<script>
+  /* Main page loading function */
+  (function() {
+    document.getElementById('systemTheme').value = "{{.UserConfig.SystemTheme}}";
+    document.getElementById('elemsOnPage').value = {{.UserConfig.ElemsOnPage}};
+    document.getElementById('elemsOnPageTeam').value = {{.UserConfig.ElemsOnPageTeam}};
+    document.getElementById('dateFormat').value = "{{.UserConfig.DateFormat}}";
+    document.getElementById('timeFormat').value = "{{.UserConfig.TimeFormat}}";
+    document.getElementById('useCalendarInConrols').checked = {{.UserConfig.UseCalendarInConrols}};
+    document.getElementById('currencyBeforeAmount').checked = {{.UserConfig.CurrencyBeforeAmount}};
+  })();
+
+</script>
+
+</body>
+</html>

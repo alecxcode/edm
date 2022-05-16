@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{{.AppTitle}}: {{.PageTitle}}</title>
+  <link rel="shortcut icon" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/theme-{{.UserConfig.SystemTheme}}.css">
+</head>
+<body>
+
+<div id="headmenu">
+  <div class="boxinmenu">
+  <div id="evenly">
+    <div class="mobileMenuButton" id="mobileMenuButtonMenu" onclick="showMobileMenu();"><img class="vector" src="/assets/menu.svg" alt="Menú"></div>
+    <div class="textmenu" id="textmenu">
+    <a href="/docs/" class="chosenmenu">Documentos</a>
+    <a href="/tasks/?anyparticipants=my">Tareas</a>
+    <a href="/team/">Equipo</a>
+    </div>
+    <div class="graphicmenu">
+      <a href="/config" title="Ajustes"><img class="vector" src="/assets/settings.svg" alt="Ajustes"></a>
+      <a href="/team/profile/{{.LoggedinID}}" title="Perfil"><img class="vector" src="/assets/profile.svg" alt="Perfil"></a>
+      <a href="/logout" title="Cerrar sesión"><img class="vector" src="/assets/quit.svg" alt="Cerrar sesión"></a>
+    </div>
+  </div>
+  </div>
+</div>
+<div id="mobilemenu" style="display: none;"></div>
+
+<div id="container">
+
+  <div id="control">
+    <h1>{{.PageTitle}}{{if .Document.RegNo}} № {{.Document.RegNo}}{{end}}</h1>
+    <p class="breadcrumbs"><a href="/docs/">todos los documentos</a> / página del documento</p>
+    {{if and .Editable (not .New)}}
+      <input type="button" class ="sbut" name="showButton" value="Editar" onclick="showEditForm('edit');">
+      <input type="button"{{if not .RemoveAllowed}}style="display: none;"{{end}} class="sbut reddish" name="showDelete" value="Eliminar" onclick="showEditForm('removal');">
+      <form id="removal" action="/docs/" method="POST" style="display: none;">
+      <div class="msgredfx">¡Esta acción no se puede deshacer! ¿Confirmar la eliminación?</div>
+      <input type="hidden" name="ids" value="{{.Document.ID}}">
+      <input type="button" class="sbut" name="cancelButton" value="Cancelar" onclick="showEditForm('view');">
+      <input type="submit" class ="sbut reddish" name="deleteButton" value="Si, eliminar">
+      </form>
+    {{end}}
+    {{if eq .Message "dataWritten"}}<div class="msgok">Datos escritos con éxito.</div>{{end}}
+    {{if eq .Message "dataNotWritten"}}<div class="msgred">Error al escribir datos.</div>{{end}}
+    {{if eq .Message "uploadError"}}<div class="msgred">Error al cargar archivos.</div>{{end}}
+    {{if eq .Message "removalError"}}<div class="msgred">Error al eliminar archivos.</div>{{end}}
+  </div>
+
+  <div id="main">
+    {{$ci := .Document.GiveCreatorID}}
+
+    {{if not .New}}
+    <div id="view">
+      <h2>Detalles del documento, tipo:</h2>
+      <p><span class="ofname">Registro:</span><span class="ofval">{{if .Document.RegNo}}n.<sup>o</sup> {{.Document.RegNo}}{{end}} {{if .Document.RegDate.Day}}de {{.Document.GiveDate "Reg" .UserConfig.DateFormat}}{{end}}</span></p>
+      <p><span class="ofname">Entrante:</span><span        class="ofval">{{if .Document.IncNo}}n.<sup>o</sup> {{.Document.IncNo}}{{end}} {{if .Document.IncDate.Day}}de {{.Document.GiveDate "Inc" .UserConfig.DateFormat}}{{end}}</span></p>
+      <p><span class="ofname">Tipo, categoría:</span><span  class="ofval">{{.Document.GiveType .DocTypes "Unknown"}} <span class="cat">{{if .Document.Category}}({{.Document.GiveCategory .Categories "Unknown"}}){{end}}</span></span></p>
+      <h2>Contenido:</h2>
+      <p><span class="ofname">Acerca de:</span><span class="ofval" id="about">{{.Document.About}}</span></p>
+      <p><span class="ofname">Term. (Exp.):</span><span class="ofval">{{.Document.GiveDate "End" .UserConfig.DateFormat}}</span></p>
+      <p><span class="ofname">Suma:</span><span class="ofval">{{if .UserConfig.CurrencyBeforeAmount}}<span class="cur">{{if gt .Document.Currency 0}}{{index .Currencies .Document.Currency}}{{end}}</span> {{end}}<span class="sum nowrap">{{.Document.GiveSum}}</span> {{if not .UserConfig.CurrencyBeforeAmount}}<span class="cur">{{if gt .Document.Currency 0}}{{index .Currencies .Document.Currency}}{{end}}</span>{{end}}</span></p>
+      <p><span class="ofname">Autores:</span><span class="ofval">{{.Document.Authors}}</span></p>
+      <p><span class="ofname">Destinatarios:</span><span class="ofval">{{.Document.Addressee}}</span></p>
+      <p><span class="ofname">Nota:</span><span class="ofval" id="note">{{.Document.Note}}</span></p>
+      <h2>Creador (propietario):</h2>
+      <p><span class="ofname">Usuario:</span><span class="ofval">{{if $ci}}<a href="/team/profile/{{$ci}}">{{.Document.Creator.GiveSelfNameJob}}</a>{{end}}</span></p>
+      <h2>Archivos del documento:</h2>
+      {{if not .Document.FileList}}<div class="afile-inline-block">No hay archivos</div>{{else}}
+      {{range .Document.FileList}}<span class="afile-inline-block">
+        {{if $.Editable}}<input type="checkbox" class="fchbox" name="filesToRemove" value="{{.}}">{{end}}
+        <a href="/files/docs/{{$.Document.ID}}/{{.}}">{{.}}</a></span>
+      <br>{{end}}
+      {{end}}
+      {{if and .Editable .Document.FileList (not .New)}}
+      Archivos seleccionados: <input type="button" class ="sbut reddish" name="showDeleteFiles" value="Eliminar" onclick="showEditForm('removalFiles');">
+      <form id="removalFiles" action="/docs/document/{{.Document.ID}}" method="POST" onsubmit="addFileElems(this);" style="display: none;">
+      <div class="msgredfx">¡Esta acción no se puede deshacer! ¿Confirmar la eliminación?</div>
+      <input type="button" class="sbut" name="cancelButton" value="Cancelar" onclick="showEditForm('view');">
+      <input type="submit" class ="sbut reddish" name="deleteFiles" value="Si, eliminar">
+      </form>
+    {{end}}
+      <br>
+      <br>
+
+    </div>
+    {{end}}
+
+  {{if .Editable}}
+    {{if .New}}<div id="create"><form id="createForm" action="/docs/document/new" method="POST" enctype="multipart/form-data" onsubmit="localStorage.setItem('new', 'document');">
+    {{else}}<div id="edit" style="display: none;"><form id="editForm" action="/docs/document/{{.Document.ID}}" method="POST" enctype="multipart/form-data">{{end}}
+     
+      <h2>Detalles del documento, tipo:</h2>
+      <p><span class="ofname">Registro:</span> 
+        <span class="nowrap">n.<sup>o</sup> <input type="text" class="numberbox" name="regNo" size="18" maxlength="127" value="{{.Document.RegNo}}"></span>
+        <span class="nowrap">de <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} class="numberbox" name="regDate" value="{{.Document.GiveDate "Reg" "yyyy-mm-dd"}}" placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" maxlength="32"></span>
+      </p>
+      <p><span class="ofname">Entrante:</span>
+        <span class="nowrap">n.<sup>o</sup> <input type="text" class="numberbox" name="incNo" size="18" maxlength="127" value="{{.Document.IncNo}}"></span>
+        <span class="nowrap">de <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} class="numberbox" name="incDate" value="{{.Document.GiveDate "Inc" "yyyy-mm-dd"}}" placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" maxlength="32"></span>
+      </p>
+      <p><span class="ofname">Tipo:</span>
+        <select name="docType" id="docType" class="numberbox">
+          {{range $i, $v := .DocTypes}}<option value="{{$i}}">{{$v}}</option>
+          {{end}}
+        </select><span class="dropdown"></span></p>
+      <p><span class="ofname">Categoría:</span>
+        <select name="category" id="category" class="numberbox">
+          {{range $i, $v := .Categories}}<option value="{{$i}}">{{$v}}</option>
+          {{end}}
+        </select><span class="dropdown"></span></p>
+      <h2>Contenido:</h2>
+      <p><span class="ofname" style="vertical-align: top;">Acerca de:</span> <textarea class="multiline ofval" name="about" maxlength="2000" rows="2" cols="30">{{.Document.About}}</textarea></p>
+      <p><span class="ofname">Term. (Exp.):</span><span class="ofval">
+        <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} class="numberbox" name="endDate" value="{{.Document.GiveDate "End" "yyyy-mm-dd"}}" placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" maxlength="32"></span></p>
+
+      <p><span class="ofname">Suma:</span><span class="ofval">
+        <span class="nowrap"><label for="currency">moneda: </label>
+        <input list="currencyList" id="currency" oninput="handleNumericFilterList(this, 'currencyCode');" class="numberbox" size="8" maxlength="32">
+        <datalist id="currencyList">
+          <option data-value="0"></option>
+          {{range $i, $v := .Currencies}}{{if gt $i 0}}<option data-value="{{$i}}">{{$v}}</option>
+          {{end}}{{end}}
+        </datalist>
+        <input type="hidden" name="currencyCode" id="currencyCode" value="{{.Document.Currency}}"></span>
+        <span class="nowrap"><label for="docSum">suma: </label>
+        <input type="text" id="docSum" class="numberbox" name="docSum" value="{{.Document.GiveSum}}"
+        placeholder="[-]0.00" pattern="-?\d+\.\d{1,2}|-?\d+" size="15" oninput="normalizeSum(this);" maxlength="32"></span>
+      </span></p>
+
+      <p><span class="ofname">Autores:</span> <input type="text" class="field ofval" name="authors" size="30" maxlength="1000" value="{{.Document.Authors}}"></p>
+      <p><span class="ofname">Destinatarios:</span> <input type="text" class="field ofval" name="addressee" size="30" maxlength="1000" value="{{.Document.Addressee}}"></p>     
+      <p><span class="ofname" style="vertical-align: top;">Nota:</span> <textarea class="multiline ofval" name="note" maxlength="2000" rows="2" cols="30">{{.Document.Note}}</textarea></p>
+      <h2>Cargar archivos:</h2>
+
+      <div class="filedrop">
+        <div id="fileDisplay"><br></div>
+        <label id="fileDisplayMsg" class="center" for="fileList">Arrastre y suelte archivos aquí o haga clic para seleccionar.<br>Hasta 10 archivos. Hasta 100 megabytes de tamaño de carga total.</label>
+        <input type="file" multiple id="fileList" name="fileList" onchange="displaySelectedFiles(
+          this,
+          document.getElementById('fileDisplay'),
+          document.getElementById('fileDisplayMsg'),
+          'La cantidad de archivos seleccionados supera el límite. Se rechazan archivos.',
+          'El tamaño de los archivos seleccionados supera el límite. Se rechazan archivos.'
+          );">
+      </div>
+      <input type="button" class ="sbut" value="Limpiar archivos seleccionados" onclick="clearInputFiles(
+        document.getElementById('fileList'),
+        document.getElementById('fileDisplay'),
+        document.getElementById('fileDisplayMsg'),
+        'Limpiado.');">
+      <br>
+      <br>
+
+    {{if .New}}<input type="submit" class ="sbut" name="createButton" value="Crear">
+               <input type="button" class ="sbut" name="cancelButton" value="Cancelar" 
+               onclick="if (history.length > 1) {history.back()} else {window.location.href = '/docs/'}">
+    </form>{{else}}
+      <input type="submit" class ="sbut" name="updateButton" value="Guardar">
+      <input type="button" class ="sbut" name="hideButton" value="Cancelar" onclick="this.parentNode.reset(); showEditForm('view');">
+    </form>{{end}}
+    </div>
+  {{end}}
+
+</div>
+
+<div id="bottom">© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></div>
+
+
+</div>
+
+<script src="/assets/functions.js"></script>
+
+<script>
+/* Page loading function for read */
+(function() {
+  let multiLineLabel;
+  multiLineLabel = document.getElementById('about');
+  if (multiLineLabel) multiLineLabel.innerHTML = multiLineLabel.innerHTML.replace(/\n/g, "<br>");
+  multiLineLabel = document.getElementById('note');
+  if (multiLineLabel) multiLineLabel.innerHTML = multiLineLabel.innerHTML.replace(/\n/g, "<br>");
+})();
+</script>
+
+{{if .Editable}}
+<script>
+
+/* Page loading function for edit */
+
+(function() {
+
+  document.getElementById('docType').value = "{{.Document.DocType}}";
+  document.getElementById('category').value = "{{.Document.Category}}";
+  setSumInput('currency', '{{.Document.Currency}}')
+
+  let result = localStorage.getItem('new');
+  if (result) {
+    localStorage.removeItem('new');
+    if (!window.location.href.endsWith('new')) {
+      let msgnew = document.createElement('div');
+      msgnew.className = "msgok";
+      msgnew.innerHTML = "Creación completada.";
+      document.getElementById('control').appendChild(msgnew);
+    }
+  }
+
+})();
+
+/* This function shows or hides edit controls */
+function showEditForm(what) {
+  const view = document.getElementById('view');
+  const edit = document.getElementById('edit');
+  const removal = document.getElementById('removal');
+  const removalFiles = document.getElementById('removalFiles');
+  if (what == 'edit') {
+    view.style.display = 'none';
+    edit.style.display = 'block';
+    removal.style.display = 'none';
+    if (removalFiles) removalFiles.style.display = 'none'
+  } else if (what == 'removal') {
+    view.style.display = 'block';
+    edit.style.display = 'none';
+    removal.style.display = 'block';
+    if (removalFiles) removalFiles.style.display = 'none'
+  } else if (what == 'removalFiles') {
+    view.style.display = 'block';
+    edit.style.display = 'none';
+    removal.style.display = 'none';
+    if (removalFiles) removalFiles.style.display = 'block'
+  } else {
+    view.style.display = 'block';
+    edit.style.display = 'none';
+    removal.style.display = 'none';
+    if (removalFiles) removalFiles.style.display = 'none'
+  }
+}
+
+</script>
+{{end}}
+
+</body>
+</html>

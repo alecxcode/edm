@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{{.AppTitle}}: {{.PageTitle}}</title>
+  <link rel="shortcut icon" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/theme-{{.UserConfig.SystemTheme}}.css">
+</head>
+<body>
+
+<div id="headmenu">
+  <div class="boxinmenu">
+  <div id="evenly">
+    <div class="mobileMenuButton" id="mobileMenuButtonMenu" onclick="showMobileMenu();"><img class="vector" src="/assets/menu.svg" alt="Menú"></div>
+    <div class="textmenu" id="textmenu">
+    <a href="/docs/" class="chosenmenu">Documentos</a>
+    <a href="/tasks/?anyparticipants=my">Tareas</a>
+    <a href="/team/">Equipo</a>
+    </div>
+    <div class="graphicmenu">
+      <a href="/config" title="Ajustes"><img class="vector" src="/assets/settings.svg" alt="Ajustes"></a>
+      <a href="/team/profile/{{.LoggedinID}}" title="Perfil"><img class="vector" src="/assets/profile.svg" alt="Perfil"></a>
+      <a href="/logout" title="Cerrar sesión"><img class="vector" src="/assets/quit.svg" alt="Cerrar sesión"></a>
+    </div>
+  </div>
+  </div>
+</div>
+<div id="mobilemenu" style="display: none;"></div>
+
+<div id="container">  
+
+  <div id="control">
+    <h1>{{.PageTitle}}</h1>
+
+  <form id="controlForm" action="/docs/" method="POST" onsubmit="addSortingOnSubmut('controlForm');">
+    <div id="search">
+    <input id="showFilters" class ="sbut" type="button" value="Filtros..." title="Mostrar u ocultar filtros" onclick="showFilters();
+    /* This function shows or hides filters controls */
+    function showFilters() {
+    const d = document.getElementById('showhide');
+    d.style.display = (d.style.display == 'none') ? 'block' : 'none';
+    };">
+    <input id="searchText" type="text" class="field" name="searchText" size="15" placeholder="Buscar texto">
+    <input id="searchButton" class ="sbut" type="submit" name="searchButton" value="Búsqueda">
+    </div>
+
+    <div id="showhide" style="display: none;">
+
+      <div class="filter" id="firstFilter"><strong id="categoriesName">Categorías:</strong><br>
+        {{range $i, $v := .Categories}}<input type="checkbox" id="dc{{$i}}" name="categories" value="{{$i}}">
+        <label for="dc{{$i}}">{{$v}}</label><br>
+        {{end}}
+      </div>
+    
+      <div class="filter"><strong id="doctypesName">Tipos de documentos:</strong><br>
+        {{range $i, $v := .DocTypes}}<input type="checkbox" id="dt{{$i}}" name="doctypes" value="{{$i}}">
+        <label for="dt{{$i}}">{{$v}}</label><br>
+        {{end}}
+      </div>
+
+      <div class="filter"><strong id="regDatesName">Fecha de Reg.:</strong><br><br>
+        <label for="regDatesSingle">Una fecha:</label><br>
+        <select id="regDatesRelation" class="numberbox" name="regDatesRelation">
+          <option value="eq">Igual a</option>
+          <option value="gteq">Después (incl.)</option>
+          <option value="lteq">Antes (incl.)</option>
+          <option value="noteq">Excepto</option>
+        </select><span class="dropdown"></span><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="regDatesSingle" class="numberbox" name="regDates" value=""
+        placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12"><br><br>
+        <label for="regDatesDiapason">Intervalo:</label>
+        <label class="switch"><input type="checkbox" class="hidden" 
+          id="regDatesDiapason" name="regDatesDiapason" value="true" 
+          onchange="handleNumericFilterChkBox(this, 'regDates');
+          handleNumericOption(this, 'regDates')"><div class="slider"></div></label><br>
+        <label for="regDatesStart">Desde:</label><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="regDatesStart" class="numberbox" name="regDates" 
+        placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" disabled><br>
+        <label for="regDatesFinish">Hasta:</label><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="regDatesFinish" class="numberbox" name="regDates" 
+        placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" disabled><br>
+      </div>
+
+      <div class="filter"><strong id="incDatesName">Fecha de Ent.:</strong><br><br>
+        <label for="incDatesSingle">Una fecha:</label><br>
+        <select id="incDatesRelation" class="numberbox" name="incDatesRelation">
+          <option value="eq">Igual a</option>
+          <option value="gteq">Después (incl.)</option>
+          <option value="lteq">Antes (incl.)</option>
+          <option value="noteq">Excepto</option>
+        </select><span class="dropdown"></span><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="incDatesSingle" class="numberbox" name="incDates" value=""
+        placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12"><br><br>
+        <label for="incDatesDiapason">Intervalo:</label>
+        <label class="switch"><input type="checkbox" class="hidden" 
+          id="incDatesDiapason" name="incDatesDiapason" value="true" 
+          onchange="handleNumericFilterChkBox(this, 'incDates');
+          handleNumericOption(this, 'incDates')"><div class="slider"></div></label><br>
+        <label for="incDatesStart">Desde:</label><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="incDatesStart" class="numberbox" name="incDates" 
+        placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" disabled><br>
+        <label for="incDatesFinish">Hasta:</label><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="incDatesFinish" class="numberbox" name="incDates" 
+        placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" disabled><br>
+      </div>
+
+      <div class="filter"><strong id="endDatesName">Term. (Exp.):</strong><br><br>
+        <label for="endDatesSingle">Una fecha:</label><br>
+        <select id="endDatesRelation" class="numberbox" name="endDatesRelation">
+          <option value="eq">Igual a</option>
+          <option value="gteq">Después (incl.)</option>
+          <option value="lteq">Antes (incl.)</option>
+          <option value="noteq">Excepto</option>
+        </select><span class="dropdown"></span><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="endDatesSingle" class="numberbox" name="endDates" value=""
+        placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12"><br><br>
+        <label for="endDatesDiapason">Intervalo:</label>
+        <label class="switch"><input type="checkbox" class="hidden" 
+          id="endDatesDiapason" name="endDatesDiapason" value="true" 
+          onchange="handleNumericFilterChkBox(this, 'endDates');
+          handleNumericOption(this, 'endDates')"><div class="slider"></div></label><br>
+        <label for="endDatesStart">Desde:</label><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="endDatesStart" class="numberbox" name="endDates" 
+        placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" disabled><br>
+        <label for="endDatesFinish">Hasta:</label><br>
+        <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="endDatesFinish" class="numberbox" name="endDates" 
+        placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" disabled><br>
+      </div>
+
+      <div class="filter"><strong id="sumsName">Suma:</strong><br>
+        <label for="sumsCurrency">Moneda:</label><input list="sumsCurrencyCodesList" id="sumsCurrency" 
+        oninput="handleNumericFilterList(this, 'sumsCurrencyCode');" class="numberbox" size="8">
+        <datalist id="sumsCurrencyCodesList">
+          <option data-value="0">Cualquier</option>
+          {{range $i, $v := .Currencies}}
+          {{if gt $i 0}}<option data-value="{{$i}}">{{$v}}</option>{{end}}
+          {{end}}
+        </datalist>
+        <input type="hidden" name="sumsCurrencyCode" id="sumsCurrencyCode">
+        <br><br>
+        <label for="sumsSingle">Una suma:</label><br>
+        <select id="sumsRelation" class="numberbox" name="sumsRelation">
+          <option value="eq">Igual a</option>
+          <option value="gt">Mayor que</option>
+          <option value="lt">Menor que</option>
+          <option value="gteq">Mayor que/igual a</option>
+          <option value="lteq">Menor que/igual a</option>
+          <option value="noteq">No es igual a</option>
+        </select><span class="dropdown"></span><br>
+        <input type="text" id="sumsSingle" class="numberbox" name="sums" value=""
+        placeholder="[-]0.00" pattern="-?\d+\.\d{1,2}|-?\d+" size="15" oninput="normalizeSum(this);"><br><br>
+        <label for="sumsDiapason">Intervalo:</label>
+        <label class="switch"><input type="checkbox" class="hidden" 
+          id="sumsDiapason" name="sumsDiapason" value="true" 
+          onchange="handleNumericFilterChkBox(this, 'sums');
+          handleNumericOption(this, 'sums')"><div class="slider"></div></label><br>
+        <label for="sumsStart">Desde:</label><br>
+        <input type="text" id="sumsStart" class="numberbox" name="sums" 
+        placeholder="[-]0.00" pattern="-?\d+\.\d{1,2}|-?\d+" size="15" oninput="normalizeSum(this);" disabled><br>
+        <label for="sumsFinish">Hasta:</label><br>
+        <input type="text" id="sumsFinish" class="numberbox" name="sums" 
+        placeholder="[-]0.00" pattern="-?\d+\.\d{1,2}|-?\d+" size="15" oninput="normalizeSum(this);" disabled><br>
+      </div>
+
+      <div class="somemargins">
+      <label for="showIncNo" title="Mostrar la fecha de entrada y el número de entrada en la tabla en lugar de la fecha y el número de registro">Número y fecha entrante en la tabla</label>
+      <label class="switch"><input type="checkbox" class="hidden" 
+        id="showIncNo" name="showIncNo" value="true" onchange="handleIncChkBox(this)">
+        <div class="slider"></div></label>
+      </div>
+
+      <div id="filterButtonsControls">
+      <input type="submit" class ="sbut" name="filterButton" value="Aplicar filtros">
+      <input type="button" class ="sbut" name="filterReset" onclick="document.getElementById('showIncNo').checked = false;
+      handleIncChkBox(document.getElementById('showIncNo'));
+      resetFilter();" value="Restablecer todos los filtros">
+      </div>
+    </div>
+  </form>
+
+  <p id="appliedFilters"></p>
+  
+  <div id="controlButtons">
+    <a href="/docs/document/new" class ="sbut greenish">+ Nuevo documento</a>
+    <input type="button" class ="sbut reddish" id="deleteButton" name="deleteButton" value="× Eliminar seleccionado" onclick="
+    this.parentNode.lastElementChild.style.display = 'block'; document.getElementById('yesDeleteButton').disabled = false;" disabled>
+    <div style="display: none;">
+    <div class="msgredfx">¡Esta acción no se puede deshacer! ¿Confirmar la eliminación?</div>
+    <input type="button" class="sbut" name="cancelButton" value="Cancelar" onclick="this.parentNode.style.display = 'none'; document.getElementById('yesDeleteButton').disabled = true;">
+    <input type="button" class ="sbut reddish" id="yesDeleteButton" name="deleteButton" value="Si, eliminar" onclick="
+    addSortingOnSubmut('datagridForm'); addFiltersOnSubmut('datagridForm'); addPaginationOnSubmut('datagridForm');
+    const frm = document.getElementById('datagridForm');
+    addHiddenElem(frm, 'deleteButton', 'Delete selected');
+    frm.submit();" disabled>
+    </div>
+  </div>
+
+  {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred">Acción rechazada: no hay permisos para todos o algunos de los objetos. {{if .RemoveAllowed}}Solo el creador o el administrador pueden eliminar.{{else}}Solo el administrador puede eliminar.{{end}}</p>{{end}}
+  {{if eq .Message "removedElems"}}<p class="msgok">Objetos eliminados: {{.RemovedNum}}.</p>{{end}}
+  {{if eq .Message "removalError"}}<p class="msgred">Error al eliminar objetos.</p>{{end}}
+
+  <form id="sortingForm" action="/docs/" method="POST" onsubmit="addFiltersOnSubmut('sortingForm');">
+    <div class="mobilesorting"><label>Ordenar:</label>
+    <select class="numberbox" id="sortedByMobile" onchange="sortBy(this.value, document.getElementById('sortedHow').value);">
+      {{if $.ShowIncNo}}
+      <option value="IncNo">Núm. Ent.</option>
+      <option value="IncDate">Fecha de Ent.</option>
+      {{else}}
+      <option value="RegNo">Núm. Reg.</option>
+      <option value="RegDate">Fecha de Reg.</option>
+      {{end}}
+      <option value="About">Acerca de</option>
+      <option value="EndDate">Term. (Exp.)</option>
+      <option value="DocSum">Suma</option>
+    </select><span class="dropdown"></span>
+    <select class="numberbox" id="sortedHowMobile" onchange="sortBy(document.getElementById('sortedBy').value, this.value);">
+      <option value="0">Descendente</option>
+      <option value="1">Ascendente</option>
+    </select><span class="dropdown"></span>
+    <script>
+      document.getElementById('sortedByMobile').value = "{{.SortedBy}}";
+      document.getElementById('sortedHowMobile').value = "{{.SortedHow}}";
+    </script>
+    </div>
+    <input type="hidden" id="sortedBy" name="sortedBy" value="{{.SortedBy}}">
+    <input type="hidden" id="sortedHow" name="sortedHow" value="{{.SortedHow}}">
+  </form>
+
+  </div>
+
+  <div class="main" id="main">
+    {{if not .Docs}}<div class="center"><br><br>No se encontraron objetos que coincidan con los criterios especificados o no hay objetos.<br><br></div>{{else}}
+    <div id="pagination">
+      <form id="paginationForm" action="/docs/" method="POST">
+        <span class="nowrap">
+          <label for="pageNumber">Página {{.PageNumber}} de </label>
+          <input class ="sbut pg" type="button" title="Primera" value="|&lt;" onclick="paginate('min');"> <input class ="sbut pg" type="button" title="Previa"value="&lt;-" onclick="paginate(-1);">
+          <input type="number" class="field" size="8" id="pageNumber" name="pageNumber" value="{{.PageNumber}}" min="1" max="" onchange="paginate(0);">
+          <input class ="sbut pg" type="button" title="Próxima" value="-&gt;" onclick="paginate(1);"> <input class ="sbut pg" type="button" title="Última" value="&gt;|" onclick="paginate('max');">
+        </span>
+      <span class="nowrap">
+      <label for="elemsOnPage">Elementos en la página:</label>
+      <select class="numberbox" id="elemsOnPage" name="elemsOnPage" onchange="document.getElementById('elemsOnPageChanged').value='true';
+      paginate('min');">
+        <option value="20">20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="200">200</option>
+        <option value="500">500</option>
+      </select><span class="dropdown"></span>
+      <input type="hidden" id="elemsOnPageChanged" name="elemsOnPageChanged" value="false">
+      </span>
+      <script>
+        document.getElementById('elemsOnPage').value = "{{.UserConfig.ElemsOnPage}}";
+      </script>
+      </form>
+    </div>
+
+    <form id="datagridForm" name="datagridForm" action="/docs/" method="POST" onsubmit="addSortingOnSubmut('datagridForm');
+    addFiltersOnSubmut('datagridForm');addPaginationOnSubmut('datagridForm');">
+    <table id="mainTable">
+      <tr class="thead">
+        <th align="center" id="Chooser"><input type="checkbox" class="chead" id="chead"></th>
+        {{if $.ShowIncNo}}
+        <th align="left" id="IncNo">Núm.Ent.<span class="sort" title="Ascendente" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descendente" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="IncDate">Fec.Ent.<span class="sort" title="Ascendente" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descendente" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        {{else}}
+        <th align="left" id="RegNo">Núm.Reg.<span class="sort" title="Ascendente" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descendente" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="RegDate">Fec.Reg.<span class="sort" title="Ascendente" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descendente" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        {{end}}
+        <th align="left" style="width: 15%;" id="DocType">Tipo</th>
+        <th align="left" id="About">Acerca de<span class="sort" title="Ascendente" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descendente" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="EndDate">Term.(Exp.)<span class="sort" title="Ascendente" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descendente" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" style="width: 11%;" id="DocSum">Suma<span class="sort" title="Ascendente" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descendente" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="Authors">Autores</th>
+        <th align="left" id="Addressee">Destinatarios</th>
+        <th align="left" id="FileList">Archivos</th>
+      </tr>
+      {{range .Docs}}
+      <tr>
+        <td label="Seleccionar" align="center"><input type="checkbox" class="chbox" id="{{.ID}}" name="ids" value="{{.ID}}"></td>
+        {{if $.ShowIncNo}}
+        <td label="Núm. Ent." align="left"><a href="/docs/document/{{.ID}}">{{.IncNo}}</a></td>
+        <td label="Fecha de Ent." align="left"><span class="nowrap">{{.GiveDate "Inc" $.UserConfig.DateFormat}}</span></td>
+        {{else}}
+        <td label="Núm. Reg." align="left"><a href="/docs/document/{{.ID}}">{{.RegNo}}</a></td>
+        <td label="Fecha de Reg." align="left"><span class="nowrap">{{.GiveDate "Reg" $.UserConfig.DateFormat}}</span></td>
+        {{end}}
+        <td label="Tipo" align="left"><a href="/docs/document/{{.ID}}">{{.GiveType $.DocTypes "Unknown"}}</a> <span class="cat">{{if .Category}}({{.GiveCategory $.Categories "Unknown"}}){{end}}</span></td>
+        <td label="Acerca de" align="left"><a href="/docs/document/{{.ID}}" class="clamp">{{.About}}</a></td>
+        <td label="Term.(Exp.)" align="left"><span class="nowrap">{{.GiveDate "End" $.UserConfig.DateFormat}}</span></td>
+        <td label="Suma" align="right">{{if $.UserConfig.CurrencyBeforeAmount}}<span class="cur">{{if gt .Currency 0}}{{index $.Currencies .Currency}}{{end}}</span> {{end}}<span class="sum nowrap">{{.GiveSum}}</span> {{if not $.UserConfig.CurrencyBeforeAmount}}<span class="cur">{{if gt .Currency 0}}{{index $.Currencies .Currency}}{{end}}</span>{{end}}</td>
+        <td label="Autores" align="left">{{.Authors}}</td>
+        <td label="Destinatarios" align="left">{{.Addressee}}</td>
+        <td label="Archivos" align="left">
+          {{$f0 := .GiveShortFileName 0}}{{$f1 := .GiveShortFileName 1}}{{$f2 := .GiveShortFileName 2}}
+          {{if $f0}}<span class="afile"><a href="/files/docs/{{.ID}}/{{index .FileList 0}}">{{$f0}}</a></span>{{end}}
+          {{if and $f1 (not $f2)}}<span class="afile"><a href="/files/docs/{{.ID}}/{{index .FileList 1}}">{{$f1}}</a></span>{{end}}
+          {{if and $f1 $f2}}<span class="afile"><a href="/docs/document/{{.ID}}">more...</a></span>{{end}}
+        </td>
+      </tr>
+      {{end}}
+    </table>
+    </form>
+
+    <div id="stat"><br>Total de objetos por criterio de búsqueda: {{.FilteredNum}}</div>
+    {{end}}
+
+  </div>
+
+  <div id="bottom">© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></div>
+
+  
+</div>
+
+<script src="/assets/functions.js"></script>
+
+<script>
+
+  /* Functions to add inputs values from different forms on submit */
+  function addSortingOnSubmut(formID) {
+    const frm = document.getElementById(formID);
+    addHiddenElem(frm, 'sortedBy', document.getElementById('sortedBy').value);
+    addHiddenElem(frm, 'sortedHow', document.getElementById('sortedHow').value);
+  }
+  function addPaginationOnSubmut(formID) {
+    const frm = document.getElementById(formID);
+    let pageNumber = document.getElementById('pageNumber').value;
+    let elemsOnPage = document.getElementById('elemsOnPage').value;
+    let elemsOnCurrentPage = getElemsOnCurrentPage();
+    addHiddenElem(frm, 'elemsOnCurrentPage', elemsOnCurrentPage);
+    addHiddenElem(frm, 'pageNumber', pageNumber);
+    addHiddenElem(frm, 'elemsOnPage', elemsOnPage);
+  }
+  function addFiltersOnSubmut(formID) {
+
+    const frm = document.getElementById(formID);
+
+    let showIncNo = {{.ShowIncNo}};
+
+    let classFilter = {{.Filters.ClassFilter}};
+    let dateFilter = {{.Filters.DateFilter}};
+    let sumFilter = {{.Filters.SumFilter}};
+    let textFilter = "{{.Filters.TextFilter}}";
+
+    if (showIncNo) {
+      addHiddenElem(frm, 'showIncNo', showIncNo);
+    }
+
+    if (classFilter) {
+      for (let eachF of classFilter) {
+        for (let i = 0; i < eachF.List.length; i++) {
+          addHiddenElem(frm, eachF.Name, eachF.List[i]);
+        }
+      }
+    }
+
+    if (dateFilter) {
+      for (let eachF of dateFilter) {
+        addHiddenElem(frm, eachF.Name+'Relation', eachF.Relation);
+        for (let i = 0; i < eachF.Dates.length; i++) {
+          addHiddenElem(frm, eachF.Name, eachF.Dates[i]);
+        }
+      }
+    }
+
+    if (sumFilter) {
+      for (let eachF of sumFilter) {
+        addHiddenElem(frm, eachF.Name+'CurrencyCode', eachF.CurrencyCode);
+        addHiddenElem(frm, eachF.Name+'Relation', eachF.Relation);
+        for (let i = 0; i < eachF.SumsStr.length; i++) {
+          addHiddenElem(frm, eachF.Name, eachF.SumsStr[i]);
+        }
+      }
+    }
+
+    if (textFilter) {
+      addHiddenElem(frm, 'searchText', textFilter);
+    }
+
+  }
+
+  function handleIncChkBox(cb) {
+    let valSortedBy = document.getElementById('sortedBy').value;
+    if (cb.checked == true) {
+      switch (valSortedBy) {
+        case 'RegDate': document.getElementById('sortedBy').value = 'IncDate'; break;
+        case 'RegNo': document.getElementById('sortedBy').value = 'IncNo'; break;
+      }
+    } else {
+      switch (valSortedBy) {
+        case 'IncDate': document.getElementById('sortedBy').value = 'RegDate'; break;
+        case 'IncNo': document.getElementById('sortedBy').value = 'RegNo'; break;
+      }
+    }
+  }
+  
+  /* Main page loading function */
+  (function() {
+
+    //console.time('Main Function');
+
+    let mainTablePresent = false;
+    if (document.getElementById('mainTable')) {
+      mainTablePresent = true;
+    }
+
+    let removeAllowed = {{.RemoveAllowed}};
+    if (removeAllowed == false) {
+      document.getElementById('deleteButton').style.display = 'none';
+      if (mainTablePresent) {
+        const checkhead = document.getElementById('chead');
+        const checkboxes = document.querySelectorAll('input[class="chbox"]');
+        checkhead.disabled = true;
+        checkboxes.forEach(cb => cb.disabled = true);
+      }
+    }
+
+    let classFilterArr = [];
+    let dateFilterArr = [];
+    let sumFilterArr = [];
+
+    let showIncNo = {{.ShowIncNo}};
+
+    let classFilter = {{.Filters.ClassFilter}};
+    let dateFilter = {{.Filters.DateFilter}};
+    let sumFilter = {{.Filters.SumFilter}};
+    let textFilter = "{{.Filters.TextFilter}}";
+
+    if (classFilter) {
+      for (let eachF of classFilter) {
+        applyTypeFilter(eachF.List, eachF.Name);
+        classFilterArr.push(eachF);
+      }
+    }
+
+    if (showIncNo) {
+      document.getElementById('showIncNo').checked = true;
+    }
+
+    if (dateFilter) {
+      for (let eachF of dateFilter) {
+        applyDateFilter(eachF);
+        dateFilterArr.push(eachF);
+      }
+    }
+
+    if (sumFilter) {
+      for (let eachF of sumFilter) {
+        applySumFilter(eachF);
+        sumFilterArr.push(eachF);
+      }
+    }
+
+    if (textFilter) {
+      applyTextFilter(textFilter);
+    }
+
+    if (textFilter && mainTablePresent) {
+      highlightSearchResults(textFilter, [1, 4, 7, 8, 9, 10]);
+    }
+
+    printAppliedFilters("Filtros aplicados: ", "No se aplicaron filtros.", "Intervalo", classFilterArr, dateFilterArr, sumFilterArr, textFilter);
+    
+    if (mainTablePresent) {
+      processTableSelection(removeAllowed);
+      applySortingSelection();
+      processPagesCalculations("Total de objetos por criterio de búsqueda", "En esta página", "Total de páginas", {{.UserConfig.ElemsOnPage}}, {{.FilteredNum}});
+    }
+        
+    //console.timeEnd('Main Function');
+
+  })();
+
+</script>
+
+</body>
+</html>

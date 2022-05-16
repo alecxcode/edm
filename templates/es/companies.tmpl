@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{{.AppTitle}}: {{.PageTitle}}</title>
+  <link rel="shortcut icon" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/theme-{{.UserConfig.SystemTheme}}.css">
+</head>
+<body>
+
+<div id="headmenu">
+  <div class="boxinmenu">
+  <div id="evenly">
+    <div class="mobileMenuButton" id="mobileMenuButtonMenu" onclick="showMobileMenu();"><img class="vector" src="/assets/menu.svg" alt="Menú"></div>
+    <div class="textmenu" id="textmenu">
+    <a href="/docs/">Documentos</a>
+    <a href="/tasks/?anyparticipants=my">Tareas</a>
+    <a href="/team/">Equipo</a>
+    </div>
+    <div class="graphicmenu">
+      <a href="/config" title="Ajustes"><img class="vector" src="/assets/settings.svg" alt="Ajustes"></a>
+      <a href="/team/profile/{{.LoggedinID}}" title="Perfil"><img class="vector" src="/assets/profile.svg" alt="Perfil"></a>
+      <a href="/logout" title="Cerrar sesión"><img class="vector" src="/assets/quit.svg" alt="Cerrar sesión"></a>
+    </div>
+  </div>
+  </div>
+</div>
+<div id="mobilemenu" style="display: none;"></div>
+
+<div id="container">
+  
+
+  <div class="control" id="control">
+    <h1>{{.PageTitle}}</h1>
+
+    <p id="appliedFilters"></p>
+
+    <div id="controlButtons">
+      <span class="panel"><a href="/team/">Ir a la página del equipo</a></span>
+      {{if .LoggedinAdmin}}<a href="/companies/company/new" class ="sbut greenish">+ Nueva compañia</a>{{end}}
+    </div>
+    
+    {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred">Acción rechazada: no hay permisos para todos o algunos de los objetos. Solo el administrador puede eliminar.</p>{{end}}
+    {{if eq .Message "removedElems"}}<p class="msgok">Objetos eliminados: {{.RemovedNum}}.</p>{{end}}
+    {{if eq .Message "removalError"}}<p class="msgred">Error al eliminar objetos.</p>{{end}}
+
+    <br>
+
+  </div>
+
+  <div class="main" id="main">
+    {{if not .Companies}}<div class="center"><br><br>No existen objetos.<br><br></div>{{else}}
+
+      {{range .Companies}}
+        {{$bi := .GiveHeadID}}
+        <div class="panel"><a href="/companies/company/{{.ID}}">{{if and (not .ShortName) (not .FullName) (not .ForeignName)}}ID: {{.ID}}{{end}}
+          {{if .ShortName}}{{.ShortName}}{{end}}{{if .FullName}}, ({{.FullName}}){{end}}{{if .ForeignName}}, ({{.ForeignName}}){{end}}</a>;
+        {{if .RegNo}}Reg. n.<sup>o</sup>: {{.RegNo}};{{end}}
+        {{if .TaxNo}}Impuesto (IVA) n.<sup>o</sup>: {{.TaxNo}};{{end}}
+        {{if .Contacts.AddressReg}}Dirección del domicilio social: {{.Contacts.AddressReg}};{{end}}
+        {{if $bi}}CEO o jefe: <a href="/team/profile/{{$bi}}">{{.GiveHeadNameJob}}</a>;{{end}}
+        Ver también: <a href="/team/?companies={{.ID}}">Lista de empleados de la compañia</a>.</div><br>
+      {{end}}
+
+    <div id="stat"><br>Total de objetos: {{.FilteredNum}}</div>
+    {{end}}
+
+  </div>
+
+  <div id="bottom">© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></div>
+
+  
+</div>
+
+<script src="/assets/functions.js"></script>
+
+</body>
+</html>
