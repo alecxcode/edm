@@ -134,7 +134,7 @@
         {{if eq .Message "loginNotUnique"}}<div class="msgred">This login is already in use.</div>{{end}}
         {{if eq .Message "passwdTooShort"}}<div class="msgred">Password length is less than allowed.</div>{{end}}
         <p><span class="ofname">Login:</span> <input type="text" class="field ofval" name="login" size="30" maxlength="32" value="{{.Profile.Login}}"></p>
-        <p><input type="checkbox" id="loginSameEmail" name="loginSameEmail" value="true" checked> <label for="loginSameEmail" title="The user will be able to change the login to another later ">Make login the same as e-mail.</label></p>
+        <p><input type="checkbox" id="loginSameEmail" name="loginSameEmail" value="true" checked> <label for="loginSameEmail" title="The user will be able to change the login to another later">Make login the same as e-mail.</label></p>
         <p><span class="ofname">Password*:</span> <input type="password" class="field ofval" name="passwd" size="30" minlength="6" maxlength="72" value="" required> 6 characters minimum</p>
         <script>
           (function() {
@@ -206,7 +206,7 @@
       if (!window.location.href.endsWith('new')) {
         let msgnew = document.createElement('div');
         msgnew.className = "msgok";
-        msgnew.innerHTML = "Creation complete.";
+        msgnew.innerHTML = "Creation completed.";
         document.getElementById('control').appendChild(msgnew);
       }
     }

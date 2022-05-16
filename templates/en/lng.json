@@ -70,7 +70,7 @@
         },
         "Cont": {
             "ProfileRegistered": "You can login to the system using the link below. Your login and password are: ",
-            "LoginPasswdChanged": "This is to notify you about your login or password change. If you know why is it happend, then no action required."
+            "LoginPasswdChanged": "This is to notify you about your login or password change. If you know why is it happened, then no action required."
         },
         "Captions": {
             "CreatedTime": "Created time",

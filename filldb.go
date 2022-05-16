@@ -186,7 +186,7 @@ func fillDBwithTestData(db *sql.DB, DBType byte) {
 				}
 				tid, _ = t.create(db, DBType)
 			}
-			for x := 0; x < 15; x++ {
+			for x := 0; x < 5; x++ {
 				m := x + 1
 				if m > 12 {
 					m = 12

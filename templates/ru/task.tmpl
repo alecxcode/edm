@@ -131,7 +131,7 @@
           {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
           {{end}}
         </select><span class="dropdown"></span></span>
-        <input type="button" class ="sbut greenish smaller" value="Добавить участника"
+        <input type="button" class="sbut greenish smaller" value="Добавить участника"
         onclick="makeFormAndSubmit(document.getElementById('selectedParticipant').value, 'participantAdd', '/tasks/task/{{.Task.ID}}');">
       </div>{{end}}
 

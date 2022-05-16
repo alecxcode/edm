@@ -102,7 +102,7 @@
   </div>
 
   {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred">Action rejected: no permissions for all or some of objects. Only administrator can delete.</p>{{end}}
-  {{if eq .Message "removedElems"}}<p class="msgok">Delete objects: {{.RemovedNum}}.</p>{{end}}
+  {{if eq .Message "removedElems"}}<p class="msgok">Deleted objects: {{.RemovedNum}}.</p>{{end}}
   {{if eq .Message "removalError"}}<p class="msgred">Error deleting objects.</p>{{end}}
   {{if eq .Message "LastAdminRejection"}}<div class="msgred">Action rejected: attempt to delete the last administrator.</div>{{end}}
   

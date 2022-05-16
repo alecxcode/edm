@@ -158,6 +158,7 @@ function applySortingSelection() {
   let valSortedBy = document.getElementById('sortedBy').value;
   let currentSortedBy = document.getElementById(valSortedBy);
   let nodeList = currentSortedBy.children;
+  if (nodeList.length > 2) nodeList = [nodeList[1], nodeList[2]];
   let valSortedHow = document.getElementById('sortedHow').value;
   if (valSortedHow == 0) { valSortedHow = 1; } else if (valSortedHow == 1) { valSortedHow = 0; }
   nodeList[valSortedHow].className = "sortchosen";

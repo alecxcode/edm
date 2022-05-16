@@ -277,7 +277,7 @@
       <form id="paginationForm" action="/tasks/" method="POST" onsubmit="addFiltersOnSubmut('paginationForm');addSortingOnSubmut('paginationForm');">
         <span class="nowrap">
           <label for="pageNumber">Page {{.PageNumber}} of </label>
-          <input class ="sbut pg" type="button" title="Firs" value="|&lt;" onclick="paginate('min');"> <input class ="sbut pg" type="button" title="Previous"value="&lt;-" onclick="paginate(-1);">
+          <input class ="sbut pg" type="button" title="First" value="|&lt;" onclick="paginate('min');"> <input class ="sbut pg" type="button" title="Previous"value="&lt;-" onclick="paginate(-1);">
           <input type="number" class="field" size="8" id="pageNumber" name="pageNumber" value="{{.PageNumber}}" min="1" max="" onchange="paginate(0);">
           <input class ="sbut pg" type="button" title="Next" value="-&gt;" onclick="paginate(1);"> <input class ="sbut pg" type="button" title="Last" value="&gt;|" onclick="paginate('max');">
         </span>

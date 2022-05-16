@@ -114,7 +114,7 @@
           {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
           {{end}}
         </select><span class="dropdown"></span></span> <span class="nowrap">
-        <input type="button" class ="sbut greenish smaller" value="Forward"
+        <input type="button" class="sbut greenish smaller" value="Forward"
         onclick="makeFormAndSubmit(document.getElementById('selectedAssignee').value, 'assigneeForward', '/tasks/task/{{.Task.ID}}');">
         <input type="button" class ="sbut smaller" value="Cancel" onclick="document.getElementById('forwardControls').style.display = 'none';">
         </span>
