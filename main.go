@@ -278,6 +278,9 @@ func main() {
 	// Server code:
 	if isPrevInstanceRunning(cfg.ServerHost + ":" + cfg.ServerPort) {
 		log.Println("server is already running, quiting")
+		if cfg.RunBrowser == "true" {
+			runClient(cfg.UseTLS, "127.0.0.1:"+cfg.ServerPort, 1, 2)
+		}
 		return
 	} else {
 		log.Println("running server")
