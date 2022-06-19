@@ -38,8 +38,8 @@ func (bs *BaseStruct) companiesHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	var Page = CompaniesPage{
-		AppTitle:   bs.lng.AppTitle,
-		PageTitle:  bs.lng.CompaniesPageTitle,
+		AppTitle:   bs.text.AppTitle,
+		PageTitle:  bs.text.CompaniesPageTitle,
 		LoggedinID: id,
 	}
 

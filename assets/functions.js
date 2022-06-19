@@ -1,3 +1,211 @@
+/* Highlights current website block */
+(function(){
+  let addr = window.location.pathname;
+  if (addr.includes("/docs")) {
+    document.querySelector("#textmenu a[href^='/docs']").classList.add("chosenmenu");
+  } else if (addr.includes("/team")) {
+    document.querySelector("#textmenu a[href^='/team']").classList.add("chosenmenu");
+  } else if (addr.includes("/task")) {
+    document.querySelector("#textmenu a[href^='/task']").classList.add("chosenmenu");
+  }
+})();
+
+/* Translates the page - aka i18n */
+(function(){
+  const langCode = document.documentElement.lang;
+  if (langCode != 'en') {
+    getLang(langCode).then(lang => {
+      translateAll(null, lang);
+      document.title = lang.appTitle + ': ' + document.querySelector('h1').innerText;
+      const loadingDiv = document.querySelector('.fullscreen');
+      if (loadingDiv) loadingDiv.parentNode.removeChild(loadingDiv);
+    });
+  }
+})();
+
+/* Translates specific element */
+function translateElem(rootElem) {
+  const langCode = document.documentElement.lang;
+  if (langCode != 'en') {
+    getLang(langCode).then(lang => translateAll(rootElem, lang));
+  }
+}
+
+async function getLang(langCode) {
+  const request = new Request(`/assets/i18n/${langCode}.json`);
+  const response = await fetch(request, {method: 'GET', credentials: 'include', mode: 'no-cors'});
+  if (response.ok) {
+    const lang = await response.json();
+    return lang;
+  } else {
+    return {};
+  }
+}
+
+function translateAll(rootElem, lang) {
+  if (!rootElem) {
+    rootElem = document;
+  }
+
+  function getAdditionalSymbols(s, e) {
+    if (!e) return s;
+    const c0 = e.charAt(0);
+    const c1 = e.charAt(e.length - 1);
+    const c2 = e.charAt(e.length - 2);
+    if (c0 == '+' && s.charAt(0) != '+') s = '+ ' + s;
+    if (c0 == '×' && s.charAt(0) != '×') s = '× ' + s;
+    if (c1 == ':' && c2 != '*' && s.charAt(s.length - 1) != ':') {s += ':';
+    } else if (c1 == ':' && c2 == '*' && s.charAt(s.length - 2) != '*') {s += '*:';}
+    return s;
+  }
+
+  const elems = rootElem.querySelectorAll('[i18n-text]');
+  elems.forEach(elem => {
+    let s = lang[elem.getAttribute('i18n-text')];
+    if (s) elem.innerHTML = getAdditionalSymbols(s, elem.innerText);
+  });
+
+  const alts = rootElem.querySelectorAll('[i18n-alt]');
+  alts.forEach(elem => {
+    let s = lang[elem.getAttribute('i18n-alt')];
+    if (s) elem.alt = s;
+  });
+
+  const titles = rootElem.querySelectorAll('[i18n-title]');
+  titles.forEach(elem => {
+    let s = lang[elem.getAttribute('i18n-title')];
+    if (s) elem.title = s;
+  });
+
+  const vals = rootElem.querySelectorAll('[i18n-value]');
+  vals.forEach(elem => {
+    let s = lang[elem.getAttribute('i18n-value')];
+    if (s) elem.value = getAdditionalSymbols(s, elem.value);
+  });
+
+  const placeholders = rootElem.querySelectorAll('[i18n-placeholder]');
+  placeholders.forEach(elem => {
+    let s = lang[elem.getAttribute('i18n-placeholder')];
+    if (s) elem.placeholder = s;
+  });
+
+  const labels = rootElem.querySelectorAll('[i18n-label]');
+  labels.forEach(elem => {
+    let s = lang[elem.getAttribute('i18n-label')];
+    if (s) elem.setAttribute('label', s);
+  });
+
+  const many = rootElem.querySelectorAll('[i18n-many]');
+  many.forEach(elem => {
+    let s = lang[elem.getAttribute('i18n-many')];
+    if (s) {
+      for (let key of Object.keys(s)) {
+        if (key == 'text') {
+          elem.innerHTML = getAdditionalSymbols(s[key], elem.innerText);
+        } else if (key == 'value') {
+          elem.value = getAdditionalSymbols(s[key], elem.value);
+        } else {
+          elem.setAttribute(key, s[key]);
+        }
+      }
+    }
+  });
+
+  const indexes = rootElem.querySelectorAll('[i18n-index]');
+  indexes.forEach(elem => {
+    let selector = elem.getAttribute('i18n-index').split('-');
+    if (lang[selector[0]]) {
+      let s = lang[selector[0]][+selector[1]];
+      if (s) elem.innerHTML = s;
+    }
+  });
+
+  const sorters = rootElem.querySelectorAll('span.sort, span.sortchosen');
+  sorters.forEach(elem => {
+    if (lang.ascending && lang.descending) {
+      let t = elem.getAttribute('title');
+      if (t == 'Ascending') {
+        elem.title = lang.ascending;
+      } else if (t == 'Descending') {
+        elem.title = lang.descending;
+      }
+    }
+  });
+
+}
+
+/* Replaces a value of an agrument in an URL get request */
+function replaceGetArg(url, key, val){
+  let res = '?';
+  var arr = url.split('?')[1].split('&');
+  if (arr) {
+    for (let i = 0; i < arr.length; i++){
+      if (arr[i].split('=')[0] == key){
+        res += key + '=' + val + '&';
+      } else {
+        res += arr[i] + '&'
+      }
+    }
+  }
+  return res.slice(0, -1);
+}
+/* Replaces the page number arg in the URL according to last query after POST */
+function replacePageNumberArg(pageNumber){
+  let lastQuery = sessionStorage.getItem('lastQuery');
+  if (lastQuery) {
+    sessionStorage.removeItem('lastQuery');
+    lastQuery = replaceGetArg(lastQuery, 'pageNumber', pageNumber);
+    window.history.replaceState(null, '', lastQuery);
+  }
+}
+
+/* Check for newly created object */
+function checkForNewCreated() {
+  let result = sessionStorage.getItem('new');
+  if (result) {
+    sessionStorage.removeItem('new');
+    if (!window.location.href.endsWith('new')) {
+      let msgnew = document.createElement('div');
+      msgnew.className = "msgok";
+      msgnew.innerHTML = "Creation completed.";
+      const langCode = document.documentElement.lang;
+      if (langCode != 'en') {
+        getLang(langCode).then(lang => {if (lang.creationCompleted) msgnew.innerHTML = lang.creationCompleted});
+      }
+      document.getElementById('control').appendChild(msgnew);
+    }
+  }
+}
+
+/* This function shows or hides edit controls */
+function showEditForm(what) {
+  const view = document.getElementById('view');
+  const edit = document.getElementById('edit');
+  const removal = document.getElementById('removal');
+  const removalFiles = document.getElementById('removalFiles');
+  if (what == 'edit') {
+    view.style.display = 'none';
+    edit.style.display = 'block';
+    removal.style.display = 'none';
+    if (removalFiles) removalFiles.style.display = 'none'
+  } else if (what == 'removal') {
+    view.style.display = 'block';
+    edit.style.display = 'none';
+    removal.style.display = 'block';
+    if (removalFiles) removalFiles.style.display = 'none'
+  } else if (what == 'removalFiles') {
+    view.style.display = 'block';
+    edit.style.display = 'none';
+    removal.style.display = 'none';
+    if (removalFiles) removalFiles.style.display = 'block'
+  } else {
+    view.style.display = 'block';
+    edit.style.display = 'none';
+    removal.style.display = 'none';
+    if (removalFiles) removalFiles.style.display = 'none'
+  }
+}
+
 /* This brings all sums to the format: [-]# ###.## on load */
 (function() {
   let caseSumsToSep = document.querySelectorAll('span.sum');
@@ -30,7 +238,7 @@
 /* This brings all sums to the format: [-]####.## on event */
 function normalizeSum(elem) {
   setTimeout(function() {
-    s = elem.value.replace(/[^-0-9.,]+/g, "").replace(/[,.]+/g, ".");
+    let s = elem.value.replace(/[^-0-9.,]+/g, "").replace(/[,.]+/g, ".");
     if (s) {
       elem.value = s[0] + s.slice(1).split("-").join("");
     } else {
@@ -52,6 +260,22 @@ function normalizeSum(elem) {
     }
   }
 })();
+
+/* This removes unused inputs from form submission */
+function removeEmptyInputs(frm) {
+  const inputs = frm.getElementsByTagName('input');
+  for (i = 0; i < inputs.length; i++) {
+    if (!inputs[i].value) inputs[i].disabled = true;
+  }
+  const selects = frm.getElementsByTagName('select');
+  for (i = 0; i < selects.length; i++) {
+    if (!selects[i].value) selects[i].disabled = true;
+    if (selects[i].value == 'eq') {
+      let numInpID = selects[i].name.replace('Relation', 'Single');
+      if (!document.getElementById(numInpID).value) selects[i].disabled = true;
+    }
+  }
+}
 
 /* This function handles sum inputs */
 function setSumInput(inputID, currencyCode) {
@@ -146,11 +370,24 @@ function processTableSelection(removeAllowed) {
   
 }
 
+/* Hides control buttons and disables checkboxes */
+function disableControlButtons() {
+  document.getElementById('controlButtons').style.display = 'none';
+  if (mainTablePresent) {
+    const checkhead = document.getElementById('chead');
+    const checkboxes = document.querySelectorAll('input[class="chbox"]');
+    checkhead.disabled = true;
+    checkboxes.forEach(cb => cb.disabled = true);
+  }
+}
+
 /* Resets filters */
 function resetFilter() {
-  document.getElementById('controlForm').reset();
+  const frm = document.getElementById('controlForm');
+  frm.reset();
+  removeEmptyInputs(frm);
   addSortingOnSubmut('controlForm');
-  document.getElementById('controlForm').submit();
+  frm.submit();
 }
 
 /* Sorting functionality */
@@ -173,6 +410,50 @@ function sortBy(bywhat, how) {
 }
 
 /* Filtering functionality */
+
+/* This function sets inputs accroding to applied filters */
+function applyAllFilters(filters, classFilterArr, dateFilterArr, sumFilterArr) {
+  let classFilter = filters.ClassFilter;
+  let classFilterOR = filters.ClassFilterOR;
+  let dateFilter = filters.DateFilter;
+  let sumFilter = filters.SumFilter;
+  let textFilter = filters.TextFilter;
+
+  if (classFilter) classFilter.forEach((e) => classFilterArr.push(e));
+  if (classFilterOR) classFilterOR.forEach((e) => {
+    if (!classFilterArr.some(v => v.Name == e.Name)) {
+      classFilterArr.push(e);
+    }
+  });
+
+  if (classFilterArr) {
+    for (let eachF of classFilterArr) {
+      if (eachF.Selector) {
+        applyTypeFilterSelector(eachF.List, eachF.Name, eachF.Selector);
+      } else {
+        applyTypeFilter(eachF.List, eachF.Name);
+      }
+    }
+  }
+
+  if (dateFilter) {
+    for (let eachF of dateFilter) {
+      applyDateFilter(eachF);
+      dateFilterArr.push(eachF);
+    }
+  }
+
+  if (sumFilter) {
+    for (let eachF of sumFilter) {
+      applySumFilter(eachF);
+      sumFilterArr.push(eachF);
+    }
+  }
+  
+  if (textFilter) {
+    applyTextFilter(textFilter);
+  }
+}
 
 /* User profile adding for a user filter */
 function addUserProfile(profileID, divID, selectorID) {
@@ -201,7 +482,6 @@ function applyTypeFilterSelector(arrayOfTypes, divID, selectorID) {
 
 /* This function handles categories and types filters */
 function applyTypeFilter(arrayOfTypes, flBoxClass) {
-  //console.log(arrayOfTypes);
   if (arrayOfTypes) {
     const filterboxes = document.getElementsByName(flBoxClass);
     filterboxes.forEach(function(cb) {
@@ -230,11 +510,13 @@ function applyDateFilter(dateFilter) {
 /* This function handles sum filters applied from server */
 function applySumFilter(sumFilter) {
   const filterCurrency = document.getElementById(sumFilter.Name+'Currency');
+  const filterCurrencyCode = document.getElementById(sumFilter.Name+'CurrencyCode');
   if (filterCurrency) {
     const options = document.getElementById(sumFilter.Name+'CurrencyCodesList').children;
     for (let i = 0; i < options.length; i++) {
       if (options[i].getAttribute('data-value') == sumFilter.CurrencyCode) {
         filterCurrency.value = options[i].innerText;
+        filterCurrencyCode.value = options[i].getAttribute('data-value');
         break;
       }
     }
@@ -298,7 +580,7 @@ function applyTextFilter(searchPhrase) {
 function highlightSearchResults(textFilter, columns) {
   textFilter = textFilter.toLowerCase().replace('<', '&lt;').replace('>', '&gt;');
   let tds;
-  tb = document.getElementById('mainTable');
+  const tb = document.getElementById('mainTable');
   if (tb) {
     tds = tb.getElementsByTagName('td');
   }
@@ -358,7 +640,7 @@ function insideTag(si, s) {
 function makeFormAndSubmit(id, elemName, action){
   if (!id) return;
   let frm = document.createElement('form');
-  frm.method = 'POST';
+  frm.method = 'post';
   frm.action = action;
   let elem = document.createElement('input');
   elem.type = 'hidden';
@@ -370,6 +652,98 @@ function makeFormAndSubmit(id, elemName, action){
   frm.submit();
 }
 
+
+
+/* Submitting data */
+function submitControlButton(inputName, inputValue) {
+  addSortingOnSubmut('datagridForm');
+  addFiltersOnSubmut('datagridForm');
+  addPaginationOnSubmut('datagridForm');
+  const frm = document.getElementById('datagridForm');
+  removeEmptyInputs(frm);
+  sessionStorage.setItem('lastQuery', location.search);
+  addHiddenElem(frm, inputName, inputValue);
+  frm.submit();
+}
+function addSortingOnSubmut(formID) {
+  const frm = document.getElementById(formID);
+  addHiddenElem(frm, 'sortedBy', document.getElementById('sortedBy').value);
+  addHiddenElem(frm, 'sortedHow', document.getElementById('sortedHow').value);
+}
+function addStandardPagination(formID) {
+  const frm = document.getElementById(formID);
+  let pageNumber = document.getElementById('pageNumber').value;
+  let elemsOnPage = document.getElementById('elemsOnPage').value;
+  let elemsOnCurrentPage = getElemsOnCurrentPage();
+  addHiddenElem(frm, 'elemsOnCurrentPage', elemsOnCurrentPage);
+  addHiddenElem(frm, 'pageNumber', pageNumber);
+  addHiddenElem(frm, 'elemsOnPage', elemsOnPage);
+}
+function addSeekPagination(formID, filteredNum){
+  const frm = document.getElementById(formID);
+  let pageNumber = document.getElementById('pageNumber').value;
+  let elemsOnPage = document.getElementById('elemsOnPage').value;
+  let elemsOnCurrentPage = getElemsOnCurrentPage();
+  addHiddenElem(frm, 'elemsOnCurrentPage', elemsOnCurrentPage);
+  addHiddenElem(frm, 'pageNumber', pageNumber);
+  addHiddenElem(frm, 'elemsOnPage', elemsOnPage);
+  addHiddenElem(frm, 'filteredNum', filteredNum);
+  addHiddenElem(frm, 'previousPage', pageNumber);
+  const mainTable = document.getElementById('mainTable');
+  addHiddenElem(frm, 'firstElemOnPage', mainTable.rows[1].cells[1].innerText);
+  addHiddenElem(frm, 'lastElemOnPage', mainTable.rows[mainTable.rows.length-1].cells[1].innerText);
+}
+function processAddingFilters(frm, filters) {
+
+  let classFilter = filters.ClassFilter;
+  let classFilterOR = filters.ClassFilterOR;
+  let dateFilter = filters.DateFilter;
+  let sumFilter = filters.SumFilter;
+  let textFilter = filters.TextFilter;
+
+  if (classFilter) {
+    for (let eachF of classFilter) {
+      for (let i = 0; i < eachF.List.length; i++) {
+        addHiddenElem(frm, eachF.Name, eachF.List[i]);
+      }
+    }
+  }
+
+  if (classFilterOR) {
+    let currentCFORName;
+    for (let eachF of classFilterOR) {
+      if (eachF.Name != currentCFORName) {
+        currentCFORName = eachF.Name;
+        for (let i = 0; i < eachF.List.length; i++) {
+          addHiddenElem(frm, eachF.Name, eachF.List[i]);
+        }
+      }
+    }
+  }
+
+  if (dateFilter) {
+    for (let eachF of dateFilter) {
+      addHiddenElem(frm, eachF.Name+'Relation', eachF.Relation);
+      for (let i = 0; i < eachF.Dates.length; i++) {
+        addHiddenElem(frm, eachF.Name, eachF.DatesStr[i]);
+      }
+    }
+  }
+
+  if (sumFilter) {
+    for (let eachF of sumFilter) {
+      addHiddenElem(frm, eachF.Name+'CurrencyCode', eachF.CurrencyCode);
+      addHiddenElem(frm, eachF.Name+'Relation', eachF.Relation);
+      for (let i = 0; i < eachF.SumsStr.length; i++) {
+        addHiddenElem(frm, eachF.Name, eachF.SumsStr[i]);
+      }
+    }
+  }
+
+  if (textFilter) {
+    addHiddenElem(frm, 'searchText', textFilter);
+  }
+}
 
 
 /* File input and file display controls */
@@ -423,7 +797,7 @@ function fileSizeOK(fileInput) {
   }
 }
 function fileQuantityOK(fileInput) {
-  const MAX_FILES_IN_FORM = 10; /*100 Mb*/
+  const MAX_FILES_IN_FORM = 100;
   if (fileInput.files.length > MAX_FILES_IN_FORM) {
     return false;
   } else {
@@ -440,68 +814,88 @@ function addFileElems(frm) {
   }
 }
 
-
-
 /* This function prints message about applied filters */
-function printAppliedFilters(fHeading, nofMessage, diapazonMessage, classFilterArr, dateFilterArr, sumFilterArr, textFilter) {
+function printAppliedFilters(classFilterArr, dateFilterArr, sumFilterArr, textFilter) {
+
   let resString = "";
+  let timeout = 0;
+  var runAllowed = false;
+  var retries = 0;
+
+  let appliedFilters = "Applied filters: ";
+  let noFiltersApplied = "No filters applied.";
+  let diapason = "Interval";
+  const langCode = document.documentElement.lang;
+  if (langCode != 'en') {
+    timeout = 20;
+    getLang(langCode).then(lang => {
+      if (lang.appliedFilters) appliedFilters = lang.appliedFilters;
+      if (lang.noFiltersApplied) noFiltersApplied = lang.noFiltersApplied;
+      if (lang.diapason) diapason = lang.diapason;
+      runAllowed = true;
+    });
+  } else {
+    runAllowed = true;
+  }
   
-  for (let classFilter of classFilterArr) {
-    
-    if (classFilter.Selector) {
-      const printedName = document.getElementById(classFilter.Name+'Name').innerText;
-      resString += '<span class="af">' + printedName + "</span> ";
-      let namesArr = document.getElementById(classFilter.Name).children;
-      for (let i = 1; i < namesArr.length; i++) {
-        if (namesArr[i].innerText && namesArr[i].innerText != "\n" && namesArr[i].innerText != " ") {
-          resString += '<span class="af">' + namesArr[i].innerText + "</span> ";
+  var intervalID = setInterval(function() {
+    retries++
+    if (retries > 10000) clearInterval(intervalID);
+    if (!document.querySelector('.fullscreen') && runAllowed) {
+      clearInterval(intervalID);
+      for (let classFilter of classFilterArr) {
+        if (classFilter.Selector) {
+          const printedName = document.getElementById(classFilter.Name+'Display').innerText;
+          resString += '<span class="af">' + printedName + "</span> ";
+          let namesArr = document.getElementById(classFilter.Name).children;
+          for (let i = 1; i < namesArr.length; i++) {
+            if (namesArr[i].innerText && namesArr[i].innerText != "\n" && namesArr[i].innerText != " ") {
+              resString += '<span class="af">' + namesArr[i].innerText + "</span> ";
+            }
+          }
+          resString += '<br>'
+        } else {
+          const filterboxes = document.getElementsByName(classFilter.Name);
+          filterboxes.forEach(function(cb) {
+            if (cb.checked) {
+              const filterLabel = document.querySelector(`label[for="${cb.id}"]`);
+              resString += '<span class="af">' + filterLabel.innerText + "</span> ";
+            }
+          });
         }
       }
-      resString += '<br>'
-    } else {
-      const filterboxes = document.getElementsByName(classFilter.Name);
-      filterboxes.forEach(function(cb) {
-        if (cb.checked) {
-          const filterLabel = document.querySelector(`label[for="${cb.id}"]`);
-          resString += '<span class="af">' + filterLabel.innerText + "</span> ";
+      for (let dateFilter of dateFilterArr) {
+        dateFilter.DatesStr = dateFilter.DatesStr.map(v => v.replace('T', ' '));
+        const printedName = document.getElementById(dateFilter.Name+'Display').innerText;
+        let rel = getSelectInputText(document.getElementById(dateFilter.Name+'Relation'));
+        if (dateFilter.DatesStr.length == 1) {
+          resString += `<span class="af">${printedName} ${rel}: ${dateFilter.DatesStr[0]}</span> `;
         }
-      });
+        if (dateFilter.DatesStr.length == 2) {
+          resString += `<span class="af">${printedName} ${diapason}: ${dateFilter.DatesStr[0]} - ${dateFilter.DatesStr[1]}</span> `;
+        }
+      }
+      for (let sumFilter of sumFilterArr) {
+        let currency = document.getElementById(sumFilter.Name+'Currency').value;
+        if (sumFilter.CurrencyCode > 0) resString += `<span class="af">${currency}</span> `;
+        const printedName = document.getElementById(sumFilter.Name+'Display').innerText;
+        let rel = getSelectInputText(document.getElementById(sumFilter.Name+'Relation'));
+        if (sumFilter.Sums.length == 1) {
+          resString += `<span class="af">${printedName} ${rel}: ${sumFilter.SumsStr[0]}</span> `;
+        }
+        if (sumFilter.Sums.length == 2) {
+          resString += `<span class="af">${printedName} ${diapason}: ${sumFilter.SumsStr[0]} - ${sumFilter.SumsStr[1]}</span> `;
+        }
+      }
+      if (textFilter) {
+        textFilter = textFilter.replace('<', '&lt;').replace('>', '&gt;');
+        resString += '<span class="af">' + textFilter + "</span> ";
+      }
+      const p = document.getElementById('appliedFilters');
+      p.innerHTML = (resString.length > 1) ? appliedFilters + resString : noFiltersApplied;
     }
-  }
-
-  for (let dateFilter of dateFilterArr) {
-    dateFilter.DatesStr = dateFilter.DatesStr.map(v => v.replace('T', ' '));
-    const printedName = document.getElementById(dateFilter.Name+'Name').innerText;
-    let rel = getSelectInputText(document.getElementById(dateFilter.Name+'Relation'));
-    if (dateFilter.DatesStr.length == 1) {
-      resString += `<span class="af">${printedName} ${rel}: ${dateFilter.DatesStr[0]}</span> `;
-    }
-    if (dateFilter.DatesStr.length == 2) {
-      resString += `<span class="af">${printedName} ${diapazonMessage}: ${dateFilter.DatesStr[0]} - ${dateFilter.DatesStr[1]}</span> `;
-    }
-  }
-
-  for (let sumFilter of sumFilterArr) {
-    let currency = document.getElementById(sumFilter.Name+'Currency').value;
-    if (sumFilter.CurrencyCode > 0) resString += `<span class="af">${currency}</span> `;
-    const printedName = document.getElementById(sumFilter.Name+'Name').innerText;
-    let rel = getSelectInputText(document.getElementById(sumFilter.Name+'Relation'));
-    if (sumFilter.Sums.length == 1) {
-      resString += `<span class="af">${printedName} ${rel}: ${sumFilter.SumsStr[0]}</span> `;
-    }
-    if (sumFilter.Sums.length == 2) {
-      resString += `<span class="af">${printedName} ${diapazonMessage}: ${sumFilter.SumsStr[0]} - ${sumFilter.SumsStr[1]}</span> `;
-    }
-  }
+  }, timeout);
   
-  if (textFilter) {
-    textFilter = textFilter.replace('<', '&lt;').replace('>', '&gt;');
-    resString += '<span class="af">' + textFilter + "</span> ";
-  }
-  
-  const p = document.getElementById('appliedFilters');
-  p.innerHTML = (resString.length > 1) ? fHeading + resString : nofMessage;
-
 }
 
 function getSelectInputText(sel) {
@@ -530,7 +924,8 @@ function paginate(val) {
   const frm = 'paginationForm';
   addFiltersOnSubmut(frm);
   addSortingOnSubmut(frm);
-  document.getElementById('paginationForm').submit();
+  removeEmptyInputs(document.getElementById(frm));
+  document.getElementById(frm).submit();
 }
 
 function calcTotalPages(elemsOnPage, filteredNum) {
@@ -554,12 +949,25 @@ function addHiddenElem(theForm, name, value) {
   theForm.appendChild(input);
 }
 
-function processPagesCalculations(textTotal, textOnPage, textPages, elemsOnPage, filteredNum) {
-  let totalPages = calcTotalPages(elemsOnPage, filteredNum);
-  document.getElementById('pageNumber').setAttribute('max', totalPages)
-  document.querySelector('label[for="pageNumber"]').innerHTML += String(totalPages) + '.';
+function processPagesCalculations(elemsOnPage, filteredNum) {
+  let totalPagesNum = calcTotalPages(elemsOnPage, filteredNum);
+  document.getElementById('pageNumber').setAttribute('max', totalPagesNum)
+  document.getElementById('totalPagesNumber').innerHTML = String(totalPagesNum);
   let rowCount = getElemsOnCurrentPage();
-  document.getElementById('stat').innerHTML = `<br>${textTotal}: ${filteredNum}<br>${textOnPage}: ${rowCount}<br>${textPages}: ${totalPages}`
+  let totalElemsFound = "Total objects by search criteria";
+  let onThisPage = "On this page";
+  let totalPages = "Total pages";
+  const langCode = document.documentElement.lang;
+  if (langCode != 'en') {
+    getLang(langCode).then(lang => {
+      if (lang.totalElemsFound) totalElemsFound = lang.totalElemsFound;
+      if (lang.onThisPage) onThisPage = lang.onThisPage;
+      if (lang.totalPages) totalPages = lang.totalPages;
+      document.getElementById('stat').innerHTML = `<br>${totalElemsFound}: ${filteredNum}<br>${onThisPage}: ${rowCount}<br>${totalPages}: ${totalPagesNum}`;  
+    });
+  } else {
+    document.getElementById('stat').innerHTML = `<br>${totalElemsFound}: ${filteredNum}<br>${onThisPage}: ${rowCount}<br>${totalPages}: ${totalPagesNum}`;  
+  }
 }
 
 function getElemsOnCurrentPage() {
@@ -577,8 +985,8 @@ function insertBBCode(tag, textInputID) {
 }
 
 function updateMultilines(className) {
-  const urlREGex = /((?:http|https|ftp|sftp):\/\/[^<\s\n\r\t]+[^.,;<\s\n\r\t"'])/gim;
-  const wwwREGex = /(www\.[^<\s\n\r\t]+[^.,;<\s\n\r\t"'])/gim; 
+  const urlREGex = /([^a-z"'=]|^)((?:http|https|sftp|ftp):\/\/[^<\s\n\r\t]+[^.,;<\s\n\r\t"'])/gim;
+  const wwwREGex = /([^a-z"'=/]|^)(www\.[^<\s\n\r\t]+[^.,;<\s\n\r\t"'])/gim;
   let multiLineLabels = document.getElementsByClassName(className);
   if (multiLineLabels) {
     
@@ -591,10 +999,10 @@ function updateMultilines(className) {
       .replace(/\[code\]/g, '<pre>').replace(/\[\/code\]/g, '</pre>');
       elem.innerHTML = replaceNewlinesWithBR(elem.innerHTML);
       if (urlREGex.test(elem.innerHTML)) {
-        elem.innerHTML = elem.innerHTML.replace(urlREGex, '<a href="$1" target="_blank">$1</a>');
+        elem.innerHTML = elem.innerHTML.replace(urlREGex, '$1<a href="$2" target="_blank">$2</a>');
       }
       if (wwwREGex.test(elem.innerHTML)) {
-        elem.innerHTML = elem.innerHTML.replace(wwwREGex, '<a href="http://$1" target="_blank">$1</a>');
+        elem.innerHTML = elem.innerHTML.replace(wwwREGex, '$1<a href="http://$2" target="_blank">$2</a>');
       }
     }
   }

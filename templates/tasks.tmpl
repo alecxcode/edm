@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="{{.UserConfig.LangCode}}">
+{{template "head" .}}
+<body>
+
+{{template "menus" .}}
+
+<div id="container">
+  {{$vtsep := " \n"}}
+
+  <div id="control">
+    <h1 i18n-text="tasks">{{.PageTitle}}</h1>
+
+  <form id="controlForm" action="/tasks/" method="get" onsubmit="addSortingOnSubmut('controlForm'); removeEmptyInputs(this);">
+    {{template "searchPanel"}}
+
+    <div id="showhide" style="display: none;">
+
+      <div class="filter" id="firstFilter"><strong id="taskstatusesDisplay" i18n-text="statuses">Statuses:</strong><br><br>
+        {{range $i, $v := .TaskStatuses}}<input type="checkbox" id="ts{{$i}}" name="taskstatuses" value="{{$i}}">
+        <label for="ts{{$i}}" i18n-index="taskStatuses-{{$i}}">{{$v}}</label><br>
+        {{end}}
+      </div>
+
+      {{template "dateTimeFilter" returnFilterRender "createdDates" "timeCreated" "Time created:" .UserConfig.UseCalendarInConrols nil}}
+      {{template "dateTimeFilter" returnFilterRender "planStartDates" "planStart" "Start (plan):" .UserConfig.UseCalendarInConrols nil}}
+      {{template "dateTimeFilter" returnFilterRender "planDueDates" "planDue" "Due (plan):" .UserConfig.UseCalendarInConrols nil}}
+      {{template "dateTimeFilter" returnFilterRender "statusSetDates" "statusSet" "Status set:" .UserConfig.UseCalendarInConrols nil}}
+
+      <div class="margintop"><strong id="userSelectorDisplay" i18n-text="userFilter">Filter by user:</strong><br>
+       <select id="userSelector" class="numberbox">
+          <option value="" i18n-text="selectUser">Select user</option>
+          {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
+          {{end}}
+        </select><span class="dropdown"></span>
+        <div class="somemargins">
+          <span i18n-text="selectTypeOfParticipation">Select the type of participation:</span>
+          <input type="button" class ="sbut pg smaller" i18n-value="creator" value="Creator"
+          onclick="addUserProfile(document.getElementById('userSelector').value, 'creators', 'userSelector');">
+          <input type="button" class ="sbut pg smaller" i18n-value="assignee" value="Assignee"
+          onclick="addUserProfile(document.getElementById('userSelector').value, 'assignees', 'userSelector');">
+          <input type="button" class ="sbut pg smaller" i18n-value="participant" value="Participant"
+          onclick="addUserProfile(document.getElementById('userSelector').value, 'participants', 'userSelector');">
+          <input type="button" class ="sbut pg smaller" i18n-value="creatorOrAssignee" value="Creator or assignee"
+          onclick="addUserProfile(document.getElementById('userSelector').value, 'creatorsOrAssignees', 'userSelector');">
+          <input type="button" class ="sbut pg smaller" i18n-value="creatorOrAssigneeOrParticipant" value="Creator or assignee or participant"
+          onclick="addUserProfile(document.getElementById('userSelector').value, 'anyparticipants', 'userSelector');">
+          <br><input type="button" class ="sbut reddish smaller" i18n-value="clearSelection" value="Clear selection" onclick="resetUserSelectors();">
+        </div>
+      </div>
+
+      <div id="creators" class="margintop"><strong id="creatorsDisplay" i18n-text="creators">Creators:</strong></div>
+      <div id="assignees" class="margintop"><strong id="assigneesDisplay" i18n-text="assignees">Assignees:</strong></div>
+      <div id="participants" class="margintop"><strong id="participantsDisplay" i18n-text="participants">Participants:</strong></div>
+      <div id="creatorsOrAssignees" class="margintop"><strong id="creatorsOrAssigneesDisplay" i18n-text="creatorsOrAssignees">Creators or assignees:</strong></div>
+      <div id="anyparticipants" class="margintop"><strong id="anyparticipantsDisplay" i18n-text="creatorsOrAssigneesOrParticipants">Creators or assignees or participants:</strong></div>
+
+      <br>
+
+      {{template "filterButtonsControls"}}
+    </div>
+  </form>
+
+  <p id="appliedFilters" i18n-text="noFiltersApplied">No filters applied.</p>
+  
+  <div id="controlButtons">
+    <span class="panel"><a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="myTasks" title="Tasks for which I am a creator or am assignee or a participant">My tasks</a></span>
+    <span class="panel"><a href="/tasks/?creators=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="myTasksCreated" title="Tasks for which I am creator">Created by me</a></span>
+    <span class="panel"><a href="/tasks/?assignees=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="myTasksAssigned" title="Tasks for which I am assignee">Assigned to me</a></span>
+    <span class="panel"><a href="/tasks/{{if not .UserConfig.ShowFinishedTasks}}?taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="anyTasks" title="Tasks related to any users">All tasks</a></span><br>
+
+    <a href="/tasks/task/new" class ="sbut greenish" i18n-text="newTask">+ New task</a>
+    <input type="button" class="sbut statusMultiControl" i18n-many="inProgressMulti" value="In progress" title="Set tasks status - in progress" onclick="submitControlButton('taskStatus', 'inprogress');" disabled>
+    <input type="button" class="sbut statusMultiControl" i18n-many="stuckMulti" value="Stuck" title="Suspend due to some problem" onclick="submitControlButton('taskStatus', 'stuck');" disabled>
+    <input type="button" class="sbut statusMultiControl" i18n-many="doneMulti" value="Done" title="Complete selected tasks" onclick="submitControlButton('taskStatus', 'done');" disabled>
+    <input type="button" class="sbut statusMultiControl" i18n-many="cancelMulti" value="Cancel" title="Cancel selected tasks" onclick="submitControlButton('taskStatus', 'cancelled');" disabled>
+    {{template "deleteButton"}}
+  </div>
+
+  {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred"><span i18n-text="noPerms">Action rejected: no permissions for all or some of objects.</span> {{if .RemoveAllowed}}<span i18n-text="removalPermsCreator">Only creator or administrator can delete.</span>{{else}}<span i18n-text="removalPermsAdmin">Only administrator can delete.</span>{{end}}</p>{{end}}
+  {{if eq .Message "removedElems"}}<p class="msgok"><span i18n-text="removedElems">Deleted objects:</span> {{.RemovedNum}}.</p>{{end}}
+  {{if eq .Message "removalError"}}<p class="msgred" i18n-text="removalError">Error deleting objects.</p>{{end}}
+  
+  {{if eq .Message "notAllorSomeElemsAllowedtoModify"}}<p class="msgred" i18n-text="noPerms">Action rejected: no permissions for all or some of objects.</p>{{end}}
+  {{if eq .Message "statusUpdated"}}<p class="msgok"><span i18n-text="updatedElems">Updated objects:</span> {{.UpdatedNum}}.</p>{{end}}
+  {{if eq .Message "statusUpdateError"}}<p class="msgred" i18n-text="updateError">Error updating objects.</p>{{end}}
+
+  <form id="sortingForm" action="/tasks/" method="get" onsubmit="addFiltersOnSubmut('sortingForm'); removeEmptyInputs(this);">
+    <div class="mobilesorting"><label i18n-text="sorting">Sorting:</label>
+    <select class="numberbox" id="sortedByMobile" onchange="sortBy(this.value, document.getElementById('sortedHow').value);">
+      <option value="ID" i18n-text="taskID">Task #</option>
+      <option value="Topic" i18n-text="topicAndContent">Topic and content</option>
+      <option value="Created" i18n-text="created">Created time</option>
+      <option value="PlanStart" i18n-text="planStart">Start (plan)</option>
+      <option value="PlanDue" i18n-text="planDue">Due (plan)</option>
+      <option value="StatusSet" i18n-text="statusSet">Status set</option>
+    </select><span class="dropdown"></span>
+    <select class="numberbox" id="sortedHowMobile" onchange="sortBy(document.getElementById('sortedBy').value, this.value);">
+      <option value="0" i18n-text="descending">Descending</option>
+      <option value="1" i18n-text="ascending">Ascending</option>
+    </select><span class="dropdown"></span>
+    <script>
+      document.getElementById('sortedByMobile').value = "{{.SortedBy}}";
+      document.getElementById('sortedHowMobile').value = "{{.SortedHow}}";
+    </script>
+    </div>
+    <input type="hidden" id="sortedBy" name="sortedBy" value="{{.SortedBy}}">
+    <input type="hidden" id="sortedHow" name="sortedHow" value="{{.SortedHow}}">
+  </form>
+
+  </div>
+
+  <div class="main" id="main">
+    {{if not .Tasks}}<div class="center somemargins" i18n-text="noElemsFound">Objects matching the specified criteria were not found, or there are no objects.</div>
+    {{else}}{{template "pagination" .PageNumber}}
+    <form id="datagridForm" name="datagridForm" action="/tasks/" method="POST" onsubmit="addSortingOnSubmut('datagridForm');
+    addFiltersOnSubmut('datagridForm'); addPaginationOnSubmut('datagridForm'); removeEmptyInputs(this);
+    sessionStorage.setItem('lastQuery', location.search);">
+    <table id="mainTable">
+      <tr class="thead">
+        <th align="center" id="Chooser"><input type="checkbox" class="chead" id="chead"></th>
+        <th align="left" id="ID" i18n-title="taskNumberLong" title="Task number"><span i18n-text="num">#</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="Topic"><span i18n-text="topicAndContent">Topic and content</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="Created" i18n-title="timeCreated" title="Time created"><span i18n-text="created">Created</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="PlanStart" i18n-title="planStart" title="Start (plan)"><span i18n-text="start">Start</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="PlanDue" i18n-title="planDue" title="Due (plan)"><span i18n-text="due">Due</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="Creator"><span i18n-text="creator">Creator</span></th>
+        <th align="left" id="Assignee"><span i18n-text="assignee">Assignee</span></th>
+        <th align="left" id="TaskStatus"><span i18n-text="status">Status</span></th>
+        <th align="left" id="StatusSet" i18n-title="statusSetHint" title="Time when the current status was set"><span i18n-text="statusSet">Status set</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+      </tr>
+      {{range .Tasks}}{{$ci := .GiveCreatorID}}{{$ai := .GiveAssigneeID}}
+      <tr>
+        <td i18n-label="select" label="Select" align="center"><input type="checkbox" class="chbox" id="{{.ID}}" name="ids" value="{{.ID}}"></td>
+        <td i18n-label="taskID" label="Task #" align="left"><a href="/tasks/task/{{.ID}}">{{.ID}}</a></td>
+        <td i18n-label="topicAndContent" label="Topic and content" align="left"><a href="/tasks/task/{{.ID}}">{{.Topic}}</a> <div class="clamp taskcontent">{{.Content}}</div></td>
+        <td i18n-label="created" label="Created" align="left"><span class="dt">{{.GiveDateTime "Created" $.UserConfig.DateFormat $.UserConfig.TimeFormat $vtsep}}</span></td>
+        <td i18n-label="start" label="Start" align="left"><span class="dt">{{.GiveDateTime "PlanStart" $.UserConfig.DateFormat $.UserConfig.TimeFormat $vtsep}}</span></td>
+        <td i18n-label="due" label="Due" align="left"><span class="dt">{{.GiveDateTime "PlanDue" $.UserConfig.DateFormat $.UserConfig.TimeFormat $vtsep}}</span></td>
+        <td i18n-label="creator" label="Creator" align="left">{{if $ci}}<a href="/team/profile/{{$ci}}">{{.Creator.GiveSelfNameJob}}</a>{{end}}</td>
+        <td i18n-label="assignee" label="Assignee" align="left">{{if $ai}}<a href="/team/profile/{{$ai}}">{{.Assignee.GiveSelfNameJob}}</a>{{end}}</td>
+        <td i18n-label="status" label="Status" align="left"><span class="statusIndicator" i18n-index="taskStatuses-{{.TaskStatus}}">{{.GiveStatus $.TaskStatuses "Unknown"}}</span></td>
+        <td i18n-label="statusSet" label="Status set" align="left"><span class="dt">{{.GiveDateTime "StatusSet" $.UserConfig.DateFormat $.UserConfig.TimeFormat $vtsep}}</span></td>
+
+      </tr>
+      {{end}}
+    </table>
+    </form>
+
+    <div id="stat" class="stat margintop"><span i18n-text="totalElemsFound">Total objects by search criteria:</span> {{.FilteredNum}}</div>
+    {{end}}
+
+  </div>
+
+{{template "bottom"}}
+
+
+</div>
+
+<script src="/assets/functions.js"></script>
+
+<script>
+
+  /* Functions to add inputs values from different forms on submit */
+  function addPaginationOnSubmut(formID) {
+    addSeekPagination(formID, {{.FilteredNum}});
+  }
+  function addFiltersOnSubmut(formID) {
+    const frm = document.getElementById(formID);
+    let filters = {{.Filters}};
+    processAddingFilters(frm, filters);
+  }
+  /* Specific page functions */
+  function resetUserSelectors() {
+    let creatorsDisplay = document.getElementById('creatorsDisplay').innerHTML;
+    let assigneesDisplay = document.getElementById('assigneesDisplay').innerHTML;
+    let participantsDisplay = document.getElementById('participantsDisplay').innerHTML;
+    let creatorsOrAssigneesDisplay = document.getElementById('creatorsOrAssigneesDisplay').innerHTML;
+    let anyparticipantsDisplay = document.getElementById('anyparticipantsDisplay').innerHTML;
+    document.querySelectorAll('input[name="creators"]').forEach(e => e.remove());
+    document.querySelectorAll('input[name="assignees"]').forEach(e => e.remove());
+    document.querySelectorAll('input[name="participants"]').forEach(e => e.remove());
+    document.querySelectorAll('input[name="creatorsOrAssignees"]').forEach(e => e.remove());
+    document.querySelectorAll('input[name="anyparticipants"]').forEach(e => e.remove());
+    document.getElementById('creators').innerHTML = '<strong id="creatorsDisplay" i18n-value="creators">' + creatorsDisplay + '</strong>';
+    document.getElementById('assignees').innerHTML = '<strong id="assigneesDisplay" i18n-value="assignees">' + assigneesDisplay + '</strong>';
+    document.getElementById('participants').innerHTML = '<strong id="participantsDisplay" i18n-value="participants">' + participantsDisplay + '</strong>';
+    document.getElementById('creatorsOrAssignees').innerHTML = '<strong id="creatorsOrAssigneesDisplay" i18n-value="creatorsOrAssignees">' + creatorsOrAssigneesDisplay + '</strong>';
+    document.getElementById('anyparticipants').innerHTML = '<strong id="anyparticipantsDisplay" i18n-value="creatorsOrAssigneesOrParticipants">' + anyparticipantsDisplay + '</strong>';
+  }
+  
+  /* Main page loading function */
+  (function() {
+
+    //console.time('Main Function');
+
+    checkForNewCreated();
+
+    let mainTablePresent = false;
+    if (document.getElementById('mainTable')) {
+      mainTablePresent = true;
+      document.getElementById('elemsOnPage').value = "{{.UserConfig.ElemsOnPage}}";
+    }
+
+    let removeAllowed = {{.RemoveAllowed}};
+    if (!removeAllowed) {
+      document.getElementById('deleteButton').style.display = 'none';
+    }
+
+    document.getElementById('filterReset').addEventListener("click", function() {
+      resetUserSelectors();
+      resetFilter();
+    }); 
+
+    let classFilterArr = [];
+    let dateFilterArr = [];
+    let sumFilterArr = [];
+    let filters = {{.Filters}};
+    let textFilter = filters.TextFilter;
+    applyAllFilters(filters, classFilterArr, dateFilterArr, sumFilterArr);
+
+    if (textFilter && mainTablePresent) {
+      highlightSearchResults(textFilter, [2]);
+    }
+    printAppliedFilters(classFilterArr, dateFilterArr, sumFilterArr, textFilter);
+    
+    if (mainTablePresent) {
+      const mainTable = document.getElementById('mainTable');
+      addHiddenElem(document.getElementById('paginationForm'), 'firstElemOnPage', mainTable.rows[1].cells[1].innerText);
+      addHiddenElem(document.getElementById('paginationForm'), 'lastElemOnPage', mainTable.rows[mainTable.rows.length-1].cells[1].innerText);
+      addHiddenElem(document.getElementById('paginationForm'), 'filteredNum', {{.FilteredNum}});
+      addHiddenElem(document.getElementById('paginationForm'), 'previousPage', document.getElementById('pageNumber').value);
+
+      processTableSelection(removeAllowed);
+      applySortingSelection();
+      processPagesCalculations({{.UserConfig.ElemsOnPage}}, {{.FilteredNum}});
+
+      let TaskStatusesArr = {{.TaskStatuses}};
+      let statusesArr = document.getElementsByClassName('statusIndicator');
+      Array.prototype.forEach.call(statusesArr, elem => {
+        const CREATED = 0, ASSIGNED = 1, INPROGRESS = 2, STUCK = 3, DONE = 4, CANCELLED = 5;
+        let className = '';
+        let taskStatus = TaskStatusesArr.indexOf(elem.innerText);
+        if (taskStatus == CREATED || taskStatus == ASSIGNED || taskStatus == INPROGRESS) className = 'txtblue';
+        if (taskStatus == STUCK) className = 'txtred';
+        if (taskStatus == DONE) className = 'txtgreen';
+        if (taskStatus == CANCELLED) className = 'txtbw';
+        elem.classList.add(className);
+      });
+
+      let dtArr = document.getElementsByClassName('dt');
+      Array.prototype.forEach.call(dtArr, elem => {
+        elem.innerHTML = elem.innerHTML.replace('\n', '<br>')
+      });
+
+      clearBBCode('div.taskcontent');
+    }
+
+    /* Replaces the page number arg in the URL according to last query after POST */
+    replacePageNumberArg({{.PageNumber}});
+        
+    //console.timeEnd('Main Function');
+
+  })();
+
+</script>
+
+</body>
+</html>

@@ -50,8 +50,8 @@ func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var Page = TeamPage{
-		AppTitle:  bs.lng.AppTitle,
-		PageTitle: bs.lng.TeamPageTitle,
+		AppTitle:  bs.text.AppTitle,
+		PageTitle: bs.text.TeamPageTitle,
 		SortedBy:  "FullName",
 		SortedHow: 1, // 0 - DESC, 1 - ASC
 		Filters: sqla.Filter{ClassFilter: []sqla.ClassFilter{
@@ -150,7 +150,7 @@ func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			} else {
 				if LastAdmins {
-					Page.Message = "LastAdminRejection"
+					Page.Message = "lastAdminRejection"
 				} else {
 					Page.Message = "notAllorSomeElemsAllowedtoRemove"
 				}

@@ -12,7 +12,7 @@ import (
 )
 
 // MAX_FILES_IN_FORM is maximum number of files in a form
-const MAX_FILES_IN_FORM = 10
+const MAX_FILES_IN_FORM = 100
 
 // MAX_UPLOAD_SIZE is maximum total size of all files in a form
 const MAX_UPLOAD_SIZE = 1048576 * 100 // 100MB
@@ -31,7 +31,7 @@ func uploader(r *http.Request, uploadDest string, inputName string) ([]string, e
 		return fileNamesList, nil
 	}
 	if len(uploadingFiles) > MAX_FILES_IN_FORM {
-		return fileNamesList, fmt.Errorf("upload files quantity is too many: %d", len(uploadingFiles))
+		return fileNamesList, fmt.Errorf("upload files exceed max quantity: %d", len(uploadingFiles))
 	}
 
 	for _, fileHeader := range uploadingFiles {

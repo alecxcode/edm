@@ -48,10 +48,10 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	var Page = DocsPage{
-		AppTitle:   bs.lng.AppTitle,
-		PageTitle:  bs.lng.DocsPageTitle,
-		Categories: bs.lng.Categories,
-		DocTypes:   bs.lng.DocTypes,
+		AppTitle:   bs.text.AppTitle,
+		PageTitle:  bs.text.DocsPageTitle,
+		Categories: bs.text.Categories,
+		DocTypes:   bs.text.DocTypes,
 		Currencies: bs.currencies,
 		SortedBy:   "RegDate",
 		SortedHow:  0, // 0 - DESC, 1 - ASC

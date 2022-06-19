@@ -354,9 +354,7 @@ func writeLoginPage(w http.ResponseWriter, LoginLang LoginLang, LoginTemplate *t
 }
 
 func (bs *BaseStruct) getLoginLang() LoginLang {
-	return LoginLang{AppTitle: bs.lng.AppTitle, LoginPageTitle: bs.lng.LoginPageTitle, LoninPrompt: bs.lng.LoninPrompt,
-		LoninFieldLabel: bs.lng.LoninFieldLabel, PasswordFieldLabel: bs.lng.PasswordFieldLabel,
-		LoginButton: bs.lng.LoginButton, WrongLoginMsg: bs.lng.WrongLoginMsg}
+	return bs.i18n.LoginLang
 }
 
 func (bs *BaseStruct) authVerify(w http.ResponseWriter, r *http.Request) (res bool, id int) {

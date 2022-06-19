@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="{{.UserConfig.LangCode}}">
+{{template "head" .}}
+<body>
+
+{{template "menus" .}}
+
+<div id="container">
+
+  <div id="control">
+    <h1>{{.PageTitle}}</h1>
+    <p class="breadcrumbs"><a href="/docs/" i18n-text="allDocuments">all documents</a> / <span i18n-text="documentPage">document page</span></p>
+    {{if and .Editable (not .New)}}
+      <input type="button" class ="sbut" name="showButton" i18n-value="edit" value="Edit" onclick="showEditForm('edit');">
+      <input type="button"{{if not .RemoveAllowed}}style="display: none;"{{end}} class="sbut reddish" name="showDelete" i18n-value="delete" value="Delete" onclick="showEditForm('removal');">
+      <form id="removal" action="/docs/" method="post" style="display: none;">
+      <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
+      <input type="hidden" name="ids" value="{{.Document.ID}}">
+      <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="showEditForm('view');">
+      <input type="submit" class ="sbut reddish" name="deleteButton" i18n-value="yesDelete" value="Yes, delete">
+      </form>
+    {{end}}
+    {{if eq .Message "dataWritten"}}<div class="msgok" i18n-text="dataWritten">Data has been written successfully.</div>{{end}}
+    {{if eq .Message "dataNotWritten"}}<div class="msgred" i18n-text="dataNotWritten">Error writing data.</div>{{end}}
+    {{if eq .Message "uploadError"}}<div class="msgred" i18n-text="uploadError">Error uploading files.</div>{{end}}
+    {{if eq .Message "removalError"}}<div class="msgred" i18n-text="removalFileError">Error deleting files.</div>{{end}}
+  </div>
+
+  <div id="main">
+    {{$ci := .Document.GiveCreatorID}}
+
+    {{if not .New}}
+    <div id="view">
+      <h2 i18n-text="detailsType">Document details, type:</h2>
+      <p><span class="ofname" i18n-text="registration">Registration:</span><span class="ofval">{{if .Document.RegNo}}<span i18n-text="num">No.</span> {{.Document.RegNo}}{{end}} {{if .Document.RegDate.Day}}<span i18n-text="dated">dated</span> {{.Document.GiveDate "Reg" .UserConfig.DateFormat}}{{end}}</span></p>
+      <p><span class="ofname" i18n-text="incoming">Incoming:</span><span class="ofval">{{if .Document.IncNo}}<span i18n-text="num">No.</span> {{.Document.IncNo}}{{end}} {{if .Document.IncDate.Day}}<span i18n-text="dated">dated</span> {{.Document.GiveDate "Inc" .UserConfig.DateFormat}}{{end}}</span></p>
+      <p><span class="ofname" i18n-text="typeCategory">Type, category:</span><span class="ofval"><span i18n-index="docTypes-{{.Document.DocType}}">{{.Document.GiveType .DocTypes "Unknown"}}</span> <span class="cat">{{if .Document.Category}}(<span i18n-index="categories-{{.Document.Category}}">{{.Document.GiveCategory .Categories "Unknown"}}</span>){{end}}</span></span></p>
+      <h2 i18n-text="content">Content:</h2>
+      <p><span class="ofname" i18n-text="docAbout">About:</span><span class="ofval" id="about">{{.Document.About}}</span></p>
+      <p><span class="ofname" i18n-text="endDate">Term (Exp.):</span><span class="ofval">{{.Document.GiveDate "End" .UserConfig.DateFormat}}</span></p>
+      <p><span class="ofname" i18n-text="docSum">Sum:</span><span class="ofval">{{if .UserConfig.CurrencyBeforeAmount}}<span class="cur">{{if gt .Document.Currency 0}}{{index .Currencies .Document.Currency}}{{end}}</span> {{end}}<span class="sum nowrap">{{.Document.GiveSum}}</span> {{if not .UserConfig.CurrencyBeforeAmount}}<span class="cur">{{if gt .Document.Currency 0}}{{index .Currencies .Document.Currency}}{{end}}</span>{{end}}</span></p>
+      <p><span class="ofname" i18n-text="authors">Authors:</span><span class="ofval">{{.Document.Authors}}</span></p>
+      <p><span class="ofname" i18n-text="addressees">Addressees:</span><span class="ofval">{{.Document.Addressee}}</span></p>
+      <p><span class="ofname" i18n-text="docNote">Note:</span><span class="ofval" id="note">{{.Document.Note}}</span></p>
+      <h2 i18n-text="creatorOwner">Creator (owner):</h2>
+      <p><span class="ofname" i18n-text="user">User:</span><span class="ofval">{{if $ci}}<a href="/team/profile/{{$ci}}">{{.Document.Creator.GiveSelfNameJob}}</a>{{end}}</span></p>
+      <h2 i18n-text="docFiles">Document files:</h2>
+      {{if not .Document.FileList}}<div class="afile-inline-block" i18n-text="noFiles">No files</div>{{else}}
+      {{range .Document.FileList}}<span class="afile-inline-block">
+        {{if $.Editable}}<input type="checkbox" class="fchbox" name="filesToRemove" value="{{.}}">{{end}}
+        <a href="/files/docs/{{$.Document.ID}}/{{.}}">{{.}}</a></span>
+      <br>{{end}}
+      {{end}}
+      {{if and .Editable .Document.FileList (not .New)}}
+      <span i18n-text="selectedFiles">Selected files:</span> <input type="button" class ="sbut reddish" name="showDeleteFiles" i18n-value="delete" value="Delete" onclick="showEditForm('removalFiles');">
+      <form id="removalFiles" action="/docs/document/{{.Document.ID}}" method="post" onsubmit="addFileElems(this);" style="display: none;">
+      <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
+      <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="showEditForm('view');">
+      <input type="submit" class ="sbut reddish" name="deleteFiles" i18n-value="yesDelete" value="Yes, delete">
+      </form>
+    {{end}}
+      <br>
+      <br>
+
+    </div>
+    {{end}}
+
+  {{if .Editable}}
+    {{if .New}}<div id="create"><form id="createForm" action="/docs/document/new" method="post" enctype="multipart/form-data" onsubmit="sessionStorage.setItem('new', 'document');">
+    {{else}}<div id="edit" style="display: none;"><form id="editForm" action="/docs/document/{{.Document.ID}}" method="post" enctype="multipart/form-data">{{end}}
+     
+      <h2 i18n-text="detailsType">Document details, type:</h2>
+      <p><span class="ofname" i18n-text="registration">Registration:</span> 
+        <span class="nowrap"><span i18n-text="num">No.</span> <input type="text" class="numberbox" name="regNo" size="18" maxlength="127" value="{{.Document.RegNo}}"></span>
+        <span class="nowrap"><span i18n-text="dated">dated</span> <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} class="numberbox" name="regDate" value="{{.Document.GiveDate "Reg" "yyyy-mm-dd"}}" placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" maxlength="32"></span>
+      </p>
+      <p><span class="ofname" i18n-text="incoming">Incoming:</span>
+        <span class="nowrap"><span i18n-text="num">No.</span> <input type="text" class="numberbox" name="incNo" size="18" maxlength="127" value="{{.Document.IncNo}}"></span>
+        <span class="nowrap"><span i18n-text="dated">dated</span> <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} class="numberbox" name="incDate" value="{{.Document.GiveDate "Inc" "yyyy-mm-dd"}}" placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" maxlength="32"></span>
+      </p>
+      <p><span class="ofname" i18n-text="docType">Type:</span>
+        <select name="docType" id="docType" class="numberbox">
+          {{range $i, $v := .DocTypes}}<option value="{{$i}}" i18n-index="docTypes-{{$i}}">{{$v}}</option>
+          {{end}}
+        </select><span class="dropdown"></span></p>
+      <p><span class="ofname" i18n-text="category">Category:</span>
+        <select name="category" id="category" class="numberbox">
+          {{range $i, $v := .Categories}}<option value="{{$i}}" i18n-index="categories-{{$i}}">{{$v}}</option>
+          {{end}}
+        </select><span class="dropdown"></span></p>
+      <h2 i18n-text="content">Content:</h2>
+      <p><span class="ofname" style="vertical-align: top;" i18n-text="docAbout">About:</span> <textarea class="multiline ofval" name="about" maxlength="2000" rows="2" cols="30">{{.Document.About}}</textarea></p>
+      <p><span class="ofname" i18n-text="endDate">Term (Exp.):</span><span class="ofval">
+        <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} class="numberbox" name="endDate" value="{{.Document.GiveDate "End" "yyyy-mm-dd"}}" placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" maxlength="32"></span></p>
+
+      <p><span class="ofname" i18n-text="docSum">Sum:</span><span class="ofval">
+        <span class="nowrap"><label for="currency" i18n-text="currencyLabel">currency: </label>
+        <input list="currencyList" id="currency" oninput="handleNumericFilterList(this, 'currencyCode');" class="numberbox" size="8" maxlength="32">
+        <datalist id="currencyList">
+          <option data-value="0"></option>
+          {{range $i, $v := .Currencies}}{{if gt $i 0}}<option data-value="{{$i}}">{{$v}}</option>
+          {{end}}{{end}}
+        </datalist>
+        <input type="hidden" name="currencyCode" id="currencyCode" value="{{.Document.Currency}}"></span>
+        <span class="nowrap"><label for="docSum" i18n-text="sumLabel">sum: </label>
+        <input type="text" id="docSum" class="numberbox" name="docSum" value="{{.Document.GiveSum}}"
+        placeholder="[-]0.00" pattern="-?\d+\.\d{1,2}|-?\d+" size="15" oninput="normalizeSum(this);" maxlength="32"></span>
+      </span></p>
+
+      <p><span class="ofname" i18n-text="authors">Authors:</span> <input type="text" class="field ofval" name="authors" size="30" maxlength="1000" value="{{.Document.Authors}}"></p>
+      <p><span class="ofname" i18n-text="addressees">Addressees:</span> <input type="text" class="field ofval" name="addressee" size="30" maxlength="1000" value="{{.Document.Addressee}}"></p>     
+      <p><span class="ofname" i18n-text="docNote" style="vertical-align: top;">Note:</span> <textarea class="multiline ofval" name="note" maxlength="2000" rows="2" cols="30">{{.Document.Note}}</textarea></p>
+      <h2 i18n-text="uploadFiles">Upload files:</h2>
+
+      {{$sfx := ""}}{{template "filedrop" $sfx}}
+      <br>
+      <br>
+
+    {{if .New}}<input type="submit" class ="sbut" name="createButton" i18n-value="create" value="Create">
+               <input type="button" class ="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" 
+               onclick="if (history.length > 1) {history.back()} else {window.location.href = '/docs/'}">
+    </form>{{else}}
+      <input type="submit" class ="sbut" name="updateButton" i18n-value="save" value="Save">
+      <input type="button" class ="sbut" name="hideButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); showEditForm('view');">
+    </form>{{end}}
+    </div>
+  {{end}}
+
+</div>
+
+{{template "bottom"}}
+
+
+</div>
+
+<script src="/assets/functions.js"></script>
+
+<script>
+/* Page loading function for read */
+(function() {
+  let multiLineLabel;
+  multiLineLabel = document.getElementById('about');
+  if (multiLineLabel) multiLineLabel.innerHTML = multiLineLabel.innerHTML.replace(/\n/g, "<br>");
+  multiLineLabel = document.getElementById('note');
+  if (multiLineLabel) multiLineLabel.innerHTML = multiLineLabel.innerHTML.replace(/\n/g, "<br>");
+})();
+</script>
+
+{{if .Editable}}
+<script>
+
+/* Some variables for messages */
+var exceedQuantityMessage = 'The quantity of selected files exceeds the limit. Files are rejected.';
+var exceedSizeMessage = 'The size of selected files exceeds the limit. Files are rejected.';
+var clearedMessage = "Cleared.";
+
+if (document.documentElement.lang != 'en') {
+  getLang(document.documentElement.lang).then(lang => {
+    if (lang.exceedQuantityMessage) exceedQuantityMessage = lang.exceedQuantityMessage;
+    if (lang.exceedSizeMessage) exceedSizeMessage = lang.exceedSizeMessage;
+    if (lang.clearedMessage) clearedMessage = lang.clearedMessage;
+    if (window.location.pathname.endsWith('/new') && lang.newDocument) {
+        document.querySelector('h1').innerHTML = lang.newDocument;
+        document.title = lang.newDocument;
+    } else if (lang.appTitle && lang.num && lang.document && lang.categories && lang.docTypes) {
+      let docType = {{.Document.DocType}};
+      let cat = {{.Document.Category}};
+      let regNo = {{.Document.RegNo}};
+      let title = lang.docTypes[docType];
+      if (docType == 0) {
+        title = lang.document + " " + title;
+      }
+      if (cat != 0) {
+        title += " (" + lang.categories[cat] + ")";
+      }
+      if (regNo) {
+        title += " " + lang.num + " " + regNo;
+      }
+      document.querySelector('h1').innerHTML = title;
+      document.title = lang.appTitle + ': ' + document.querySelector('h1').innerText;
+    }
+  });
+}
+
+/* Page loading function for edit */
+
+(function() {
+
+  document.getElementById('docType').value = "{{.Document.DocType}}";
+  document.getElementById('category').value = "{{.Document.Category}}";
+  setSumInput('currency', '{{.Document.Currency}}')
+
+  checkForNewCreated();
+
+})();
+
+</script>
+{{end}}
+
+</body>
+</html>

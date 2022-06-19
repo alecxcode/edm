@@ -39,8 +39,11 @@ type UserConfig struct {
 	ElemsOnPageTeam      int
 	DateFormat           string
 	TimeFormat           string
+	LangCode             string
 	UseCalendarInConrols bool
 	CurrencyBeforeAmount bool
+	ShowFinishedTasks    bool
+	ReturnAfterCreation  bool
 }
 
 // UserContacts contains user contact data
@@ -61,7 +64,7 @@ func unmarshalNonEmptyProfileContacts(c string) (res UserContacts) {
 	return res
 }
 
-func createFirstAdmin(db *sql.DB, DBType byte) {
+func createFirstAdmin(db *sql.DB, DBType byte, langCode string) {
 	admin := Profile{
 		UserRole:  1,
 		Login:     "admin",
@@ -73,8 +76,11 @@ func createFirstAdmin(db *sql.DB, DBType byte) {
 			ElemsOnPageTeam:      500,
 			DateFormat:           "dd.mm.yyyy",
 			TimeFormat:           "24h",
+			LangCode:             langCode,
 			UseCalendarInConrols: true,
 			CurrencyBeforeAmount: true,
+			ShowFinishedTasks:    true,
+			ReturnAfterCreation:  true,
 		},
 	}
 	admin.create(db, DBType)
@@ -294,6 +300,9 @@ func (uc *UserConfig) correctIfEmpty() {
 	if uc.SystemTheme == "" {
 		uc.SystemTheme = "dark"
 	}
+	if uc.LangCode == "" {
+		uc.LangCode = "en"
+	}
 	if uc.ElemsOnPage == 0 {
 		uc.ElemsOnPage = 20
 	}
@@ -464,7 +473,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	var Page = ProfilePage{
-		AppTitle:      bs.lng.AppTitle,
+		AppTitle:      bs.text.AppTitle,
 		LoggedinID:    id,
 		LoggedinAdmin: false,
 		Editable:      false,
@@ -520,8 +529,11 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 			ElemsOnPageTeam:      500,
 			DateFormat:           "dd.mm.yyyy",
 			TimeFormat:           "24h",
+			LangCode:             bs.cfg.DefaultLang,
 			UseCalendarInConrols: true,
 			CurrencyBeforeAmount: true,
+			ShowFinishedTasks:    true,
+			ReturnAfterCreation:  true,
 		}
 		p.Login = r.FormValue("login")
 		if r.FormValue("loginSameEmail") == "true" {
@@ -541,19 +553,28 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 			p.ID, created = p.create(bs.db, bs.dbt)
 			if created > 0 {
 				if r.FormValue("notifyCreatedUser") == "true" && p.Login != "" && p.Contacts.Email != "" && p.UserLock == 0 {
-					email := EmailMessage{Subj: bs.lng.Messages.Subj.ProfileRegistered, SendTo: []UserToSend{{p.FirstName + " " + p.Surname, p.Contacts.Email}}}
+					email := EmailMessage{Subj: bs.i18n.Messages.Subj.ProfileRegistered, SendTo: []UserToSend{{p.FirstName + " " + p.Surname, p.Contacts.Email}}}
 					if len(email.SendTo) > 0 || len(email.SendCc) > 0 {
-						newProfileMail := AnyMail{email.Subj, bs.lng.Messages.Cont.ProfileRegistered + p.Login + ", " + r.FormValue("passwd"), bs.systemURL, bs.lng.Messages.DoNotReply, bs.systemURL, bs.lng.Messages.MailerName}
+						newProfileMail := AnyMail{email.Subj, bs.i18n.Messages.Cont.ProfileRegistered + p.Login + ", " + r.FormValue("passwd"), bs.systemURL, bs.i18n.Messages.DoNotReply, bs.systemURL, bs.i18n.Messages.MailerName}
 						var tmpl bytes.Buffer
 						if err := bs.anymailtmpl.Execute(&tmpl, newProfileMail); err != nil {
 							log.Println("executing task mail template [newprofile]:", err)
 						}
 						email.Cont = tmpl.String()
-						bs.mailchan <- email
+						select {
+						case bs.mailchan <- email:
+						default:
+							log.Println("Channel is full. While creating login cannot send message.")
+							email.saveToDBandLog(bs.db, bs.dbt)
+						}
 					}
 				}
 				bs.team.constructUserList(bs.db, bs.dbt)
-				http.Redirect(w, r, fmt.Sprintf("/team/profile/%d", p.ID), http.StatusSeeOther)
+				if Page.UserConfig.ReturnAfterCreation {
+					http.Redirect(w, r, "/team/", http.StatusSeeOther)
+				} else {
+					http.Redirect(w, r, fmt.Sprintf("/team/profile/%d", p.ID), http.StatusSeeOther)
+				}
 				return
 			} else {
 				Page.Message = "dataNotWritten"
@@ -607,7 +628,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if LastAdmin {
-			Page.Message = "LastAdminRejection"
+			Page.Message = "lastAdminRejection"
 		} else {
 			updated = sqla.UpdateSingleInt(bs.db, bs.dbt, "profiles", "UserLock", p.UserLock, p.ID)
 			doupdate = true
@@ -629,7 +650,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if LastAdmin {
-			Page.Message = "LastAdminRejection"
+			Page.Message = "lastAdminRejection"
 		} else {
 			updated = sqla.UpdateSingleInt(bs.db, bs.dbt, "profiles", "UserRole", p.UserRole, p.ID)
 			doupdate = true
@@ -680,21 +701,26 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 		} else if len(rawpasswd) < 6 {
 			Page.Message = "passwdTooShort"
 		} else if LastAdmin {
-			Page.Message = "LastAdminRejection"
+			Page.Message = "lastAdminRejection"
 		} else {
 			updatedPasswd = p.updatePasswd(bs.db, bs.dbt)
 			if updatedPasswd > 0 {
 				p.preload(bs.db, bs.dbt)
 				if p.Contacts.Email != "" && p.UserLock == 0 {
-					email := EmailMessage{Subj: bs.lng.Messages.Subj.SecurityAlert, SendTo: []UserToSend{{p.FirstName + " " + p.Surname, p.Contacts.Email}}}
+					email := EmailMessage{Subj: bs.i18n.Messages.Subj.SecurityAlert, SendTo: []UserToSend{{p.FirstName + " " + p.Surname, p.Contacts.Email}}}
 					if len(email.SendTo) > 0 || len(email.SendCc) > 0 {
-						newProfileMail := AnyMail{email.Subj, bs.lng.Messages.Cont.LoginPasswdChanged, bs.systemURL + "/profiles/" + strconv.Itoa(p.ID), bs.lng.Messages.DoNotReply, bs.systemURL, bs.lng.Messages.MailerName}
+						newProfileMail := AnyMail{email.Subj, bs.i18n.Messages.Cont.LoginPasswdChanged, bs.systemURL + "/profiles/" + strconv.Itoa(p.ID), bs.i18n.Messages.DoNotReply, bs.systemURL, bs.i18n.Messages.MailerName}
 						var tmpl bytes.Buffer
 						if err := bs.anymailtmpl.Execute(&tmpl, newProfileMail); err != nil {
 							log.Println("executing task mail template [newprofile]:", err)
 						}
 						email.Cont = tmpl.String()
-						bs.mailchan <- email
+						select {
+						case bs.mailchan <- email:
+						default:
+							log.Println("Channel is full. While updating password cannot send message.")
+							email.saveToDBandLog(bs.db, bs.dbt)
+						}
 					}
 				}
 				Page.Message = "dataWritten"
@@ -712,7 +738,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 	Page.UnitList = bs.team.returnUnitList()
 	if TextID == "new" {
 		Page.New = true
-		Page.PageTitle = bs.lng.NewProfile
+		Page.PageTitle = bs.text.NewProfile
 		if Page.Message == "" {
 			Page.Message = "onlyAdminCanCreate"
 		}
@@ -737,7 +763,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 			Page.PageTitle = Page.Profile.Login
 		}
 		if Page.PageTitle == "" {
-			Page.PageTitle = bs.lng.Profile + " ID: " + strconv.Itoa(Page.Profile.ID)
+			Page.PageTitle = bs.text.Profile + " ID: " + strconv.Itoa(Page.Profile.ID)
 		}
 	}
 
@@ -770,6 +796,7 @@ type UserConfigPage struct {
 	Themes      []string
 	DateFormats []string
 	TimeFormats []string
+	LangCodes   []string
 }
 
 func (bs *BaseStruct) userConfigHandler(w http.ResponseWriter, r *http.Request) {
@@ -780,7 +807,7 @@ func (bs *BaseStruct) userConfigHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var Page = UserConfigPage{
-		AppTitle:   bs.lng.AppTitle,
+		AppTitle:   bs.text.AppTitle,
 		LoggedinID: id,
 	}
 
@@ -796,9 +823,12 @@ func (bs *BaseStruct) userConfigHandler(w http.ResponseWriter, r *http.Request) 
 			ElemsOnPageTeam: strToInt(r.FormValue("elemsOnPageTeam")),
 			DateFormat:      r.FormValue("dateFormat"),
 			TimeFormat:      r.FormValue("timeFormat"),
+			LangCode:        r.FormValue("langCode"),
 		}
 		p.UserConfig.UseCalendarInConrols, _ = strconv.ParseBool(r.FormValue("useCalendarInConrols"))
 		p.UserConfig.CurrencyBeforeAmount, _ = strconv.ParseBool(r.FormValue("currencyBeforeAmount"))
+		p.UserConfig.ShowFinishedTasks, _ = strconv.ParseBool(r.FormValue("showFinishedTasks"))
+		p.UserConfig.ReturnAfterCreation, _ = strconv.ParseBool(r.FormValue("returnAfterCreation"))
 		updated = p.updateConfig(bs.db, bs.dbt)
 		if updated > 0 {
 			bs.team.updateConfig(p)
@@ -807,10 +837,11 @@ func (bs *BaseStruct) userConfigHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Loading code ============================================
-	Page.PageTitle = bs.lng.ConfigPageTitle
+	Page.PageTitle = bs.text.ConfigPageTitle
 	Page.Themes = bs.options.Themes
 	Page.DateFormats = bs.options.DateFormats
 	Page.TimeFormats = bs.options.TimeFormats
+	Page.LangCodes = bs.options.LangCodes
 
 	user := bs.team.getByID(Page.LoggedinID)
 	Page.UserConfig = user.UserConfig

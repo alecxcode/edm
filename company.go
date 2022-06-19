@@ -281,7 +281,7 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	var Page = CompanyPage{
-		AppTitle:   bs.lng.AppTitle,
+		AppTitle:   bs.text.AppTitle,
 		LoggedinID: id,
 		Editable:   false,
 		New:        false,
@@ -331,7 +331,11 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 			c.ID, created = c.create(bs.db, bs.dbt)
 			if created > 0 {
 				bs.team.constructCorpList(bs.db, bs.dbt)
-				http.Redirect(w, r, fmt.Sprintf("/companies/company/%d", c.ID), http.StatusSeeOther)
+				if Page.UserConfig.ReturnAfterCreation {
+					http.Redirect(w, r, "/companies/", http.StatusSeeOther)
+				} else {
+					http.Redirect(w, r, fmt.Sprintf("/companies/company/%d", c.ID), http.StatusSeeOther)
+				}
 				return
 			} else {
 				Page.Message = "dataNotWritten"
@@ -402,7 +406,7 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 	Page.UserList = bs.team.returnUserList()
 	if TextID == "new" {
 		Page.New = true
-		Page.PageTitle = bs.lng.NewCompany
+		Page.PageTitle = bs.text.NewCompany
 		if Page.Message == "" {
 			Page.Message = "onlyAdminCanCreate"
 		}
@@ -428,7 +432,7 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 			Page.PageTitle = Page.Company.ForeignName
 		}
 		if Page.PageTitle == "" {
-			Page.PageTitle = bs.lng.Company + " ID: " + strconv.Itoa(Page.Company.ID)
+			Page.PageTitle = bs.text.Company + " ID: " + strconv.Itoa(Page.Company.ID)
 		}
 	}
 

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="{{.UserConfig.LangCode}}">
+{{template "head" .}}
+<body>
+
+{{template "menus" .}}
+
+<div id="container">
+
+
+  <div id="control">
+    <h1 i18n-text="team">{{.PageTitle}}</h1>
+
+  <form id="controlForm" action="/team/" method="get" onsubmit="addSortingOnSubmut('controlForm'); removeEmptyInputs(this);">
+    {{template "searchPanel"}}
+
+    <div id="showhide" style="display: none;">
+
+      <div class="filter" id="firstFilter"><strong id="jobunitsDisplay" i18n-text="unitsDepartments">Units (departments):</strong><br>
+        <div class="scroller">
+        {{range .UnitList}}
+        <input type="checkbox" id="ju{{.ID}}" name="jobunits" value="{{.ID}}">
+        <label for="ju{{.ID}}">{{.UnitNameComp}}</label><br>{{end}}
+        </div>
+      </div>
+    
+      <div class="filter"><strong id="companiesDisplay" i18n-title="companiesUnitsFilterTitle" title="by company unit related to a company" i18n-text="companies">Companies:</strong><br>
+        <div class="scroller">
+        {{range .CorpList}}
+        <input type="checkbox" id="com{{.ID}}" name="companies" value="{{.ID}}">
+        <label for="com{{.ID}}">{{.CompanyName}}</label><br>{{end}}
+        </div>
+      </div>
+
+      <div class="filter"><strong id="userroleDisplay" i18n-text="userRole">Role:</strong><br>
+        <input type="checkbox" id="rl0" name="userrole" value="0"><label for="rl0" i18n-text="noRole">No role</label><br>
+        <input type="checkbox" id="rl1" name="userrole" value="1"><label for="rl1" i18n-text="adminRole">Administrator</label><br>
+      </div>
+
+      <div class="filter"><strong id="userlockDisplay" i18n-text="userLock">Lock:</strong><br>
+        <input type="checkbox" id="lo0" name="userlock" value="0"><label for="lo0" i18n-text="noLock">No lock</label><br>
+        <input type="checkbox" id="lo1" name="userlock" value="1"><label for="lo1" i18n-text="yesLock">Locked</label><br>
+      </div>
+
+      {{template "filterButtonsControls"}}
+    </div>
+  </form>
+
+  <p id="appliedFilters" i18n-text="noFiltersApplied">No filters applied.</p>
+
+  <div class="panel"><a href="/companies/" i18n-text="gotoCompaniesPage">Go to companies list</a></div>
+  <div id="controlButtons">
+    <a href="/team/profile/new" class ="sbut greenish" i18n-text="newUser">+ New user profile</a>
+    {{template "deleteButton"}}
+  </div>
+
+  {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred" i18n-text="noPermsOnlyAdmin">Action rejected: no permissions for all or some of objects. Only administrator can delete.</p>{{end}}
+  {{if eq .Message "removedElems"}}<p class="msgok"><span i18n-text="removedElems">Deleted objects:</span> {{.RemovedNum}}.</p>{{end}}
+  {{if eq .Message "removalError"}}<p class="msgred" i18n-text="removalError">Error deleting objects.</p>{{end}}
+  {{if eq .Message "lastAdminRejection"}}<div class="msgred" i18n-text="lastAdminRemoveRejection">Action rejected: attempt to delete the last active administrator.</div>{{end}}
+  
+  <form id="sortingForm" action="/team/" method="get" onsubmit="addFiltersOnSubmut('sortingForm'); removeEmptyInputs(this);">
+    <div class="mobilesorting"><label i18n-text="sorting">Sorting:</label>
+    <select class="numberbox" id="sortedByMobile" onchange="sortBy(this.value, document.getElementById('sortedHow').value);">
+      <option value="FullName" i18n-text="fullName">Full name</option>
+      <option value="JobTitle" i18n-text="jobTitle">Job title</option>
+      <option value="Unit" i18n-text="unit">Unit</option>
+    </select><span class="dropdown"></span>
+    <select class="numberbox" id="sortedHowMobile" onchange="sortBy(document.getElementById('sortedBy').value, this.value);">
+      <option value="0" i18n-text="descending">Descending</option>
+      <option value="1" i18n-text="ascending">Ascending</option>
+    </select><span class="dropdown"></span>
+    <script>
+      document.getElementById('sortedByMobile').value = "{{.SortedBy}}";
+      document.getElementById('sortedHowMobile').value = "{{.SortedHow}}";
+    </script>
+    </div>
+    <input type="hidden" id="sortedBy" name="sortedBy" value="{{.SortedBy}}">
+    <input type="hidden" id="sortedHow" name="sortedHow" value="{{.SortedHow}}">
+  </form>
+
+  </div>
+
+  <div class="main" id="main">
+    {{if not .Team}}<div class="center somemargins" i18n-text="noElemsFound">Objects matching the specified criteria were not found, or there are no objects.</div>
+    {{else}}{{template "pagination" .PageNumber}}
+    <form id="datagridForm" name="datagridForm" action="/team/" method="post" onsubmit="addSortingOnSubmut('datagridForm');
+    addFiltersOnSubmut('datagridForm'); addPaginationOnSubmut('datagridForm'); removeEmptyInputs(this);
+    sessionStorage.setItem('lastQuery', location.search);">
+    <table id="mainTable">
+      <tr class="thead">
+        <th align="center" id="Chooser"><input type="checkbox" class="chead" id="chead"></th>
+        <th align="left" id="FullName"><span i18n-text="fullName">Full name</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="JobTitle"><span i18n-text="jobTitle">Job title</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="Unit"><span i18n-text="unitDepartment">Unit (department)</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <th align="left" id="Contacts"><span i18n-text="contacts">Contacts</span></th>
+      </tr>
+      {{range .Team}}
+      <tr>
+        {{$ui := .GiveUnitID}}
+        {{$fn := (print .Surname .FirstName .OtherName)}}
+        <td i18n-label="select" label="Select" align="center"><input type="checkbox" class="chbox" id="{{.ID}}" name="ids" value="{{.ID}}"></td>
+        <td i18n-label="fullName" label="Full name" align="left"><a href="/team/profile/{{.ID}}">{{if $fn}}{{.Surname}} {{.FirstName}} {{.OtherName}}{{else}}ID: {{.ID}}{{end}}</a></td>
+        <td i18n-label="jobTitle" label="Job title" align="left">{{.JobTitle}}</td>
+        <td i18n-label="unitDept" label="Unit (dept.)" align="left">{{if $ui}}<a href="/companies/company/{{.JobUnit.Company.ID}}#unit{{$ui}}">{{.GiveUnitName}}</a>{{end}}</td>
+        <td i18n-label="contacts" label="Contacts" align="left">
+          {{if .Contacts.TelOffice}}<span class="afile"><span i18n-text="officePhone">Office phone:</span> {{.Contacts.TelOffice}}</span>{{end}}
+          {{if .Contacts.TelMobile}}<span class="afile"><span i18n-text="mobilePhone">Mobile phone:</span> {{.Contacts.TelMobile}}</span>{{end}}
+          {{if .Contacts.Email}}<span class="afile"><a href="mailto:{{.Contacts.Email}}">{{.Contacts.Email}}</a></span>{{end}}
+          {{if .Contacts.Other}}<span class="afile">{{.Contacts.Other}}</span>{{end}}
+        </td>
+      </tr>
+      {{end}}
+    </table>
+    </form>
+
+    <div id="stat" class="stat margintop"><span i18n-text="totalElemsFound">Total objects by search criteria:</span> {{.FilteredNum}}</div>
+    {{end}}
+
+  </div>
+
+{{template "bottom"}}
+
+
+</div>
+
+<script src="/assets/functions.js"></script>
+
+<script>
+
+  /* Functions to add inputs values from different forms on submit */
+  function addPaginationOnSubmut(formID) {
+    addStandardPagination(formID)
+  }
+  function addFiltersOnSubmut(formID) {
+    const frm = document.getElementById(formID);
+    let filters = {{.Filters}};
+    processAddingFilters(frm, filters);
+  }
+ 
+  /* Main page loading function */
+  (function() {
+
+    //console.time('Main Function');
+
+    checkForNewCreated();
+
+    let mainTablePresent = false;
+    if (document.getElementById('mainTable')) {
+      mainTablePresent = true;
+      document.getElementById('elemsOnPage').value = "{{.UserConfig.ElemsOnPageTeam}}";
+    }
+
+    let loggedinAdmin = {{.LoggedinAdmin}};
+    if (!loggedinAdmin) {
+      disableControlButtons();
+    }
+
+    document.getElementById('filterReset').addEventListener("click", function() {
+      resetFilter();
+    }); 
+
+    let classFilterArr = [];
+    let dateFilterArr = [];
+    let sumFilterArr = [];
+    let filters = {{.Filters}};
+    let textFilter = filters.TextFilter;
+    applyAllFilters(filters, classFilterArr, dateFilterArr, sumFilterArr);
+
+    if (textFilter && mainTablePresent) {
+      highlightSearchResults(textFilter, [1, 2, 3, 4]);
+    }
+    printAppliedFilters(classFilterArr, dateFilterArr, sumFilterArr, textFilter);
+    
+    if (mainTablePresent) {
+      let removeAllowed = {{.LoggedinAdmin}};
+      processTableSelection(removeAllowed);
+      applySortingSelection();
+      processPagesCalculations({{.UserConfig.ElemsOnPageTeam}}, {{.FilteredNum}});
+    }
+
+    /* Replaces the page number arg in the URL according to last query after POST */
+    replacePageNumberArg({{.PageNumber}});
+        
+    //console.timeEnd('Main Function');
+
+  })();
+
+</script>
+
+</body>
+</html>

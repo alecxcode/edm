@@ -1,0 +1,49 @@
+{
+    "LangCode": "ru",
+    "LoginLang": {
+        "AppTitle": "ЭУД",
+        "LoginPageTitle": "Вход в систему",
+        "LoninPrompt": "Пожалуйста, введите свои логин и пароль",
+        "LoninFieldLabel": "Логин:",
+        "PasswordFieldLabel": "Пароль:",
+        "LoginButton": "Войти",
+        "WrongLoginMsg": "Неправильные данные для входа"
+    },
+    "TaskCaption": "Задача",
+    "CommentCaption": "Комментарий",
+    "TaskStatuses": [
+        "Создана",
+        "Назначена",
+        "В работе",
+        "Застряла",
+        "Завершена",
+        "Отменена"
+    ],
+    "Messages": {
+        "MailerName": "Система ЭУД",
+        "DoNotReply": "Не отвечайте на это сообщение, оно отправлено автоматически.",
+        "Subj": {
+            "AssigneeSet": "Новый исполнитель задачи",
+            "AssigneeToSet": "Вы назначены исполнителем задачи",
+            "NewTaskComment": "Новый комментарий к задаче",
+            "TaskEdited": "Отредактирована задача",
+            "TaskStatusChanged": "Изменен статус задачи",
+            "ParticipantToAdded": "Вы добавлены в список участников задачи",
+            "ProfileRegistered": "Доступ к системе ЭУД",
+            "SecurityAlert": "Сообщение безопасности"
+        },
+        "Cont": {
+            "ProfileRegistered": "Вы можете войти в систему по ссылке ниже. Ваши логин и пароль: ",
+            "LoginPasswdChanged": "Уведомление о смене логина или пароля. Если Вы знаете о причине изменений, то каких-либо действий не требуется."
+        },
+        "Captions": {
+            "CreatedTime": "Время создания",
+            "Creator": "Создатель",
+            "Assignee": "Исполнитель",
+            "Open": "Открыть в системе",
+            "TaskStatus": "Статус",
+            "TaskStartDueTime": "Плановые сроки",
+            "FileList": "Файлы"
+        }
+    }
+}

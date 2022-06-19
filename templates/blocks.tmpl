@@ -1,0 +1,211 @@
+{{define "head"}}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{{.AppTitle}}: {{.PageTitle}}</title>
+  <link rel="shortcut icon" href="/assets/favicon.png">{{if not (eq .UserConfig.LangCode "en")}}
+  <link rel="preload" href="/assets/i18n/{{.UserConfig.LangCode}}.json" as="fetch">{{end}}
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/theme-{{.UserConfig.SystemTheme}}.css">
+</head>
+{{end}}
+
+{{define "menus"}}
+  {{if not (eq .UserConfig.LangCode "en")}}
+  <div class="fullscreen">
+    <div class="loading">
+      <div class="loadingCircle"></div>
+      <div class="loadingMessage">Loading</div>
+    </div>
+  </div>
+  {{end}}
+  <div id="headmenu">
+    <div class="boxinmenu">
+    <div id="evenly">
+      <div class="mobileMenuButton" id="mobileMenuButtonMenu" onclick="showMobileMenu();"><img class="vector" src="/assets/menu.svg" i18n-alt="menu" alt="Menu"></div>
+      <div class="textmenu" id="textmenu">
+      <a href="/docs/" i18n-text="docs">Documents</a>
+      <a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-text="tasks">Tasks</a>
+      <a href="/team/" i18n-text="team">Team</a>
+      </div>
+      <div class="graphicmenu">
+        <a href="/config" i18n-title="config" title="Settings"><img class="vector" src="/assets/settings.svg" i18n-alt="config" alt="Settings"></a>
+        <a href="/team/profile/{{.LoggedinID}}" i18n-title="profile" title="Profile"><img class="vector" src="/assets/profile.svg" i18n-alt="profile" alt="Profile"></a>
+        <a href="/logout" i18n-title="logOutButton" title="Log out"><img class="vector" src="/assets/quit.svg" i18n-alt="logOutButton" alt="Log out"></a>
+      </div>
+    </div>
+    </div>
+  </div>
+  <div id="mobilemenu" style="display: none;"></div>
+{{end}}
+
+{{define "bottom"}}
+  <div id="bottom">© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></div>
+{{end}}
+
+{{define "pagination"}}
+<div id="pagination">
+  <form id="paginationForm" action="?" method="get" onsubmit="addFiltersOnSubmut('paginationForm'); addSortingOnSubmut('paginationForm'); removeEmptyInputs(this);">
+    <span class="nowrap">
+      <label for="pageNumber"><span i18n-text="page">Page</span> {{.}} <span i18n-text="of">of</span> <span id="totalPagesNumber"></span>.</label>
+      <input class ="sbut pg" type="button" i18n-title="firstP" title="First" value="|&lt;" onclick="paginate('min');"> <input class ="sbut pg" type="button" i18n-title="previousP" title="Previous"value="&lt;-" onclick="paginate(-1);">
+      <input type="number" class="field" size="8" id="pageNumber" name="pageNumber" value="{{.}}" min="1" max="" onchange="paginate(0);">
+      <input class ="sbut pg" type="button" i18n-title="nextP" title="Next" value="-&gt;" onclick="paginate(1);"> <input class ="sbut pg" type="button" i18n-title="lastP" title="Last" value="&gt;|" onclick="paginate('max');">
+   </span>
+  <span class="nowrap">
+  <label for="elemsOnPage" i18n-text="elemsOnPage">Elements on page:</label>
+  <select class="numberbox" id="elemsOnPage" name="elemsOnPage" onchange="document.getElementById('elemsOnPageChanged').value='true';
+  paginate('min');">
+    <option value="20">20</option>
+    <option value="50">50</option>
+    <option value="100">100</option>
+    <option value="200">200</option>
+    <option value="500">500</option>
+  </select><span class="dropdown"></span>
+  <input type="hidden" id="elemsOnPageChanged" name="elemsOnPageChanged" value="false">
+  </span>
+  </form>
+</div>
+{{end}}
+
+{{define "searchPanel"}}
+<div id="search">
+  <input id="showFilters" class ="sbut" type="button" i18n-value="filters" value="Filters..." i18n-title="filtersTitle" title="Show or hide filters" onclick="showFilters();
+  /* This function shows or hides filters controls */
+  function showFilters() {
+    const d = document.getElementById('showhide');
+    d.style.display = (d.style.display == 'none') ? 'block' : 'none';
+  };">
+  <input id="searchText" type="text" class="field" name="searchText" size="15" i18n-placeholder="searchPhrase" placeholder="Search text">
+  <input id="searchButton" class ="sbut" type="submit" name="searchButton" i18n-value="search" value="Search">
+</div>
+{{end}}
+
+{{define "filterButtonsControls"}}
+<div id="filterButtonsControls">
+  <input type="submit" class="sbut" name="filterButton" i18n-value="applyFilters" value="Apply filters">
+  <input type="button" class="sbut" name="filterReset" id="filterReset" i18n-value="resetAllFilters" value="Reset all filters">
+</div>
+{{end}}
+
+{{define "deleteButton"}}
+<input type="button" class ="sbut reddish" id="deleteButton" name="deleteButton" i18n-value="deleteSelected" value="× Delete selected"
+  onclick="this.parentNode.lastElementChild.style.display = 'block'; document.getElementById('yesDeleteButton').disabled = false;" disabled>
+<div style="display: none;">
+  <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
+  <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.style.display = 'none'; document.getElementById('yesDeleteButton').disabled = true;">
+  <input type="button" class ="sbut reddish" id="yesDeleteButton" name="deleteButton" i18n-value="yesDelete" value="Yes, delete" onclick="
+  submitControlButton('deleteButton', 'Delete selected');" disabled>
+</div>
+{{end}}
+
+{{define "dateFilter"}}
+<div class="filter"><strong id="{{.Name}}Display" i18n-text="{{.Attri18n}}">{{.DisplayName}}</strong><br><br>
+  <label for="{{.Name}}Single" i18n-text="dateOne">One date:</label><br>
+  <select id="{{.Name}}Relation" class="numberbox" name="{{.Name}}Relation">
+    <option value="eq" i18n-text="relEquals">Equals</option>
+    <option value="gteq" i18n-text="relAfter">After (incl.)</option>
+    <option value="lteq" i18n-text="relBefore">Before (incl.)</option>
+    <option value="noteq" i18n-text="relExcept">Except</option>
+  </select><span class="dropdown"></span><br>
+  <input {{if .UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="{{.Name}}Single" class="numberbox" name="{{.Name}}" value=""
+  placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12"><br><br>
+  <label for="{{.Name}}Diapason" i18n-text="diapason">Interval:</label>
+  <label class="switch"><input type="checkbox" class="hidden" 
+    id="{{.Name}}Diapason" name="{{.Name}}Diapason" value="true" 
+    onchange="handleNumericFilterChkBox(this, '{{.Name}}');
+    handleNumericOption(this, '{{.Name}}')"><div class="slider"></div></label><br>
+  <label for="{{.Name}}Start" i18n-text="diapasonStart">From:</label><br>
+  <input {{if .UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="{{.Name}}Start" class="numberbox" name="{{.Name}}" 
+  placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" disabled><br>
+  <label for="{{.Name}}Finish" i18n-text="diapasonEnd">To:</label><br>
+  <input {{if .UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="{{.Name}}Finish" class="numberbox" name="{{.Name}}" 
+  placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" disabled><br>
+</div>
+{{end}}
+
+{{define "dateTimeFilter"}}
+<div class="filter"><strong id="{{.Name}}Display" i18n-text="{{.Attri18n}}">{{.DisplayName}}</strong><br><br>
+  <label for="createdDatesSingle" i18n-text="valueOne">One value:</label><br>
+  <select id="createdDatesRelation" class="numberbox" name="createdDatesRelation">
+    <option value="eq" i18n-text="relEquals">Equals</option>
+    <option value="gteq" i18n-text="relAfter">After (incl.)</option>
+    <option value="lteq" i18n-text="relBefore">Before (incl.)</option>
+    <option value="noteq" i18n-text="relExcept">Except</option>
+  </select><span class="dropdown"></span><br>
+  <input {{if .UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="createdDatesSingle" class="numberbox" name="createdDates" value=""
+  placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18"><br><br>
+  <label for="createdDatesDiapason"i18n-text="diapason">Interval:</label>
+  <label class="switch"><input type="checkbox" class="hidden" 
+    id="createdDatesDiapason" name="createdDatesDiapason" value="true" 
+    onchange="handleNumericFilterChkBox(this, 'createdDates');
+    handleNumericOption(this, 'createdDates')"><div class="slider"></div></label><br>
+  <label for="createdDatesStart" i18n-text="diapasonStart">Start:</label><br>
+  <input {{if .UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="createdDatesStart" class="numberbox" name="createdDates" 
+  placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" disabled><br>
+  <label for="createdDatesFinish" i18n-text="diapasonEnd">End:</label><br>
+  <input {{if .UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="createdDatesFinish" class="numberbox" name="createdDates" 
+  placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" disabled><br>
+</div>
+{{end}}
+
+{{define "sumFilter"}}
+<div class="filter"><strong id="{{.Name}}Display" i18n-text="{{.Attri18n}}">{{.DisplayName}}</strong><br>
+  <label for="{{.Name}}Currency" i18n-text="currency">Currency:</label><input list="{{.Name}}CurrencyCodesList" id="{{.Name}}Currency" 
+  oninput="handleNumericFilterList(this, '{{.Name}}CurrencyCode');" class="numberbox" size="8">
+  <datalist id="{{.Name}}CurrencyCodesList">
+    <option data-value="0"></option>{{range $i, $v := .Currencies}}{{if gt $i 0}}
+    <option data-value="{{$i}}">{{$v}}</option>{{end}}{{end}}
+  </datalist>
+  <input type="hidden" name="{{.Name}}CurrencyCode" id="{{.Name}}CurrencyCode">
+  <br><br>
+  <label for="{{.Name}}Single" i18n-text="sumOne">One sum:</label><br>
+  <select id="{{.Name}}Relation" class="numberbox" name="{{.Name}}Relation">
+    <option value="eq" i18n-text="relEquals">Equals</option>
+    <option value="gt" i18n-text="relGreater">Greater than</option>
+    <option value="lt" i18n-text="relLess">Less than</option>
+    <option value="gteq" i18n-text="relGreaterEquals">Greater than/equals</option>
+    <option value="lteq" i18n-text="relLessEquals">Less than/equals</option>
+    <option value="noteq" i18n-text="relNotEquals">Not equals</option>
+  </select><span class="dropdown"></span><br>
+  <input type="text" id="{{.Name}}Single" class="numberbox" name="{{.Name}}" value=""
+  placeholder="[-]0.00" pattern="-?\d+\.\d{1,2}|-?\d+" size="15" oninput="normalizeSum(this);"><br><br>
+  <label for="{{.Name}}Diapason" i18n-text="diapason">Interval:</label>
+  <label class="switch"><input type="checkbox" class="hidden" 
+    id="{{.Name}}Diapason" name="{{.Name}}Diapason" value="true" 
+    onchange="handleNumericFilterChkBox(this, '{{.Name}}');
+    handleNumericOption(this, '{{.Name}}')"><div class="slider"></div></label><br>
+  <label for="{{.Name}}Start" i18n-text="diapasonStart">Start:</label><br>
+  <input type="text" id="{{.Name}}Start" class="numberbox" name="{{.Name}}" 
+  placeholder="[-]0.00" pattern="-?\d+\.\d{1,2}|-?\d+" size="15" oninput="normalizeSum(this);" disabled><br>
+  <label for="{{.Name}}Finish" i18n-text="diapasonEnd">End:</label><br>
+  <input type="text" id="{{.Name}}Finish" class="numberbox" name="{{.Name}}" 
+  placeholder="[-]0.00" pattern="-?\d+\.\d{1,2}|-?\d+" size="15" oninput="normalizeSum(this);" disabled><br>
+</div>
+{{end}}
+
+{{define "filedrop"}}
+<div class="filedrop">
+  <div id="fileDisplay{{.}}"><br></div>
+  <label id="fileDisplayMsg{{.}}" class="center" for="fileList{{.}}" i18n-text="dropFilesHere">Drag and drop files here or click to select.<br>Up to 100 files. Up to 100 megabytes total upload size.</label>
+  <input type="file" multiple id="fileList{{.}}" name="fileList{{.}}" onchange="displaySelectedFiles(
+    this,
+    document.getElementById('fileDisplay{{.}}'),
+    document.getElementById('fileDisplayMsg{{.}}'),
+    exceedQuantityMessage,
+    exceedSizeMessage);">
+</div>
+<input type="button" class ="sbut" i18n-value="clearSelectedFiles" value="Clear selected files" onclick="clearInputFiles(
+  document.getElementById('fileList{{.}}'),
+  document.getElementById('fileDisplay{{.}}'),
+  document.getElementById('fileDisplayMsg{{.}}'),
+  clearedMessage);">
+{{end}}
+
+{{define "bbcode"}}
+<input type="button" class="sbut pg smaller" i18n-many="bbcodeB" value="B" title="Bold" onclick="insertBBCode('b', '{{.}}')">
+<input type="button" class="sbut pg smaller" i18n-many="bbcodeI" value="I" title="Italic" onclick="insertBBCode('i', '{{.}}')">
+<input type="button" class="sbut pg smaller" i18n-many="bbcodeU" value="U" title="Underline" onclick="insertBBCode('u', '{{.}}')">
+<input type="button" class="sbut pg smaller" i18n-many="bbcodeCode" value="Code" title="Monospace font, keep formatting" onclick="insertBBCode('code', '{{.}}')">
+{{end}}

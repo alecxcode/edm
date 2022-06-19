@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="{{.UserConfig.LangCode}}">
+{{template "head" .}}
+<body>
+
+{{template "menus" .}}
+
+<div id="container">
+
+  <div class="control" id="control">
+    <h1 i18n-text="companies">{{.PageTitle}}</h1>
+
+    <p id="appliedFilters"></p>
+
+    <div id="controlButtons">
+      <span class="panel"><a href="/team/" i18n-text="gotoTeamPage">Go to team page</a></span>
+      {{if .LoggedinAdmin}}<a href="/companies/company/new" class ="sbut greenish" i18n-text="newCompany">+ New company</a>{{end}}
+    </div>
+    
+    {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred" i18n-text="noPermsOnlyAdmin">Action rejected: no permissions for all or some of objects. Only administrator can delete.</p>{{end}}
+    {{if eq .Message "removedElems"}}<p class="msgok"><span i18n-text="removedElems">Deleted objects:</span> {{.RemovedNum}}.</p>{{end}}
+    {{if eq .Message "removalError"}}<p class="msgred" i18n-text="removalError">Error deleting objects.</p>{{end}}
+
+  </div>
+
+  <div class="main" id="main">
+    {{if not .Companies}}<div class="center somemargins" i18n-text="noElems">There are no objects.</div>{{else}}
+      <br>
+      {{range .Companies}}
+        {{$bi := .GiveHeadID}}
+        <div class="panel"><a href="/companies/company/{{.ID}}">{{if and (not .ShortName) (not .FullName) (not .ForeignName)}}ID: {{.ID}}{{end}}
+          {{if .ShortName}}{{.ShortName}}{{end}}{{if .FullName}}, ({{.FullName}}){{end}}{{if .ForeignName}}, ({{.ForeignName}}){{end}}</a>;
+        {{if .RegNo}}<span i18n-text="companyRegNo">Reg. No.:</span> {{.RegNo}};{{end}}
+        {{if .TaxNo}}<span i18n-text="companyTaxNo">Tax (VAT) No.:</span> {{.TaxNo}};{{end}}
+        {{if .Contacts.AddressReg}}<span i18n-text="companyAddrReg">Registered office address:</span> {{.Contacts.AddressReg}};{{end}}
+        {{if $bi}}<span i18n-text="companyHead">CEO or head:</span> <a href="/team/profile/{{$bi}}">{{.GiveHeadNameJob}}</a>;{{end}}
+        <span i18n-text="seeAlso">See also:</span> <a href="/team/?companies={{.ID}}" i18n-text="companyEmployeeList">Company employee list</a>.</div><br>
+      {{end}}
+
+    <div id="stat" class="stat"><br><span i18n-text="totalElems">Total objects:</span> {{.FilteredNum}}</div>
+    {{end}}
+
+  </div>
+
+{{template "bottom"}}
+
+
+</div>
+
+<script src="/assets/functions.js"></script>
+<script>checkForNewCreated();</script>
+
+</body>
+</html>

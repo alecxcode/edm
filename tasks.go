@@ -59,9 +59,9 @@ func (bs *BaseStruct) tasksHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	var Page = TasksPage{
-		AppTitle:     bs.lng.AppTitle,
-		PageTitle:    bs.lng.TasksPageTitle,
-		TaskStatuses: bs.lng.TaskStatuses,
+		AppTitle:     bs.text.AppTitle,
+		PageTitle:    bs.text.TasksPageTitle,
+		TaskStatuses: bs.text.TaskStatuses,
 		SortedBy:     "ID",
 		SortedHow:    0, // 0 - DESC, 1 - ASC
 		Filters: sqla.Filter{
@@ -72,8 +72,8 @@ func (bs *BaseStruct) tasksHandler(w http.ResponseWriter, r *http.Request) {
 				{Name: "participants", Selector: "userSelector", InJSON: true, Column: "Participants"},
 			},
 			ClassFilterOR: []sqla.ClassFilter{
-				{Name: "creatorsORassignees", Selector: "userSelector", Column: "creator.ID"},
-				{Name: "creatorsORassignees", Selector: "userSelector", Column: "assignee.ID"},
+				{Name: "creatorsOrAssignees", Selector: "userSelector", Column: "creator.ID"},
+				{Name: "creatorsOrAssignees", Selector: "userSelector", Column: "assignee.ID"},
 				{Name: "anyparticipants", Selector: "userSelector", Column: "creator.ID"},
 				{Name: "anyparticipants", Selector: "userSelector", Column: "assignee.ID"},
 				{Name: "anyparticipants", Selector: "userSelector", InJSON: true, Column: "Participants"},
@@ -196,7 +196,7 @@ WHERE tasks.TaskStatus <> ` + sqla.MakeParam(bs.dbt, 1) + " "
 							for i := range idstoupd {
 								t := tasks[i]
 								participants, _ := t.loadParticipants(bs.db, bs.dbt)
-								email := EmailMessage{Subj: bs.lng.Messages.Subj.TaskStatusChanged + " [" + bs.lng.Task + " #" + strconv.Itoa(t.ID) + "]"}
+								email := EmailMessage{Subj: bs.i18n.Messages.Subj.TaskStatusChanged + " [" + bs.i18n.TaskCaption + " #" + strconv.Itoa(t.ID) + "]"}
 								if t.Creator != nil && t.Creator.Contacts.Email != "" && t.Creator.UserLock == 0 {
 									email.SendTo = append(email.SendTo, UserToSend{t.Creator.FirstName + " " + t.Creator.Surname, t.Creator.Contacts.Email})
 								}
@@ -209,7 +209,7 @@ WHERE tasks.TaskStatus <> ` + sqla.MakeParam(bs.dbt, 1) + " "
 									}
 								}
 								if len(email.SendTo) > 0 || len(email.SendCc) > 0 {
-									taskMail := TaskMail{email.Subj, t, bs.lng.Messages, bs.lng.Task, Page.TaskStatuses, bs.systemURL}
+									taskMail := TaskMail{email.Subj, t, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
 									var tmpl bytes.Buffer
 									if err := bs.taskmailtmpl.Execute(&tmpl, taskMail); err != nil {
 										log.Println("executing task mail template [multstatuses]:", err)
@@ -219,7 +219,12 @@ WHERE tasks.TaskStatus <> ` + sqla.MakeParam(bs.dbt, 1) + " "
 									if cont != nil && len(cont) >= 1 {
 										email.Cont = strings.Replace(email.Cont, cont[1], replaceBBCodeWithHTML(cont[1]), 1)
 									}
-									bs.mailchan <- email
+									select {
+									case bs.mailchan <- email:
+									default:
+										log.Println("Channel is full. While multiple tasks status updating cannot send message.")
+										email.saveToDBandLog(bs.db, bs.dbt)
+									}
 								}
 							}
 						} else {

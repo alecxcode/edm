@@ -1,0 +1,49 @@
+{
+    "LangCode": "fr",
+    "LoginLang": {
+        "AppTitle": "GED",
+        "LoginPageTitle": "Entrée du système",
+        "LoninPrompt": "Veuillez saisir votre identifiant et votre mot de passe",
+        "LoninFieldLabel": "Identifiant",
+        "PasswordFieldLabel": "Mot de passe",
+        "LoginButton": "Entrer",
+        "WrongLoginMsg": "Données de connexion erronées"
+    },
+    "TaskCaption": "Tâche",
+    "CommentCaption": "Commentaire",
+    "TaskStatuses": [
+        "Créée",
+        "Assignée",
+        "En cours",
+        "Coincée",
+        "Faite",
+        "Annulée"
+    ],
+    "Messages": {
+        "MailerName": "Système GED",
+        "DoNotReply": "Ne répondez pas à ce message, il a été envoyé automatiquement",
+        "Subj": {
+            "AssigneeSet": "Nouveau responsable de la tâche",
+            "AssigneeToSet": "Vous avez été désigné pour effectuer la tâche",
+            "NewTaskComment": "Nouveau commentaire à la tâche",
+            "TaskEdited": "La tâche a été modifiée",
+            "TaskStatusChanged": "Le statut de la tâche a été changé",
+            "ParticipantToAdded": "Vous avez été ajouté à la liste des participants à la tâche",
+            "ProfileRegistered": "Accès au système GED",
+            "SecurityAlert": "Alerte de sécurité"
+        },
+        "Cont": {
+            "ProfileRegistered": "Vous pouvez vous connecter au système en utilisant le lien ci-dessous. Votre login et mot de passe sont: ",
+            "LoginPasswdChanged": "Il s'agit de vous informer de votre changement d'identifiant ou de mot de passe. Si vous savez pourquoi cela s'est produit, aucune action n'est requise."
+        },
+        "Captions": {
+            "CreatedTime": "Temps créée",
+            "Creator": "Créateur",
+            "Assignee": "Responsable",
+            "Open": "Ouvrez ceci dans le système",
+            "TaskStatus": "Statut",
+            "TaskStartDueTime": "Début et échéance",
+            "FileList": "Fichiers"
+        }
+    }
+}

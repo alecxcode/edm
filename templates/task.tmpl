@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="{{.UserConfig.LangCode}}">
+{{template "head" .}}
+<body>
+
+{{template "menus" .}}
+
+<div id="container">
+  {{$ci := .Task.GiveCreatorID}}
+  {{$ai := .Task.GiveAssigneeID}}
+  {{$vtsep := " "}}
+
+  <div id="control">
+    <h1>{{.PageTitle}}</h1>
+    <p class="breadcrumbs"><a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-text="allTasks">all tasks</a> / <span i18n-text="companyPage">task page</span></p>
+
+    {{if and (not .New) (or .Editable .IamAssignee)}}
+    <form id="statuses" action="/tasks/task/{{.Task.ID}}" method="POST">
+      <input type="hidden" name="taskStatus" value="" id="taskStatus">
+      <input type="submit" class ="sbut" id="inprogress" name="statusButton" i18n-many="inProgressOne" value="In progress" title="Set task status - in progress" onclick="document.getElementById('taskStatus').value = 'inprogress';">
+      <input type="submit" class ="sbut" id="stuck" name="statusButton" i18n-many="stuckOne" value="Stuck" title="Suspend due to some problem" onclick="document.getElementById('taskStatus').value = 'stuck';">
+      <input type="submit" class ="sbut" id="done" name="statusButton" i18n-many="doneOne" value="Done" title="Complete the task" onclick="document.getElementById('taskStatus').value = 'done';">
+      <input type="submit" class ="sbut" id="cancelled" name="statusButton" i18n-many="cancelOne" value="Cancel" title="Cancel the task" onclick="document.getElementById('taskStatus').value = 'cancelled';">
+    </form>
+    <script>
+      (function() {
+        const CREATED = 0, ASSIGNED = 1, INPROGRESS = 2, STUCK = 3, DONE = 4, CANCELLED = 5;
+        let textStatus = '';
+        let taskStatus = {{.Task.TaskStatus}};
+        if (taskStatus == INPROGRESS) textStatus = 'inprogress';
+        if (taskStatus == STUCK) textStatus = 'stuck';
+        if (taskStatus == DONE) textStatus = 'done';
+        if (taskStatus == CANCELLED) textStatus = 'cancelled';
+        if (textStatus) document.getElementById(textStatus).disabled = true;
+      })();
+    </script>
+    {{end}}
+
+    {{if and .Editable (not .New)}}
+      <input type="button" class ="sbut" name="showButton" i18n-value="edit" value="Edit" onclick="showEditForm('edit');">
+      <input type="button"{{if not .RemoveAllowed}}style="display: none;"{{end}} class="sbut reddish" name="showDelete" i18n-value="delete" value="Delete" onclick="showEditForm('removal');">
+      <form id="removal" action="/tasks/" method="POST" style="display: none;">
+      <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
+      <input type="hidden" name="ids" value="{{.Task.ID}}">
+      <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="showEditForm('view');">
+      <input type="submit" class ="sbut reddish" name="deleteButton" i18n-value="yesDelete" value="Yes, delete">
+      </form>
+    {{end}}
+
+    {{if eq .Message "dataWritten"}}<div class="msgok" i18n-text="dataWritten">Data has been written successfully.</div>{{end}}
+    {{if eq .Message "dataNotWritten"}}<div class="msgred" i18n-text="dataNotWritten">Error writing data.</div>{{end}}
+    {{if eq .Message "commentWritten"}}<div class="msgok" i18n-text="commentWritten">Comment saved successfully.</div>{{end}}
+    {{if eq .Message "commentNotWritten"}}<div class="msgred" i18n-text="commentNotWritten">Error writing comment.</div>{{end}}
+    {{if eq .Message "uploadError"}}<div class="msgred" i18n-text="uploadError">Error uploading files.</div>{{end}}
+    {{if eq .Message "removalError"}}<div class="msgred" i18n-text="removalFileError">Error deleting files.</div>{{end}}
+    {{if eq .Message "participantAlreadyInList"}}<div class="msgok" i18n-text="participantAlreadyInList">This participant is already in the list.</div>{{end}}
+  </div>
+
+  <div id="main">
+
+  {{if not .New}}
+    <div id="view">
+      <h2 i18n-text="parameters">Parameters:</h2>
+      <p><span class="ofname" i18n-text="status">Status:</span><span class="ofval" id="about"><span id="statusIndicator" class="txtbw" i18n-index="taskStatuses-{{.Task.TaskStatus}}">{{.Task.GiveStatus .TaskStatuses "Unknown"}}</span>;
+        <span i18n-text="statusSet">Status set</span>: {{.Task.GiveDateTime "StatusSet" .UserConfig.DateFormat .UserConfig.TimeFormat $vtsep}}</span></p>
+        <script>
+          (function() {
+            const CREATED = 0, ASSIGNED = 1, INPROGRESS = 2, STUCK = 3, DONE = 4, CANCELLED = 5;
+            let className = '';
+            let taskStatus = {{.Task.TaskStatus}};
+            if (taskStatus == CREATED || taskStatus == ASSIGNED || taskStatus == INPROGRESS) className = 'txtblue';
+            if (taskStatus == STUCK) className = 'txtred';
+            if (taskStatus == DONE) className = 'txtgreen';
+            if (taskStatus == CANCELLED) className = 'txtbw';
+            if (className) document.getElementById('statusIndicator').className = className;
+          })();
+        </script>
+      <p><span class="ofname" i18n-text="plannedStartDue">Planned start and due:</span><span class="ofval">{{if .Task.PlanStart.Day}}<span class="nowrap"><span i18n-text="start">Start:</span> {{.Task.GiveDateTime "PlanStart" .UserConfig.DateFormat .UserConfig.TimeFormat $vtsep}}</span>{{end}}
+        {{if and .Task.PlanStart.Day .Task.PlanDue.Day}}-{{end}}
+        {{if .Task.PlanDue.Day}}<span class="nowrap"><span i18n-text="due">Due:</span> {{.Task.GiveDateTime "PlanDue" .UserConfig.DateFormat .UserConfig.TimeFormat $vtsep}}</span>{{end}}</span></p>
+      <p><span class="ofname" i18n-text="created">Created:</span><span class="ofval">{{.Task.GiveDateTime "Created" .UserConfig.DateFormat .UserConfig.TimeFormat $vtsep}}{{if $ci}}, <span i18n-text="creatorOwner">Creator (owner):</span> <a href="/team/profile/{{$ci}}">{{.Task.Creator.GiveSelfNameJob}}</a>{{end}}</span></p>
+      <p><span class="ofname" i18n-text="assignee">Assignee:</span><span class="ofval">{{if $ai}}<a href="/team/profile/{{$ai}}">{{.Task.Assignee.GiveSelfNameJob}}</a>{{end}} {{if or .Editable .IamAssignee}}<span class="someaction" onclick="document.getElementById('forwardControls').style.display = 'block';">{{if $ai}}<span i18n-text="forwardToAssignee">Forward to another user</span>{{else}}<span i18n-text="selectAssignee">Select assignee</span>{{end}}</span>{{end}}</span></p>
+      {{if or .Editable .IamAssignee}}<div id="forwardControls" style="display: none;">
+        <span class="nowrap"><select id="selectedAssignee" class="numberbox">
+          <option value="" i18n-text="selectNewAssignee">Select new assignee</option>
+          {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
+          {{end}}
+        </select><span class="dropdown"></span></span> <span class="nowrap">
+        <input type="button" class="sbut greenish smaller" i18n-value="forward" value="Forward"
+        onclick="makeFormAndSubmit(document.getElementById('selectedAssignee').value, 'assigneeForward', '/tasks/task/{{.Task.ID}}');">
+        <input type="button" class ="sbut smaller" i18n-value="cancel" value="Cancel" onclick="document.getElementById('forwardControls').style.display = 'none';">
+        </span>
+      </div>{{end}}
+      <h2 i18n-text="content">Content:</h2>
+      <div class="elem"><div class="subelem multilineContent">{{.Task.Content}}</div></div>
+
+      <div id="appliedElems"><span i18n-text="participants">Participants:</span>
+        {{range .Participants}}<a class="chosen-withrm" href="/team/profile/{{.ID}}">{{.GiveSelfNameJob}}</a>{{if or $.Editable $.IamAssignee}}<span class="rm" i18n-title="delete" title="Delete" onclick="makeFormAndSubmit('{{.ID}}', 'participantRemove', '/tasks/task/{{$.Task.ID}}');">×</span>{{end}} {{end}}
+      </div>
+      {{if or .Editable .IamAssignee}}<div>
+        <span class="nowrap"><select id="selectedParticipant" class="numberbox">
+          <option value="" i18n-text="selectParticipantToAdd">Select a participant to add</option>
+          {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
+          {{end}}
+        </select><span class="dropdown"></span></span>
+        <input type="button" class ="sbut greenish smaller" i18n-value="addParticipant" value="Add participant"
+        onclick="makeFormAndSubmit(document.getElementById('selectedParticipant').value, 'participantAdd', '/tasks/task/{{.Task.ID}}');">
+      </div>{{end}}
+
+      <h2 i18n-text="taskFiles">Task files:</h2>
+      {{if not .Task.FileList}}<div class="afile-inline-block" i18n-text="noFiles">No files</div>{{else}}
+        {{range .Task.FileList}}<span class="afile-inline-block">
+          {{if $.Editable}}<input type="checkbox" class="fchbox" name="filesToRemove" value="{{.}}">{{end}}
+          <a href="/files/tasks/{{$.Task.ID}}/{{.}}">{{.}}</a></span>
+        <br>{{end}}
+      {{end}}
+      {{if and .Editable .Task.FileList (not .New)}}
+        <span i18n-text="selectedFiles">Selected files:</span> <input type="button" class ="sbut reddish" name="showDeleteFiles" i18n-value="delete" value="Delete" onclick="showEditForm('removalFiles');">
+        <form id="removalFiles" action="/tasks/task/{{.Task.ID}}" method="POST" onsubmit="addFileElems(this);" style="display: none;">
+        <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
+        <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="showEditForm('view');">
+        <input type="submit" class ="sbut reddish" name="deleteFiles" i18n-value="yesDelete" value="Yes, delete">
+        </form>
+      {{end}}
+      <br>
+      <br>
+
+      <h2 i18n-text="comments">Comments:</h2>
+      {{range $i, $c := .Comments}}
+        {{$cc := .GiveCreatorID}}
+        {{$comID := .ID}}
+        <div class="elem" id="comment{{.Inci $i}}">
+        <h3><a href="#comment{{.Inci $i}}">#{{.Inci $i}}</a>: {{.GiveDateTime $.UserConfig.DateFormat $.UserConfig.TimeFormat $vtsep}}
+          <span i18n-text="postedBy">by:</span> {{if $cc}}<a href="/team/profile/{{$cc}}">{{.Creator.GiveSelfNameJob}}</a>{{end}}</h3>
+        <span class="subelem multilineContent">{{.Content}}</span>
+        {{if .FileList}} <div class="subelem"><div i18n-text="attachedFiles">Attached files:</div>
+        {{range .FileList}}<span class="afile-inline-block">
+          <a href="/files/tasks/{{$.Task.ID}}/{{$comID}}/{{.}}">{{.}}</a></span>
+        <br>{{end}}</div>
+        {{end}}
+        </div>
+      {{end}}
+      
+      {{if or .Editable .IamAssignee .IamParticipant}}
+      <br><br><br>
+      <div class="elem" id="newComment"><h3 i18n-text="newComment">New comment</h3>
+        <form id="taskCreateComment" action="/tasks/task/{{.Task.ID}}" method="POST" enctype="multipart/form-data">
+          <div class="subelem"><div class="nowrap">
+            {{$textarea := "textAreaComm"}}{{template "bbcode" $textarea}}
+          </div>
+          <textarea class="multiline" id="textAreaComm" name="content" maxlength="8000" style="width: 100%; height: 8em; margin-bottom: 0.4em;"></textarea>
+          {{$sfx := "Comm"}}{{template "filedrop" $sfx}}
+          </div>
+          <div class="subelem"><input type="submit" class ="sbut greenish" name="createComment" i18n-value="addComment" value="Add comment"></div>
+        </form>
+      </div>
+      {{end}}
+
+    </div>
+  {{end}}
+
+  {{if .Editable}}
+    {{if .New}}<div id="create"><form id="createForm" action="/tasks/task/new" method="POST" enctype="multipart/form-data" onsubmit="sessionStorage.setItem('new', 'task');">
+    {{else}}<div id="edit" style="display: none;"><form id="editForm" action="/tasks/task/{{.Task.ID}}" method="POST" enctype="multipart/form-data">{{end}}
+     
+      <h2 i18n-text="parameters">Parameters:</h2>
+      <p><span class="ofname" i18n-text="plannedStartDue">Planned start and due:</span>
+        {{$tsep := " "}}
+        {{$inpt := "text"}}
+        {{if .UserConfig.UseCalendarInConrols}}
+          {{$tsep = "T"}}
+          {{$inpt = "datetime-local"}}
+        {{end}}
+        <span class="nowrap"><span i18n-text="start">Start:</span> <input type="{{$inpt}}" class="numberbox" name="planStart" value="{{.Task.GiveDateTime "PlanStart" "yyyy-mm-dd" "24h" $tsep}}" placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" maxlength="32"></span>
+        <span class="nowrap"><span i18n-text="due">Due:</span> <input type="{{$inpt}}" class="numberbox" name="planDue" value="{{.Task.GiveDateTime "PlanDue" "yyyy-mm-dd" "24h" $tsep}}" placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" maxlength="32"></span>
+      </p>
+      <p><span class="ofname" i18n-text="assignee">Assignee:</span> <span class="nowrap">
+        <select name="assignee" id="assignee" class="numberbox">
+        <option value="0" i18n-text="no">no</option>
+        {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
+        {{end}}
+      </select><span class="dropdown"></span></span></p>
+      <h2 i18n-text="content">Content:</h2>
+      <p><span class="ofname" i18n-text="topic">Topic*:</span> <input type="text" class="field ofval" name="topic" size="30" maxlength="127" value="{{.Task.Topic}}" required></p>
+      <div class="wideelem"><span class="ofname" i18n-text="content">Content:</span> <span class="ofval nowrap">
+        {{$textarea := "textAreaMain"}}{{template "bbcode" $textarea}}
+        </span><br>
+        <textarea class="multiline" id="textAreaMain" name="content" maxlength="8000" style="width: 100%; height: 8em; margin-bottom: 0.4em;">{{.Task.Content}}</textarea>
+      </div>
+      <h2 i18n-text="uploadFiles">Upload files:</h2>
+      {{$sfx := ""}}{{template "filedrop" $sfx}}
+      <br>
+      <br>
+
+    {{if .New}}<input type="submit" class ="sbut" name="createButton" i18n-value="create" value="Create">
+               <input type="button" class ="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" 
+               onclick="if (history.length > 1) {history.back()} else {window.location.href = '/tasks/'}">
+    </form>{{else}}
+      <input type="submit" class ="sbut" name="updateButton" i18n-value="save" value="Save">
+      <input type="button" class ="sbut" name="hideButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); showEditForm('view');">
+    </form>{{end}}
+    </div>
+  {{end}}
+
+</div>
+
+{{template "bottom"}}
+
+
+</div>
+
+<script src="/assets/functions.js"></script>
+
+
+
+<script>
+/* Some variables for messages */
+var exceedQuantityMessage = 'The quantity of selected files exceeds the limit. Files are rejected.';
+var exceedSizeMessage = 'The size of selected files exceeds the limit. Files are rejected.';
+var clearedMessage = "Cleared.";
+if (document.documentElement.lang != 'en') {
+  getLang(document.documentElement.lang).then(lang => {
+    if (lang.exceedQuantityMessage) exceedQuantityMessage = lang.exceedQuantityMessage;
+    if (lang.exceedSizeMessage) exceedSizeMessage = lang.exceedSizeMessage;
+    if (lang.clearedMessage) clearedMessage = lang.clearedMessage;
+    if (window.location.pathname.endsWith('/new') && lang.newTask) {
+        document.querySelector('h1').innerHTML = lang.newTask;
+        document.title = lang.newTask;
+    } else if (lang.appTitle && lang.task) {
+      let topic = {{.Task.Topic}};
+      let id = {{.Task.ID}};
+      let title = lang.task + " #" + id;
+      if (topic) {
+        title += ": " + topic;
+      }
+      document.querySelector('h1').innerHTML = title;
+      document.title = lang.appTitle + ': ' + document.querySelector('h1').innerText;
+    }
+  });
+}
+
+
+/* Page loading function for read */
+(function() {
+  updateMultilines('multilineContent');
+})();
+</script>
+
+{{if .Editable}}
+<script>
+/* Page loading function for edit */
+(function() {
+  document.getElementById('assignee').value = "{{$ai}}";
+  checkForNewCreated();
+})();
+</script>
+{{end}}
+
+</body>
+</html>

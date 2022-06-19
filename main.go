@@ -25,7 +25,8 @@ const DEBUG = false
 // BaseStruct for handlers
 type BaseStruct struct {
 	cfg        *Config
-	lng        Lang
+	text       text
+	i18n       i18n
 	currencies map[int]string
 	utcdiff    int64
 	validURLs  struct {
@@ -55,6 +56,7 @@ type BaseStruct struct {
 		Themes      []string
 		DateFormats []string
 		TimeFormats []string
+		LangCodes   []string
 	}
 }
 
@@ -95,6 +97,7 @@ func main() {
 		logFile        string
 		assetsPath     string // default images, fonts, css, js, unmodifiable files
 		templatesPath  string
+		i18nPath       string
 		sqlscriptsPath string
 		db             *sql.DB
 		DBT            byte
@@ -144,7 +147,6 @@ func main() {
 		log.Println(currentFunction()+":", err)
 	}
 	defer applog.Close()
-	// Uncomment in Release; Comment in Development:
 	if !consolelog {
 		log.SetOutput(applog) // Setting logging to a file
 	}
@@ -168,7 +170,7 @@ func main() {
 		sqla.CreateDB(DBT, DSN, getSQLinitScript(DBT, sqlscriptsPath))
 		db = sqla.OpenSQLConnection(DBT, DSN)
 		defer db.Close()
-		createFirstAdmin(db, DBT)
+		createFirstAdmin(db, DBT, cfg.DefaultLang)
 		return
 	}
 
@@ -189,7 +191,7 @@ func main() {
 	db = sqla.OpenSQLConnection(DBT, DSN)
 	defer db.Close()
 	if sqliteFirstRun {
-		createFirstAdmin(db, DBT)
+		createFirstAdmin(db, DBT, cfg.DefaultLang)
 	}
 	cfg.DBUser = "no access"     // clear DB login in memory
 	cfg.DBPassword = "no access" // clear DB passwd in memory
@@ -209,10 +211,12 @@ func main() {
 			Themes      []string
 			DateFormats []string
 			TimeFormats []string
+			LangCodes   []string
 		}{
 			Themes:      []string{"dark", "light", "monochrome-dark", "monochrome-light"},
 			DateFormats: []string{"yyyy-mm-dd", "yyyy.mm.dd", "dd.mm.yyyy", "dd/mm/yyyy", "Mon dd, yyyy", "mm/dd/yyyy"},
 			TimeFormats: []string{"12h am/pm", "24h"},
+			LangCodes:   []string{"en", "es", "fr", "ru"},
 		},
 	}
 
@@ -237,8 +241,10 @@ func main() {
 
 	bs.regexes.emailCont = regexp.MustCompile(`(?sU)<div class="somemargins content">(.+)</div>`)
 
-	templatesPath = filepath.Join(cfg.ServerSystem, "templates", bs.cfg.DefaultLang)
-	bs.templates = template.Must(template.ParseFiles(
+	templatesPath = filepath.Join(cfg.ServerSystem, "templates")
+	bs.templates = template.Must(template.New("edm").
+		Funcs(template.FuncMap{"returnFilterRender": returnFilterRender}).ParseFiles(
+		filepath.Join(templatesPath, "blocks.tmpl"),
 		filepath.Join(templatesPath, "config.tmpl"),
 		filepath.Join(templatesPath, "docs.tmpl"),
 		filepath.Join(templatesPath, "document.tmpl"),
@@ -253,7 +259,9 @@ func main() {
 	bs.anymailtmpl = getAnyMailTemplate()
 	bs.taskmailtmpl = getTaskMailTemplate()
 	bs.commmailtmpl = getCommMailTemplate()
-	bs.lng = newLangStruct(filepath.Join(templatesPath, "lng.json"))
+	i18nPath = filepath.Join(cfg.ServerSystem, "i18nserver")
+	bs.text = newTextStruct()
+	bs.i18n = newi18nStruct(filepath.Join(i18nPath, cfg.DefaultLang+".json"))
 
 	err = bs.team.constructUserList(db, DBT)
 	if err != nil {
@@ -289,7 +297,9 @@ func main() {
 	// Launching mailer monitor:
 	bs.mailchan = make(chan EmailMessage, 1024)
 	go mailerMonitor(bs.mailchan, bs.cfg.SMTPHost, strToInt(bs.cfg.SMTPPort), bs.cfg.SMTPUser, bs.cfg.SMTPPassword, bs.cfg.SMTPEmail, bs.db, bs.dbt)
-	go readMailFromDB(bs.mailchan, 30, bs.db, bs.dbt)
+	if cfg.SMTPHost != "" {
+		go readMailFromDB(bs.mailchan, 30, bs.db, bs.dbt)
+	}
 
 	// Launching browser:
 	if cfg.RunBrowser == "true" {

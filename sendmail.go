@@ -50,6 +50,14 @@ func (em *EmailMessage) saveToDB(db *sql.DB, DBType byte) (lastid int, rowsaff i
 	return lastid, rowsaff
 }
 
+func (em *EmailMessage) saveToDBandLog(db *sql.DB, DBType byte) {
+	log.Println("Saving mail message to DB.")
+	_, ra := em.saveToDB(db, DBType)
+	if ra < 1 {
+		log.Println("Cannot save mail message to DB, DB error.")
+	}
+}
+
 func readMailFromDB(ch chan EmailMessage, waitTimeSeconds int, db *sql.DB, DBType byte) {
 	for {
 		sq := "SELECT ID, SendTo, SendCc, Subj, Cont FROM emailmessages ORDER BY ID ASC LIMIT 100"
@@ -100,7 +108,11 @@ func readMailFromDB(ch chan EmailMessage, waitTimeSeconds int, db *sql.DB, DBTyp
 			em.Subj = Subj.String
 			em.Cont = Cont.String
 			if len(em.SendTo) > 0 || len(em.SendCc) > 0 {
-				ch <- em
+				select {
+				case ch <- em:
+				default:
+					log.Println("Channel is full. DB Mailer cannot send message.")
+				}
 			}
 			i++
 		}
@@ -108,7 +120,11 @@ func readMailFromDB(ch chan EmailMessage, waitTimeSeconds int, db *sql.DB, DBTyp
 			if DEBUG {
 				log.Println("No mail in DB to send, quiting DB Mailer routine")
 			}
-			ch <- EmailMessage{ID: 0, Subj: "DB_MAILER_GOROUTINE_QUITED"}
+			select {
+			case ch <- EmailMessage{ID: 0, Subj: "DB_MAILER_GOROUTINE_QUITED"}:
+			default:
+				log.Println("Channel is full. DB Mailer cannot send quit message.")
+			}
 			return
 		}
 		time.Sleep(time.Duration(waitTimeSeconds) * time.Second)
@@ -116,6 +132,9 @@ func readMailFromDB(ch chan EmailMessage, waitTimeSeconds int, db *sql.DB, DBTyp
 }
 
 func mailerMonitor(ch chan EmailMessage, host string, port int, user string, passwd string, from string, db *sql.DB, DBType byte) {
+	if port == 0 {
+		port = 25
+	}
 	d := gomail.NewDialer(host, port, user, passwd)
 	gm := gomail.NewMessage()
 	var sc gomail.SendCloser
@@ -143,7 +162,7 @@ func mailerMonitor(ch chan EmailMessage, host string, port int, user string, pas
 				continue
 			}
 			if !open {
-				if host != "" || user != "" || passwd != "" {
+				if host != "" {
 					if DEBUG {
 						log.Println("Dialing SMTP connection...")
 					}
@@ -176,11 +195,7 @@ func mailerMonitor(ch chan EmailMessage, host string, port int, user string, pas
 			}
 			if !open || errsending {
 				if em.ID == 0 {
-					log.Println("Saving mail message to DB.")
-					_, ra := em.saveToDB(db, DBType)
-					if ra < 1 {
-						log.Println("Cannot save mail message to DB, DB error.")
-					}
+					em.saveToDBandLog(db, DBType)
 				}
 				if dbMailerQuited {
 					if DEBUG {
@@ -314,7 +329,7 @@ func getTaskMailTemplate() *template.Template {
   <a class="msglnk" href="{{$.SystemURL}}/files/tasks/{{$.Task.ID}}/{{.}}" target="_blank">{{.}}</a>
 <br>{{end}}</div>
 {{end}}
-<div><a class="sbut" href="{{$.SystemURL}}/tasks/task/{{.Task.ID}}" target="_blank">{{.AppMessages.Captions.Open}}</a></div>
+<div class="margintop"><a class="sbut" href="{{$.SystemURL}}/tasks/task/{{.Task.ID}}" target="_blank">{{.AppMessages.Captions.Open}}</a></div>
 </div><div class="bottom" id="bottom">{{.AppMessages.DoNotReply}}<br>
 <a href="{{.SystemURL}}" target="_blank">{{.AppMessages.MailerName}}</a></div></div></body></html>`
 	return template.Must(template.New("taskmail").Parse(tmpl))
@@ -357,7 +372,7 @@ func getCommMailTemplate() *template.Template {
   <a class="msglnk" href="{{$.SystemURL}}/files/tasks/{{$.TaskID}}/{{$.Comment.ID}}/{{.}}" target="_blank">{{.}}</a>
 <br>{{end}}</div>
 {{end}}
-<div><a class="sbut" href="{{$.SystemURL}}/tasks/task/{{.TaskID}}#comment{{.Comment.ID}}" target="_blank">{{.AppMessages.Captions.Open}}</a></div>
+<div class="margintop"><a class="sbut" href="{{$.SystemURL}}/tasks/task/{{.TaskID}}#comment{{.Comment.ID}}" target="_blank">{{.AppMessages.Captions.Open}}</a></div>
 </div><div class="bottom" id="bottom">{{.AppMessages.DoNotReply}}<br>
 <a href="{{.SystemURL}}" target="_blank">{{.AppMessages.MailerName}}</a></div></div></body></html>`
 	return template.Must(template.New("commmail").Parse(tmpl))

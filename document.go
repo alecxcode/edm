@@ -258,12 +258,12 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	var Page = DocumentPage{
-		AppTitle:   bs.lng.AppTitle,
+		AppTitle:   bs.text.AppTitle,
 		LoggedinID: id,
 		Editable:   false,
 		New:        false,
-		Categories: bs.lng.Categories,
-		DocTypes:   bs.lng.DocTypes,
+		Categories: bs.text.Categories,
+		DocTypes:   bs.text.DocTypes,
 		Currencies: bs.currencies,
 	}
 
@@ -340,7 +340,11 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 				moveUploadedFilesToFinalDest(defaultUploadPath,
 					filepath.Join(bs.cfg.ServerRoot, "files", "docs", strconv.Itoa(d.ID)),
 					d.FileList)
-				http.Redirect(w, r, fmt.Sprintf("/docs/document/%d", d.ID), http.StatusSeeOther)
+				if Page.UserConfig.ReturnAfterCreation {
+					http.Redirect(w, r, "/docs/", http.StatusSeeOther)
+				} else {
+					http.Redirect(w, r, fmt.Sprintf("/docs/document/%d", d.ID), http.StatusSeeOther)
+				}
 				return
 			} else {
 				Page.Message = "dataNotWritten"
@@ -386,14 +390,17 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 	// Other fields code ============================================
 	if TextID == "new" {
 		Page.New = true
-		Page.PageTitle = bs.lng.NewDocument
+		Page.PageTitle = bs.text.NewDocument
 	} else {
-		Page.PageTitle = Page.Document.GiveType(Page.DocTypes, bs.lng.Document)
+		Page.PageTitle = Page.Document.GiveType(Page.DocTypes, bs.text.Document)
 		if Page.Document.DocType == 0 {
-			Page.PageTitle = bs.lng.Document + " " + Page.PageTitle
+			Page.PageTitle = bs.text.Document + " " + Page.PageTitle
 		}
 		if Page.Document.Category != 0 {
 			Page.PageTitle += " (" + Page.Document.GiveCategory(Page.Categories, "") + ")"
+		}
+		if Page.Document.RegNo != "" {
+			Page.PageTitle += " No. " + Page.Document.RegNo
 		}
 	}
 

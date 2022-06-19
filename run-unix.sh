@@ -2,5 +2,4 @@
 go generate
 go build
 #chmod +x ./edm
-./edm
-
+./edm --consolelog

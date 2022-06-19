@@ -13,6 +13,19 @@ import (
 	"unicode"
 )
 
+// FilterRender is for rendering frontend for filters in templates
+type FilterRender struct {
+	Name                 string
+	Attri18n             string
+	DisplayName          string
+	UseCalendarInConrols bool
+	Currencies           map[int]string
+}
+
+func returnFilterRender(Name string, Attri18n string, DisplayName string, UseCalendarInConrols bool, Currencies map[int]string) FilterRender {
+	return FilterRender{Name, Attri18n, DisplayName, UseCalendarInConrols, Currencies}
+}
+
 func fileExists(name string) bool {
 	if _, err := os.Stat(name); err != nil {
 		if os.IsNotExist(err) {
