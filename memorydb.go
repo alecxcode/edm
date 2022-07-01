@@ -326,7 +326,13 @@ func getLoginTemplate() *template.Template {
 <div><label for="loginName" style="display: inline-block; width: 80px;">{{.LoninFieldLabel}}</label> <input id="loginName" type="text" size="15" class="field" name="loginName" placeholder="" value=""></div>
 <div><label for="loginPasswd" style="display: inline-block; width: 80px;">{{.PasswordFieldLabel}}</label> <input id="loginPasswd" type="password" size="15" class="field" name="loginPasswd" placeholder="" value=""></div>
 <br><input type="submit" class ="sbut" name="loginButton" value="{{.LoginButton}}"><br>
-</form></div><div id="bottom">© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></div></div></body></html>`
+</form></div>
+<div id="bottom">
+<span>© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></span>
+<span>v1.0.0.</span>
+<span><a href="/assets/manual.html">Manual</a></span>
+</div>
+</div></body></html>`
 	return template.Must(template.New("login").Parse(logintmpl))
 }
 

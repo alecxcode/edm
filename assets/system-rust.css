@@ -19,6 +19,9 @@ body {
 pre, code {
   font-family: 'Courier New', Courier, monospace;
   overflow-x: auto;
+  background-color: #f0f0e0;
+  padding: 1px 3px;
+  border-radius: calc(var(--elements-radius) * 2);
 }
   
 #container {
@@ -51,7 +54,7 @@ pre, code {
 }
 a, a:visited {
   text-decoration: none;
-  color: #500;
+  color: #903;
 }
 a:hover, a:focus {
   text-decoration: underline;
@@ -89,7 +92,7 @@ a:hover, a:focus {
   outline: 0;
 }
 h1 {
-  color: #605959;
+  color: #3d3939;
   font-size: 22px;
   font-weight: bold;
   margin-bottom: 10px;
@@ -115,14 +118,14 @@ h2 {
   text-align: center;
 }
 .somemargins {
-  margin-top: 6px;
-  margin-bottom: 6px;
+  margin-top: 9px;
+  margin-bottom: 9px;
 }
 .margintop {
-  margin-top: 6px;
+  margin-top: 9px;
 }
 .marginbottom {
-  margin-top: 6px;
+  margin-bottom: 9px;
 }
 input[type=text], input[type=button], input[type=submit], button {
   -webkit-appearance: none;
@@ -203,9 +206,6 @@ a.sbut, a.sbut:active, a.sbut:visited {
   background-color: #c22;
   border: 1px solid #500;
 }
-.smaller {
-  padding: 2px 4px;
-}
 .nowrap {
   white-space: nowrap;
 }
@@ -222,6 +222,9 @@ a.sbut, a.sbut:active, a.sbut:visited {
 }
 .inline-block {
   display: inline-block;
+}
+.smaller, .smaller:hover, .smaller:focus {
+  padding: 2px 4px;
 }
 
 /* other things */

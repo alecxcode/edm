@@ -116,14 +116,14 @@ h2 {
   text-align: center;
 }
 .somemargins {
-  margin-top: 6px;
-  margin-bottom: 6px;
+  margin-top: 9px;
+  margin-bottom: 9px;
 }
 .margintop {
-  margin-top: 6px;
+  margin-top: 9px;
 }
 .marginbottom {
-  margin-top: 6px;
+  margin-bottom: 9px;
 }
 input[type=text], input[type=button], input[type=submit], button {
   -webkit-appearance: none;
@@ -204,9 +204,6 @@ a.sbut, a.sbut:active, a.sbut:visited {
   background-color: #c22;
   border: 1px solid #500;
 }
-.smaller {
-  padding: 2px 4px;
-}
 .nowrap {
   white-space: nowrap;
 }
@@ -223,6 +220,9 @@ a.sbut, a.sbut:active, a.sbut:visited {
 }
 .inline-block {
   display: inline-block;
+}
+.smaller, .smaller:hover, .smaller:focus {
+  padding: 2px 4px;
 }
 
 /* other things */

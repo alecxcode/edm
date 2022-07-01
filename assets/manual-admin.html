@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>EDM: User documentation</title>
+<link rel="shortcut icon" href="favicon.png">
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="system-rust.css">
+</head>
+<body><div id="container">
+    <div id="control">
+    <div class="center somemargins">
+        <a class="sbut smaller inline-block" href="/">EDM System Home</a>
+        <a class="sbut smaller inline-block" href="manual.html">User documentation</a>
+        <strong class="panel smaller inline-block">Administrator documentation</strong>
+    </div>
+    <h1>Administrator documentation</h1>
+    </div>
+    <div id="main">
+
+        <p>Please, read <a href="manual.html">user documentation</a> before this administrator documentation in order to understand some basic concepts.</p>
+        
+        <h2 class="margintop">Technical Description</h2>
+        <p>This software utilizes <a href="https://go.dev/">Go</a> programming language, <a href="https://github.com/alecxcode/sqla">sqla</a> module and drivers for each database type to directly connect to a database server.</p>
+        <p>Probably all platforms where Go programming language is available are supported (Linux, Mac, Windows, etc.).</p>
+        <p>The software should be installed on a server machine and configured to use a database management system selected by you.</p>
+        <p>The following RDBMS are supported:</p>
+        <ul>
+            <li>SQLite</li>
+            <li>Microsoft SQL Server</li>
+            <li>MySQL(MariaDB)</li>
+            <li>Oracle</li>
+            <li>PostgreSQL</li>
+        </ul>
+        <p>On the client-side it is necessary to use modern web browsers like Chrome, Firefox, Safari with enabled JavaScript. Internet Exprorer is not supported.</p>
+        <p>Basic bruteforce protection by default blocks login capability for any users from any IP addresses for 60 minutes after 100 attempts to enter with wrong login or password.</p>
+        
+        <h2 class="margintop">Installation of a release package</h2>
+        <p>Installing in Windows is easy: run the downloaded distribution file, select a folder to install, and then it runs automatically. This way of installation is more for presentation purposes.</p>
+        <p>On Linux/Mac/BSD: unpack the app somewhere and run <code>./edm</code> executable. If there is no build for your system or it does not work, you need to build it yourself. It is recommended to create a separate user for the server (e.g. with the name <code>edm</code>), like for other servers and configure the software as a service on your system. You should refer to your system administration guides or manuals about how to do that.</p>
+        <p>Default login after installation: <b>admin</b>, and the password is empty (there is no password).</p>
+
+        <h2 class="margintop">Configuration file</h2>
+        <p>Configuration file by default is located in the <b>.edm</b> directory of a user home directory. The name of this file is <b>edm-system.cfg</b>.</p>
+        <p>If there is no configuration file found on launch, the file will be created with default values.</p>
+        <p>Every line consists of option name and option value which are separated by <code>=</code> sign. Wrong option names, lines started with <code>#</code> are ignored.</p>
+        <p>The following options are available:</p>
+        <p><code>ServerSystem</code> - path where all static files (templates, themes, etc.) are located. Not writable. Default is <code>.</code> (current directory).</p>
+        <p><code>ServerRoot</code> - path where server modifiable files (uploads, logs, etc.) are stored. Should be writable. Default is <code>.edm</code></p>
+        <p><code>ServerHost</code> - ip address to bind the server process. Default is <code>127.0.0.1</code>. To bind the server to all interfaces make this option empty.</p>
+        <p><code>ServerPort</code> - server process port. Default is <code>8090</code>.</p>
+        <p><code>DomainName</code> - domain name of your system. It is used in email notifications.</p>
+        <p><code>DefaultLang</code> - default server language which is used on login page, in emails, by newly created user profiles. Use one of these two-letter codes:
+            <code>en</code>,
+            <code>es</code>,
+            <code>fr</code>,
+            <code>ru</code>.</p>
+        <p><code>StartPage</code> - default "base" page to display after logged-in user opens the system url. Use one of these: 
+            <code>docs</code>,
+            <code>tasks</code>,
+            <code>team</code>.</p>
+        <p><code>RemoveAllowed</code> - permission for owners to delete their objects: <code>true</code> or <code>false</code>.</p>
+        <p><code>RunBrowser</code> - should the server run a browser on launch: <code>true</code> or <code>false</code>.</p>
+        <p><code>UseTLS</code> - whether or not to use https: <code>true</code> or <code>false</code>.</p>
+        <p><code>SSLCertFile</code> - specify certificate file path if UseTLS is set to true.</p>
+        <p><code>SSLKeyFile</code> - specify key file path if UseTLS is set to true.</p>
+        <p><code>CreateDB</code> - if set to true the server will create database tables to initialize empty database. Usually should not be used.</p>
+        <p><code>DBType</code> - specifies RDBMS type. Might be one of these:
+            <code>sqlite</code>,
+            <code>mssql</code> or <code>sqlserver</code>,
+            <code>mysql</code> or <code>mariadb</code>,
+            <code>oracle</code>,
+            <code>postgresql</code> or <code>postgres</code>.</p>
+        <p><code>DBName</code> - database name to connect. For Oracle it is a service name.</p>
+        <p><code>DBHost</code> - host address of the database server.</p>
+        <p><code>DBPort</code> - port of the database server.</p>
+        <p><code>DBUser</code> - database user to connect.</p>
+        <p><code>DBPassword</code> - password of the database user.</p>
+        <p><code>SMTPEmail</code> - email address to use in notification emails.</p>
+        <p><code>SMTPHost</code> - SMTP server host address. Should be specified in order to make notifications work properly.</p>
+        <p><code>SMTPPort</code> - SMTP server port. Should be specified in order to make notifications work properly.</p>
+        <p><code>SMTPUser</code> - SMTP server user. Should be specified in order to make notifications work properly.</p>
+        <p><code>SMTPPassword</code> - SMTP server password. Should be specified in order to make notifications work properly.</p>
+        
+        <h2 class="margintop">Command line arguments</h2>
+        <p>Command-line arguments have higher priority over (overwrite) configuration file values.</p>
+        <p><code>--createdb</code> - the server will create database table to initialize empty database.</p>
+		<p><code>--filldb</code> - fill database with showcase data. Useful only for presentation and testing.</p>
+        <p><code>--nobrowser</code> - the server should not run a browser on launch.</p>
+        <p><code>--consolelog</code> - print messages to console instead of a log file.</p>
+        
+        <h2 class="margintop">Building from source</h2>
+        <p>The simplest way to build the software is to run <code>go build</code> command, and then you can run <code>./edm</code> (<code>edm.exe</code> for windows) app in the current directory.</p>
+        <p>You should have Go compiler and C compiler (like one supplied with GCC or MinGW) on your system installed.</p>
+        <p><b>Dockerfile</b> and <b>docker-compose.yml</b> files are available to run the software with Docker.</p>
+        <p><b>build-release.cmd</b> and <b>build-release.sh</b> are for building a smaller executable with some flags.</p>
+        <p><b>addicon.cmd</b> is for adding the program icon into the exe file in Windows - this requires <a href="http://angusj.com/resourcehacker/">Resource Hacker</a> on your system.</p>
+        <p><b>run-unix.sh</b> is a more convenient way to run the software while developing it.</p>
+        <p>In order to know some constants and structs of the app read the package documentation available in source files, for example with <code>go doc --all</code> command.</p>
+        <p>If you add some structs which requires creating tables in a database, you can use <code>go generate</code> command to run <b>sql-gen.py</b> python script to create sql scripts. This runs python3 and requires it to be installed on your system.</p>
+        <p>If you modify server config code, you can use <code>go generate</code> command to run <b>config-gen.py</b> python script to rewrite config loading and saving functions. This runs python3 and requires it to be installed on your system.</p>
+        <p>All compilers, interpreters, executables which are necessary to build the software should be available in a path variable of you environment.</p>
+        <h3 class="margintop">Themes</h3>
+        <p>Any theme is a single css file which name starts with <b>theme-</b> prefix and which is located in the <b>assets</b> directory.</p>
+        <p>To add a new theme you need to create that file with selectors like in other files. Theme list is defined in <code>main()</code> function of the program. You need to add theme name to the list, and rebuild the application.</p>
+        <h3 class="margintop">Localization</h3>
+        <p>There are two JSON files wich contain language-specific strings. Name of these files is two-letter language code and .json extension.
+            Server-side files are located in <b>i18nserver</b> directory, and they are relatively small as they are used only for login page and email notifications.
+            Frontend localization files are located in <b>assets/i18n</b> directory, and they contain a lot more strings, almost everything user interface language. Users can easily switch their interface language on settings page.
+        </p>
+        <p>To add a new language you need to create those two JSON files with the same structure as existing files. Language codes list is defined in <code>main()</code> function of the program. You need to add language code to the list, and rebuild the application. You also need to edit <b>config.tmpl</b> file to add a language name there.</p>
+        
+    </div>
+    <div id="bottom">© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></div>
+</div></body></html>

@@ -13,8 +13,12 @@ The application has the following functions:
 * Some basic bruteforce protection
 * Other functions, not mentioned in this list
 
+Supported themes: dark, light, monochrome-dark, monochrome-light.  
+Supported languages: English, Spanish, French, Russian.
+
 ## How to build and run
-To build use Go (Golang) programming language, run `go build`, and then you can run `./edm` (`edm.exe` for windows) app in the current directory. If you build the application and run locally, by default it immediately opens the browser, so you can start using it. Default login: **admin**, default password: **no password**.  
+To build use Go (Golang) programming language, run `go build`, and then you can run `./edm` (`edm.exe` for windows) app in the current directory. If you build the application and run locally, by default it immediately opens the browser, so you can start using it.  
+Default login: **admin**, for default password use empty string (no password).  
 To build with docker and run with docker-compose use: `docker build -t edm .` and then `docker-compose up`. If you run it with docker-compose it does not open the browser by itself. You can open the system at: http://127.0.0.1:8090
 
 ## Technical details
