@@ -145,7 +145,7 @@ a:hover, a:focus {
   outline: 0;
 }
 a:focus-visible {text-decoration-thickness: 1.5px;}
-.breadcrumbs {margin-bottom: 10px;}
+.breadcrumbs {margin-bottom: 10px; text-transform:lowercase;}
 .scroller {height: 11em; overflow-y: scroll; padding: 4px; background-color: #fff;}
 
 .txtred {color: #000;}
@@ -178,13 +178,14 @@ a:focus-visible {text-decoration-thickness: 1.5px;}
   padding: 0px 5px 0px 5px;
   white-space: nowrap;
 }
-.chosen-withrm, #control .chosen-withrm, #main .chosen-withrm {
+.chosen, #control .chosen, #main .chosen {
   color: #aaa;
   background-color: #000;
-  border-radius: var(--elements-radius) 0 0 var(--elements-radius);
+  border-radius: var(--elements-radius);
   padding: 0px 5px 0px 5px;
   white-space: nowrap;
 }
+.withrm, #control .withrm, #main .withrm {border-radius: var(--elements-radius) 0 0 var(--elements-radius);}
 .rm{ 
   cursor: pointer;
   color:#aaa; 
@@ -324,7 +325,7 @@ th, td {border: 0.5px solid #000;}
   margin-top: 6px;
 }
 .marginbottom {
-  margin-top: 6px;
+  margin-bottom: 6px;
 }
 
 
@@ -529,12 +530,6 @@ a.sbut, a.sbut:active, a.sbut:visited {
   color: #fff;
   background-color: #000;
 }
-.smaller {
-  padding: 2px 4px;
-}
-.nowrap {
-  white-space: nowrap;
-}
 
 /* panel */
 .panel, .panel:hover, .panel:focus {
@@ -646,7 +641,12 @@ h3 a:focus {
   text-decoration: underline;
   text-decoration-style: dotted;
 }
-
+.smaller, .smaller:hover, .smaller:focus {
+  padding: 2px 4px;
+}
+.nowrap {
+  white-space: nowrap;
+}
 
 
 
@@ -720,6 +720,8 @@ h3 a:focus {
   background-color: var(--defaultBackgroundColor);
   width: 100%; height: 100%;
 }
+.semitransparent {background-color: #FFFFFFCC}
+.dialog {max-width: 640px; background-color: var(--defaultBackgroundColor); position: relative; margin: 0 auto; top: 15%;}
 .loading {
   color: #000;
   position: relative; margin: 0 auto; top: 30%;

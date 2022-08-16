@@ -4,15 +4,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>{{.AppTitle}}: {{.PageTitle}}</title>
-  <link rel="shortcut icon" href="/assets/favicon.png">{{if not (eq .UserConfig.LangCode "en")}}
-  <link rel="preload" href="/assets/i18n/{{.UserConfig.LangCode}}.json" as="fetch">{{end}}
+  <link rel="shortcut icon" href="/assets/favicon.png">
+  <link rel="preload" href="/assets/i18n/{{.LangCode}}.json" as="fetch">
   <link rel="stylesheet" href="/assets/fonts.css">
-  <link rel="stylesheet" href="/assets/theme-{{.UserConfig.SystemTheme}}.css">
+  <link rel="stylesheet" href="/assets/{{if isThemeSystem .SystemTheme}}{{.SystemTheme}}{{else}}theme-{{.SystemTheme}}{{end}}.css">
 </head>
 {{end}}
 
-{{define "menus"}}
-  {{if not (eq .UserConfig.LangCode "en")}}
+{{define "loading"}}
+  {{if not (eq . "en")}}
   <div class="fullscreen">
     <div class="loading">
       <div class="loadingCircle"></div>
@@ -20,6 +20,9 @@
     </div>
   </div>
   {{end}}
+{{end}}
+
+{{define "menus"}}
   <div id="headmenu">
     <div class="boxinmenu">
     <div id="evenly">
@@ -43,7 +46,7 @@
 {{define "bottom"}}
 <div id="bottom">
   <span>© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></span>
-  <span>v1.0.0.</span>
+  <span>v1.1.0.</span>
   <span><a href="/assets/manual.html">Manual</a></span>
 </div>
 {{end}}

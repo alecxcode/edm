@@ -8,6 +8,8 @@ services:
       - 8090:8090
     depends_on:
       - db
+    volumes:
+      - app:/serverroot
   db:
     image: postgres
     environment:
@@ -17,5 +19,11 @@ services:
     ports:
       - 5435:5432
     volumes:
+      - db:/var/lib/postgresql/data/
       - ./sqlscripts/postgresql-create.sql:/docker-entrypoint-initdb.d/postgresql-create.sql
       - ./testfiles/xadmin.sql:/docker-entrypoint-initdb.d/xadmin.sql
+
+volumes:
+  db:
+  app:
+  

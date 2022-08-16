@@ -233,7 +233,7 @@ func main() {
 	// valid paths for handlers
 	bs.validURLs.Indx = regexp.MustCompile("^/?$")
 	bs.validURLs.Config = regexp.MustCompile("^/config$")
-	bs.validURLs.Docs = regexp.MustCompile("^/docs(/document/([0-9]+|new))?/?$")
+	bs.validURLs.Docs = regexp.MustCompile("^/docs(/document/([0-9]+|[0-9]+/approval|new))?/?$")
 	bs.validURLs.Task = regexp.MustCompile("^/tasks(/task/([0-9]+|new))?/?$")
 	bs.validURLs.Team = regexp.MustCompile("^/team(/profile/([0-9]+|new))?/?$")
 	bs.validURLs.Comp = regexp.MustCompile("^/companies(/company/([0-9]+|new))?/?$")
@@ -243,11 +243,16 @@ func main() {
 
 	templatesPath = filepath.Join(cfg.ServerSystem, "templates")
 	bs.templates = template.Must(template.New("edm").
-		Funcs(template.FuncMap{"returnFilterRender": returnFilterRender}).ParseFiles(
+		Funcs(template.FuncMap{
+			"returnFilterRender": returnFilterRender,
+			"returnHeadRender":   returnHeadRender,
+			"isThemeSystem":      isThemeSystem,
+		}).ParseFiles(
 		filepath.Join(templatesPath, "blocks.tmpl"),
 		filepath.Join(templatesPath, "config.tmpl"),
 		filepath.Join(templatesPath, "docs.tmpl"),
 		filepath.Join(templatesPath, "document.tmpl"),
+		filepath.Join(templatesPath, "approval.tmpl"),
 		filepath.Join(templatesPath, "tasks.tmpl"),
 		filepath.Join(templatesPath, "task.tmpl"),
 		filepath.Join(templatesPath, "team.tmpl"),
@@ -296,7 +301,7 @@ func main() {
 
 	// Launching mailer monitor:
 	bs.mailchan = make(chan EmailMessage, 1024)
-	go mailerMonitor(bs.mailchan, bs.cfg.SMTPHost, strToInt(bs.cfg.SMTPPort), bs.cfg.SMTPUser, bs.cfg.SMTPPassword, bs.cfg.SMTPEmail, bs.db, bs.dbt)
+	go mailerMonitor(bs.mailchan, bs.cfg.SMTPHost, strToInt(bs.cfg.SMTPPort), bs.cfg.SMTPUser, bs.cfg.SMTPPassword, bs.cfg.SMTPEmail, bs.i18n.Messages.MailerName, bs.db, bs.dbt)
 	if cfg.SMTPHost != "" {
 		go readMailFromDB(bs.mailchan, 30, bs.db, bs.dbt)
 	}

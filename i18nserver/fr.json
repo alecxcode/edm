@@ -9,8 +9,31 @@
         "LoginButton": "Entrer",
         "WrongLoginMsg": "Données de connexion erronées"
     },
+    "DocCaption": "Document",
     "TaskCaption": "Tâche",
     "CommentCaption": "Commentaire",
+    "Categories": [
+        "Aucun",
+        "Entrant",
+        "Sortant",
+        "Interne"
+    ],
+    "DocTypes": [
+        "Autre",
+        "Lettre",
+        "Application",
+        "Réclamation",
+        "Contrat, addenda à celui-ci",
+        "Comptable, financier",
+        "Technique, ingénierie",
+        "Ordre, règlement",
+        "Décision corporative",
+        "Comptes rendus des réunions",
+        "Procuration",
+        "Plaidoirie",
+        "Judiciaire (d'une cour)",
+        "Modèle"
+    ],
     "TaskStatuses": [
         "Créée",
         "Assignée",
@@ -30,11 +53,19 @@
             "TaskStatusChanged": "Le statut de la tâche a été changé",
             "ParticipantToAdded": "Vous avez été ajouté à la liste des participants à la tâche",
             "ProfileRegistered": "Accès au système GED",
-            "SecurityAlert": "Alerte de sécurité"
+            "SecurityAlert": "Alerte de sécurité",
+            "NewApproval": "Nouvelle approbation",
+            "Approved": "Approuvé",
+            "Rejected": "Rejeté"
         },
         "Cont": {
             "ProfileRegistered": "Vous pouvez vous connecter au système en utilisant le lien ci-dessous. Votre login et mot de passe sont: ",
-            "LoginPasswdChanged": "Il s'agit de vous informer de votre changement d'identifiant ou de mot de passe. Si vous savez pourquoi cela s'est produit, aucune action n'est requise."
+            "LoginPasswdChanged": "Il s'agit de vous informer de votre changement d'identifiant ou de mot de passe. Si vous savez pourquoi cela s'est produit, aucune action n'est requise.",
+            "ApproveThis": "Veuillez examiner et approuver",
+            "ByApprover": "par approbateur",
+            "Approved": "a été approuvé",
+            "Rejected": "a été rejeté",
+            "InfoLink": "Ouvrez ce lien pour plus de détails"
         },
         "Captions": {
             "CreatedTime": "Temps créée",

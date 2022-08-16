@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="{{.UserConfig.LangCode}}">
-{{template "head" .}}
+{{template "head" returnHeadRender .AppTitle .PageTitle .UserConfig.LangCode .UserConfig.SystemTheme}}
 <body>
 
+{{template "loading" .UserConfig.LangCode}}
 {{template "menus" .}}
 
 <div id="container">
@@ -48,7 +49,7 @@
 
   <p id="appliedFilters" i18n-text="noFiltersApplied">No filters applied.</p>
 
-  <div class="panel"><a href="/companies/" i18n-text="gotoCompaniesPage">Go to companies list</a></div>
+  <div class="panel smaller"><a href="/companies/" i18n-text="gotoCompaniesPage">Go to companies list</a></div>
   <div id="controlButtons">
     <a href="/team/profile/new" class ="sbut greenish" i18n-text="newUser">+ New user profile</a>
     {{template "deleteButton"}}

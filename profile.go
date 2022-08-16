@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -83,7 +82,10 @@ func createFirstAdmin(db *sql.DB, DBType byte, langCode string) {
 			ReturnAfterCreation:  true,
 		},
 	}
-	admin.create(db, DBType)
+	uniqueLogin, _ := admin.isLoginUniqueorBlank(db, DBType)
+	if uniqueLogin {
+		admin.create(db, DBType)
+	}
 }
 
 func (p *Profile) create(db *sql.DB, DBType byte) (lastid int, rowsaff int) {
@@ -155,7 +157,7 @@ func (p *Profile) updateConfig(db *sql.DB, DBType byte) (rowsaff int) {
 func (p *Profile) load(db *sql.DB, DBType byte) error {
 
 	row := db.QueryRow(`SELECT
-p.ID, p.FirstName, p.OtherName, p.Surname, p.Contacts, p.BirthDate, p.JobTitle, p.JobUnit, p.Boss, p.UserRole, p.UserLock, p.UserConfig, p.Login, p.Passwd,
+p.ID, p.FirstName, p.OtherName, p.Surname, p.Contacts, p.BirthDate, p.JobTitle, p.JobUnit, p.Boss, p.UserRole, p.UserLock, p.UserConfig, p.Login,
 units.ID, units.Company, units.UnitName,
 companies.ID, companies.ShortName,
 b.ID, b.FirstName, b.Surname, b.JobTitle
@@ -177,7 +179,6 @@ WHERE p.ID = `+sqla.MakeParam(DBType, 1), p.ID)
 	var UserLock sql.NullInt64
 	var UserConfig sql.NullString
 	var Login sql.NullString
-	var Passwd sql.NullString
 
 	var UnitID sql.NullInt64
 	var UnitCompany sql.NullInt64
@@ -191,7 +192,7 @@ WHERE p.ID = `+sqla.MakeParam(DBType, 1), p.ID)
 	var BossSurname sql.NullString
 	var BossJobTitle sql.NullString
 
-	err := row.Scan(&p.ID, &FirstName, &OtherName, &Surname, &Contacts, &BirthDate, &JobTitle, &JobUnit, &Boss, &UserRole, &UserLock, &UserConfig, &Login, &Passwd,
+	err := row.Scan(&p.ID, &FirstName, &OtherName, &Surname, &Contacts, &BirthDate, &JobTitle, &JobUnit, &Boss, &UserRole, &UserLock, &UserConfig, &Login,
 		&UnitID, &UnitCompany, &UnitName,
 		&CompanyID, &ShortName,
 		&BossID, &BossFirstName, &BossSurname, &BossJobTitle)
@@ -232,7 +233,6 @@ WHERE p.ID = `+sqla.MakeParam(DBType, 1), p.ID)
 		}
 	}
 	p.Login = Login.String
-	p.Passwd = Passwd.String
 
 	return nil
 }
@@ -552,22 +552,11 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			p.ID, created = p.create(bs.db, bs.dbt)
 			if created > 0 {
-				if r.FormValue("notifyCreatedUser") == "true" && p.Login != "" && p.Contacts.Email != "" && p.UserLock == 0 {
-					email := EmailMessage{Subj: bs.i18n.Messages.Subj.ProfileRegistered, SendTo: []UserToSend{{p.FirstName + " " + p.Surname, p.Contacts.Email}}}
-					if len(email.SendTo) > 0 || len(email.SendCc) > 0 {
-						newProfileMail := AnyMail{email.Subj, bs.i18n.Messages.Cont.ProfileRegistered + p.Login + ", " + r.FormValue("passwd"), bs.systemURL, bs.i18n.Messages.DoNotReply, bs.systemURL, bs.i18n.Messages.MailerName}
-						var tmpl bytes.Buffer
-						if err := bs.anymailtmpl.Execute(&tmpl, newProfileMail); err != nil {
-							log.Println("executing task mail template [newprofile]:", err)
-						}
-						email.Cont = tmpl.String()
-						select {
-						case bs.mailchan <- email:
-						default:
-							log.Println("Channel is full. While creating login cannot send message.")
-							email.saveToDBandLog(bs.db, bs.dbt)
-						}
-					}
+				if r.FormValue("notifyCreatedUser") == "true" {
+					mail := AnyMail{bs.i18n.Messages.Subj.ProfileRegistered,
+						bs.i18n.Messages.Cont.ProfileRegistered + p.Login + ", " + r.FormValue("passwd"),
+						bs.systemURL, bs.i18n.Messages.DoNotReply, bs.systemURL, bs.i18n.Messages.MailerName}
+					mail.constructToChannel(bs.db, bs.dbt, bs.anymailtmpl, bs.mailchan, p)
 				}
 				bs.team.constructUserList(bs.db, bs.dbt)
 				if Page.UserConfig.ReturnAfterCreation {
@@ -706,23 +695,11 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 			updatedPasswd = p.updatePasswd(bs.db, bs.dbt)
 			if updatedPasswd > 0 {
 				p.preload(bs.db, bs.dbt)
-				if p.Contacts.Email != "" && p.UserLock == 0 {
-					email := EmailMessage{Subj: bs.i18n.Messages.Subj.SecurityAlert, SendTo: []UserToSend{{p.FirstName + " " + p.Surname, p.Contacts.Email}}}
-					if len(email.SendTo) > 0 || len(email.SendCc) > 0 {
-						newProfileMail := AnyMail{email.Subj, bs.i18n.Messages.Cont.LoginPasswdChanged, bs.systemURL + "/profiles/" + strconv.Itoa(p.ID), bs.i18n.Messages.DoNotReply, bs.systemURL, bs.i18n.Messages.MailerName}
-						var tmpl bytes.Buffer
-						if err := bs.anymailtmpl.Execute(&tmpl, newProfileMail); err != nil {
-							log.Println("executing task mail template [newprofile]:", err)
-						}
-						email.Cont = tmpl.String()
-						select {
-						case bs.mailchan <- email:
-						default:
-							log.Println("Channel is full. While updating password cannot send message.")
-							email.saveToDBandLog(bs.db, bs.dbt)
-						}
-					}
-				}
+				mail := AnyMail{bs.i18n.Messages.Subj.SecurityAlert,
+					bs.i18n.Messages.Cont.LoginPasswdChanged,
+					bs.systemURL + "/profiles/" + strconv.Itoa(p.ID),
+					bs.i18n.Messages.DoNotReply, bs.systemURL, bs.i18n.Messages.MailerName}
+				mail.constructToChannel(bs.db, bs.dbt, bs.anymailtmpl, bs.mailchan, p)
 				Page.Message = "dataWritten"
 				if bs.team.isProfileInMemory(p.ID) {
 					bs.team.updatePasswd(p)

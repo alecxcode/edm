@@ -27,6 +27,7 @@ type text struct {
 	NewComment         string
 	Categories         []string
 	DocTypes           []string
+	ApprovalSign       []string
 	TaskStatuses       []string
 }
 
@@ -34,8 +35,11 @@ type text struct {
 type i18n struct {
 	LangCode       string
 	LoginLang      LoginLang
+	DocCaption     string
 	TaskCaption    string
 	CommentCaption string
+	Categories     []string
+	DocTypes       []string
 	TaskStatuses   []string
 	Messages       AppMessages
 }
@@ -53,10 +57,18 @@ type AppMessages struct {
 		ParticipantToAdded string
 		ProfileRegistered  string
 		SecurityAlert      string
+		NewApproval        string
+		Approved           string
+		Rejected           string
 	}
 	Cont struct {
 		ProfileRegistered  string
 		LoginPasswdChanged string
+		ApproveThis        string
+		ByApprover         string
+		Approved           string
+		Rejected           string
+		InfoLink           string
 	}
 	Captions struct {
 		CreatedTime      string
@@ -109,6 +121,12 @@ func newTextStruct() text {
 			"Pleading",
 			"Judicial (from a court)",
 			"Template",
+		},
+		ApprovalSign: []string{
+			"For approval",
+			"Approved",
+			"Rejected",
+			"Broken",
 		},
 		TaskStatuses: []string{
 			"Created",

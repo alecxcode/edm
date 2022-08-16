@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="{{.UserConfig.LangCode}}">
-{{template "head" .}}
+{{template "head" returnHeadRender .AppTitle .PageTitle .UserConfig.LangCode .UserConfig.SystemTheme}}
 <body>
 
+{{template "loading" .UserConfig.LangCode}}
 {{template "menus" .}}
 
 <div id="container">
@@ -10,20 +11,75 @@
   <div id="control">
     <h1>{{.PageTitle}}</h1>
     <p class="breadcrumbs"><a href="/docs/" i18n-text="allDocuments">all documents</a> / <span i18n-text="documentPage">document page</span></p>
-    {{if and .Editable (not .New)}}
+    
+    {{if not .New}}
+      {{if .Editable}}
       <input type="button" class ="sbut" name="showButton" i18n-value="edit" value="Edit" onclick="showEditForm('edit');">
       <input type="button"{{if not .RemoveAllowed}}style="display: none;"{{end}} class="sbut reddish" name="showDelete" i18n-value="delete" value="Delete" onclick="showEditForm('removal');">
+      {{end}}
+
+      {{if .Approvals}}<a href="/docs/document/{{.Document.ID}}/approval" class="sbut" i18n-text="approvalList">Approval list</a>{{end}}
+      
+      {{if .IamApprover}}
+      {{if not (eq .YouApproved 1)}}
+      <input type="button" class="sbut" id="showApprovalWindow" name="showApprovalWindow" i18n-value="approvalDialog" value="Approval dialog" onclick="document.getElementById('approvalWindow').style.display = 'block';">
+      <div id="approvalWindow" class="fullscreen semitransparent" style="display: none;">
+        <div class="dialog elem">
+          <h3 i18n-text="approval">Approval</h3>
+          <form id="approvalForm" action="/docs/document/{{.Document.ID}}" method="post">
+            <div class="subelem">
+              <div class="marginbottom" i18n-text="approvalNote">Type approval note if you wish or leave empty:</div>
+              <div class="nowrap">{{$textarea := "textAreaNote"}}{{template "bbcode" $textarea}}</div>
+              <textarea class="multiline" id="textAreaNote" name="approvalNote" maxlength="8000" style="width: 100%; height: 8em; margin-bottom: 0.4em;">{{.Approvals.GetApprovalNote .Document.ID .LoggedinID}}</textarea>
+            </div>
+            <div class="subelem">
+              <input type="hidden" id="approvalSign" name="approvalSign" value="{{.YouApproved}}">
+              <input type="submit" class="sbut greenish" name="approvalButton" i18n-value="approve" value="Approve" onclick="document.getElementById('approvalSign').value = '1';">
+              <input type="submit" class="sbut reddish" name="approvalButton" i18n-value="reject" value="Reject" onclick="document.getElementById('approvalSign').value = '2';">
+              <input type="submit" class="sbut" name="approvalButton" i18n-value="saveNote" value="Save note">
+              <input type="button" class="sbut" i18n-value="cancel" value="Cancel" onclick="document.getElementById('approvalWindow').style.display = 'none';document.getElementById('approvalForm').reset();">
+            </div>
+          </form>
+        </div>
+      </div>
+      {{end}}
+      {{if eq .YouApproved 1}} <span class="txtgreen" i18n-text="youApproved">Approved by you.</span>{{end}}
+      {{if eq .YouApproved 2}} <span class="txtred" i18n-text="youRejected">Rejected by you.</span>{{end}}
+      {{if eq .YouApproved 3}} <span class="txtred" i18n-text="yourApprovalBroken">Your approval is broken.</span>{{end}}
+      {{end}}
+
+      {{if .Editable}}
       <form id="removal" action="/docs/" method="post" style="display: none;">
       <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
       <input type="hidden" name="ids" value="{{.Document.ID}}">
       <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="showEditForm('view');">
-      <input type="submit" class ="sbut reddish" name="deleteButton" i18n-value="yesDelete" value="Yes, delete">
+      <input type="submit" class="sbut reddish" name="deleteButton" i18n-value="yesDelete" value="Yes, delete">
       </form>
+      {{end}}
+
+      {{if or .Editable .IamApprover}}
+      <div>
+        <span class="nowrap"><select id="selectedApprover" class="numberbox">
+          <option value="" i18n-text="selectApproverToAdd">Select an approver to add</option>
+          {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
+          {{end}}
+        </select><span class="dropdown"></span></span>
+        <input type="button" class ="sbut greenish smaller" i18n-value="addApprover" value="Add approver"
+        onclick="makeFormAndSubmit(document.getElementById('selectedApprover').value, 'approvalAdd', '/docs/document/{{.Document.ID}}');">
+      </div>
+      {{end}}
+
+      <div id="appliedElems"><span i18n-text="approvers">Approvers:</span>{{if .Approvals}}
+        {{range .Approvals}}<a class="chosen {{if and $.Editable (eq .Approved 0)}}withrm{{end}}" href="/team/profile/{{.GiveApproverID}}">{{.Approver.GiveSelfNameJob}}</a>{{if and $.Editable (eq .Approved 0)}}<span class="rm" i18n-title="delete" title="Delete" onclick="makeFormAndSubmit('{{.ID}}', 'approvalRemove', '/docs/document/{{$.Document.ID}}');">×</span>{{end}} {{end}}
+        {{else}} <span i18n-text="no">no</span>{{end}}
+      </div>
     {{end}}
+
     {{if eq .Message "dataWritten"}}<div class="msgok" i18n-text="dataWritten">Data has been written successfully.</div>{{end}}
     {{if eq .Message "dataNotWritten"}}<div class="msgred" i18n-text="dataNotWritten">Error writing data.</div>{{end}}
     {{if eq .Message "uploadError"}}<div class="msgred" i18n-text="uploadError">Error uploading files.</div>{{end}}
     {{if eq .Message "removalError"}}<div class="msgred" i18n-text="removalFileError">Error deleting files.</div>{{end}}
+    {{if eq .Message "approverAlreadyInList"}}<div class="msgred" i18n-text="approverAlreadyInList">This approver is already in the list.</div>{{end}}
   </div>
 
   <div id="main">
@@ -41,7 +97,7 @@
       <p><span class="ofname" i18n-text="docSum">Sum:</span><span class="ofval">{{if .UserConfig.CurrencyBeforeAmount}}<span class="cur">{{if gt .Document.Currency 0}}{{index .Currencies .Document.Currency}}{{end}}</span> {{end}}<span class="sum nowrap">{{.Document.GiveSum}}</span> {{if not .UserConfig.CurrencyBeforeAmount}}<span class="cur">{{if gt .Document.Currency 0}}{{index .Currencies .Document.Currency}}{{end}}</span>{{end}}</span></p>
       <p><span class="ofname" i18n-text="authors">Authors:</span><span class="ofval">{{.Document.Authors}}</span></p>
       <p><span class="ofname" i18n-text="addressees">Addressees:</span><span class="ofval">{{.Document.Addressee}}</span></p>
-      <p><span class="ofname" i18n-text="docNote">Note:</span><span class="ofval" id="note">{{.Document.Note}}</span></p>
+      <p><span class="ofname" i18n-text="note">Note:</span><span class="ofval" id="note">{{.Document.Note}}</span></p>
       <h2 i18n-text="creatorOwner">Creator (owner):</h2>
       <p><span class="ofname" i18n-text="user">User:</span><span class="ofval">{{if $ci}}<a href="/team/profile/{{$ci}}">{{.Document.Creator.GiveSelfNameJob}}</a>{{end}}</span></p>
       <h2 i18n-text="docFiles">Document files:</h2>
@@ -54,6 +110,7 @@
       {{if and .Editable .Document.FileList (not .New)}}
       <span i18n-text="selectedFiles">Selected files:</span> <input type="button" class ="sbut reddish" name="showDeleteFiles" i18n-value="delete" value="Delete" onclick="showEditForm('removalFiles');">
       <form id="removalFiles" action="/docs/document/{{.Document.ID}}" method="post" onsubmit="addFileElems(this);" style="display: none;">
+      <div class="msgredfx" i18n-text="approvalBreak">This will break any approval if present!</div>
       <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
       <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="showEditForm('view');">
       <input type="submit" class ="sbut reddish" name="deleteFiles" i18n-value="yesDelete" value="Yes, delete">
@@ -109,7 +166,7 @@
 
       <p><span class="ofname" i18n-text="authors">Authors:</span> <input type="text" class="field ofval" name="authors" size="30" maxlength="1000" value="{{.Document.Authors}}"></p>
       <p><span class="ofname" i18n-text="addressees">Addressees:</span> <input type="text" class="field ofval" name="addressee" size="30" maxlength="1000" value="{{.Document.Addressee}}"></p>     
-      <p><span class="ofname" i18n-text="docNote" style="vertical-align: top;">Note:</span> <textarea class="multiline ofval" name="note" maxlength="2000" rows="2" cols="30">{{.Document.Note}}</textarea></p>
+      <p><span class="ofname" i18n-text="note" style="vertical-align: top;">Note:</span> <textarea class="multiline ofval" name="note" maxlength="2000" rows="2" cols="30">{{.Document.Note}}</textarea></p>
       <h2 i18n-text="uploadFiles">Upload files:</h2>
 
       {{$sfx := ""}}{{template "filedrop" $sfx}}
@@ -146,14 +203,11 @@
 })();
 </script>
 
-{{if .Editable}}
 <script>
-
 /* Some variables for messages */
 var exceedQuantityMessage = 'The quantity of selected files exceeds the limit. Files are rejected.';
 var exceedSizeMessage = 'The size of selected files exceeds the limit. Files are rejected.';
 var clearedMessage = "Cleared.";
-
 if (document.documentElement.lang != 'en') {
   getLang(document.documentElement.lang).then(lang => {
     if (lang.exceedQuantityMessage) exceedQuantityMessage = lang.exceedQuantityMessage;
@@ -181,9 +235,11 @@ if (document.documentElement.lang != 'en') {
     }
   });
 }
+</script>
 
-/* Page loading function for edit */
-
+{{if .Editable}}
+<script>
+  /* Page loading function for edit */
 (function() {
 
   document.getElementById('docType').value = "{{.Document.DocType}}";
@@ -193,7 +249,6 @@ if (document.documentElement.lang != 'en') {
   checkForNewCreated();
 
 })();
-
 </script>
 {{end}}
 

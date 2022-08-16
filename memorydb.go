@@ -329,7 +329,7 @@ func getLoginTemplate() *template.Template {
 </form></div>
 <div id="bottom">
 <span>© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></span>
-<span>v1.0.0.</span>
+<span>v1.1.0.</span>
 <span><a href="/assets/manual.html">Manual</a></span>
 </div>
 </div></body></html>`

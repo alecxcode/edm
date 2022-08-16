@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="{{.UserConfig.LangCode}}">
-{{template "head" .}}
+{{template "head" returnHeadRender .AppTitle .PageTitle .UserConfig.LangCode .UserConfig.SystemTheme}}
 <body>
 
+{{template "loading" .UserConfig.LangCode}}
 {{template "menus" .}}
 
 <div id="container">
@@ -28,6 +29,18 @@
         {{end}}
       </div>
 
+      <div class="filter"><strong id="approverDisplay" i18n-text="myApprovals">My approvals:</strong><br>
+        {{range $i, $v := .ApprovalSign}}<input type="checkbox" id="ap{{$i}}" name="approved" value="{{$i}}" onclick="handleApprovalChkBox();">
+        <label for="ap{{$i}}" i18n-index="approvalSign-{{$i}}">{{$v}}</label><br>
+        {{end}}
+        <input style="display: none;" type="checkbox" id="auid" name="approver" value="{{.LoggedinID}}">
+        <label style="display: none;" for="auid" i18n-text="myApprovals">My approvals</label><br>
+
+        <strong id="approverDisplay" i18n-text="creator">Creator:</strong><br>
+        <input type="checkbox" id="cr{{.LoggedinID}}" name="creator" value="{{.LoggedinID}}">
+        <label for="cr{{.LoggedinID}}" i18n-text="myDocuments">My documents</label><br>
+      </div>
+
       {{template "dateFilter" returnFilterRender "regDates" "regDate" "Reg.Date:" .UserConfig.UseCalendarInConrols nil}}
       {{template "dateFilter" returnFilterRender "incDates" "incDate" "Inc.Date:" .UserConfig.UseCalendarInConrols nil}}
       {{template "dateFilter" returnFilterRender "endDates" "endDate" "Term (Exp.):" .UserConfig.UseCalendarInConrols nil}}
@@ -47,11 +60,16 @@
   <p id="appliedFilters" i18n-text="noFiltersApplied">No filters applied.</p>
   
   <div id="controlButtons">
-    <span class="panel"><a href="/docs/?categories=1" i18n-index="categories-1">Incoming</a></span>
-    <span class="panel"><a href="/docs/?categories=2" i18n-index="categories-2">Outgoing</a></span>
-    <span class="panel"><a href="/docs/?categories=3" i18n-index="categories-3">Internal</a></span>
-    <span class="panel"><a href="/docs/?doctypes=4" i18n-index="docTypes-4">Contract, addendum to it</a></span>
-    <span class="panel"><a href="/docs/?doctypes=13" i18n-index="docTypes-13"> Template</a></span><br>
+    <span class="panel smaller"><a href="/docs/?categories=1" i18n-index="categories-1">Incoming</a></span>
+    <span class="panel smaller"><a href="/docs/?categories=2" i18n-index="categories-2">Outgoing</a></span>
+    <span class="panel smaller"><a href="/docs/?categories=3" i18n-index="categories-3">Internal</a></span>
+    <span class="panel smaller"><a href="/docs/?doctypes=4" i18n-index="docTypes-4">Contract, addendum to it</a></span>
+    <span class="panel smaller"><a href="/docs/?doctypes=13" i18n-index="docTypes-13">Template</a></span>
+    <span class="panel smaller"><a href="/docs/?creator=my" i18n-many="myDocsCreated" title="Documents for which I am creator">Created by me</a></span>
+    <span class="panel smaller"><a href="/docs/?approver=my&approved=0" i18n-index="approvalSignMy-0">For my approval</a></span>
+    <span class="panel smaller"><a href="/docs/?approver=my&approved=1" i18n-index="approvalSignMy-1">Approved by me</a></span>
+    <span class="panel smaller"><a href="/docs/?approver=my&approved=2" i18n-index="approvalSignMy-2">Rejected by me</a></span>
+    <br>
 
     <a href="/docs/document/new" class="sbut greenish" i18n-text="newDocument">+ New document</a>
     {{template "deleteButton"}}
@@ -182,6 +200,17 @@
         case 'IncNo': document.getElementById('sortedBy').value = 'RegNo'; break;
       }
     }
+  }
+  function handleApprovalChkBox() {
+    const approvalChkBox = document.getElementById('auid');
+    const checkboxes = document.getElementsByName('approved');
+    for (const cb of checkboxes) {
+      if (cb.checked) {
+        approvalChkBox.checked = true;
+        return;
+      }
+    }
+    approvalChkBox.checked = false;
   }
   
   /* Main page loading function */

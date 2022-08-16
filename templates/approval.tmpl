@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="{{.UserConfig.LangCode}}">
+{{template "head" returnHeadRender .AppTitle .PageTitle .UserConfig.LangCode "system-render"}}
+<body>
+
+{{template "loading" .UserConfig.LangCode}}
+
+<div id="container">
+  {{$vtsep := " "}}
+
+  <div id="main">
+    <h1 class="center" i18n-text="approvalList">Approval list</h1>
+    <div class="breadcrumbs noprint"><a href="/docs/" i18n-text="allDocuments">all documents</a> / <a href="/docs/document/{{.Document.ID}}" i18n-text="documentPage">document page</a> / <span i18n-text="approvalList">approval list</a></div>
+    
+    {{if and .Approvals (not .New)}}
+      <p><span i18n-text="registration">Registration:</span> <span>{{if .Document.RegNo}}<span i18n-text="num">No.</span> {{.Document.RegNo}}{{end}} {{if .Document.RegDate.Day}}<span i18n-text="dated">dated</span> {{.Document.GiveDate "Reg" .UserConfig.DateFormat}}{{end}}</span></p>
+      {{if or .Document.IncNo .Document.IncDate.Day}}<p><span i18n-text="incoming">Incoming:</span> <span>{{if .Document.IncNo}}<span i18n-text="num">No.</span> {{.Document.IncNo}}{{end}} {{if .Document.IncDate.Day}}<span i18n-text="dated">dated</span> {{.Document.GiveDate "Inc" .UserConfig.DateFormat}}{{end}}</span></p>{{end}}
+      <p><span i18n-text="typeCategory">Type, category:</span> <span><span i18n-index="docTypes-{{.Document.DocType}}">{{.Document.GiveType .DocTypes "Unknown"}}</span> <span class="cat">{{if .Document.Category}}(<span i18n-index="categories-{{.Document.Category}}">{{.Document.GiveCategory .Categories "Unknown"}}</span>){{end}}</span></span></p>
+      <p><span class="ofname" i18n-text="docAbout">About:</span> <span id="about">{{.Document.About}}</span></p>
+      <p><span class="ofname" i18n-text="endDate">Term (Exp.):</span> <span>{{.Document.GiveDate "End" .UserConfig.DateFormat}}</span></p>
+      <p><span class="ofname" i18n-text="docSum">Sum:</span> <span>{{if .UserConfig.CurrencyBeforeAmount}}<span class="cur">{{if gt .Document.Currency 0}}{{index .Currencies .Document.Currency}}{{end}}</span> {{end}}<span class="sum nowrap">{{.Document.GiveSum}}</span> {{if not .UserConfig.CurrencyBeforeAmount}}<span class="cur">{{if gt .Document.Currency 0}}{{index .Currencies .Document.Currency}}{{end}}</span>{{end}}</span></p>
+      <p><span i18n-text="creatorOwner">Creator (owner):</span> <span>{{if .Document.GiveCreatorID}}{{.Document.Creator.GiveSelfNameJob}}{{end}}{{if .Document.Creator.GiveUnitID}}; {{.Document.Creator.GiveUnitName}}{{end}}</span></p>
+      
+      <div class="grid-container">
+        <div class="bold gridelem gridheader" i18n-text="approver">Approver</div><div class="bold gridelem gridheader" i18n-text="approval">Approval</div><div class="bold gridelem gridheader" i18n-text="signature">Signature</div>
+        {{range .Approvals}}
+        <div class="gridelem firstcell">
+          <span class="bold onlymobile" i18n-text="approver">Approver:</span>
+          {{if .ApproverSign}} <span>{{.ApproverSign}}</span>{{else}}{{if .GiveApproverID}}{{.Approver.GiveSelfNameJob}}{{end}}{{end}}
+        </div><div class="gridelem">
+          <span class="bold onlymobile" i18n-text="approval">Approval:</span>
+           <span i18n-index="approvalSign-{{.Approved}}">
+            {{index $.ApprovalSign .Approved}}
+           </span>
+          {{if .Written.Day}} <span class="nowrap">{{.GiveDateTime $.UserConfig.DateFormat $.UserConfig.TimeFormat $vtsep}}</span>{{end}}
+        </div><div class="gridelem">
+          <span class="bold onlymobile" i18n-text="signature">Signature:</span>
+          {{if .ApproverSign}} <span i18n-text="yes">yes</span>{{end}}
+        </div>
+        {{if .Note}}<div class="approvalNote gridelem"><span class="bold" i18n-text="note">Note:</span> {{.Note}}</div>{{end}}
+        {{end}}
+      </div>
+
+    {{else}}
+      <div class="marginbottom bold" i18n-text="noData">No data available.</div>
+    {{end}}
+
+    <div class="margintop noprint">
+      <input type="button" class ="sbut pg smaller" name="closeButton" i18n-value="close" value="Close" 
+      onclick="if (history.length > 1) {history.back();} else {window.location.href = '/docs/document/{{.Document.ID}}';}">
+    </div>
+
+  </div>
+
+{{template "bottom"}}
+
+</div>
+
+<script src="/assets/functions.js"></script>
+
+<script>
+/* Page loading function for read */
+(function() {
+  let multiLineLabel;
+  multiLineLabel = document.getElementById('about');
+  if (multiLineLabel) multiLineLabel.innerHTML = multiLineLabel.innerHTML.replace(/\n/g, "<br>");
+  multiLineLabel = document.getElementById('note');
+  if (multiLineLabel) multiLineLabel.innerHTML = multiLineLabel.innerHTML.replace(/\n/g, "<br>");
+  updateMultilines('approvalNote');
+})();
+</script>
+
+</body>
+</html>

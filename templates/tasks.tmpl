@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="{{.UserConfig.LangCode}}">
-{{template "head" .}}
+{{template "head" returnHeadRender .AppTitle .PageTitle .UserConfig.LangCode .UserConfig.SystemTheme}}
 <body>
 
+{{template "loading" .UserConfig.LangCode}}
 {{template "menus" .}}
 
 <div id="container">
@@ -64,10 +65,10 @@
   <p id="appliedFilters" i18n-text="noFiltersApplied">No filters applied.</p>
   
   <div id="controlButtons">
-    <span class="panel"><a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="myTasks" title="Tasks for which I am a creator or am assignee or a participant">My tasks</a></span>
-    <span class="panel"><a href="/tasks/?creators=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="myTasksCreated" title="Tasks for which I am creator">Created by me</a></span>
-    <span class="panel"><a href="/tasks/?assignees=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="myTasksAssigned" title="Tasks for which I am assignee">Assigned to me</a></span>
-    <span class="panel"><a href="/tasks/{{if not .UserConfig.ShowFinishedTasks}}?taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="anyTasks" title="Tasks related to any users">All tasks</a></span><br>
+    <span class="panel smaller"><a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="myTasks" title="Tasks for which I am a creator or am assignee or a participant">My tasks</a></span>
+    <span class="panel smaller"><a href="/tasks/?creators=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="myTasksCreated" title="Tasks for which I am creator">Created by me</a></span>
+    <span class="panel smaller"><a href="/tasks/?assignees=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="myTasksAssigned" title="Tasks for which I am assignee">Assigned to me</a></span>
+    <span class="panel smaller"><a href="/tasks/{{if not .UserConfig.ShowFinishedTasks}}?taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="anyTasks" title="Tasks related to any users">All tasks</a></span><br>
 
     <a href="/tasks/task/new" class ="sbut greenish" i18n-text="newTask">+ New task</a>
     <input type="button" class="sbut statusMultiControl" i18n-many="inProgressMulti" value="In progress" title="Set tasks status - in progress" onclick="submitControlButton('taskStatus', 'inprogress');" disabled>

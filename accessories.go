@@ -26,6 +26,25 @@ func returnFilterRender(Name string, Attri18n string, DisplayName string, UseCal
 	return FilterRender{Name, Attri18n, DisplayName, UseCalendarInConrols, Currencies}
 }
 
+// HeadRender is for rendering frontend for head block in templates
+type HeadRender struct {
+	AppTitle    string
+	PageTitle   string
+	LangCode    string
+	SystemTheme string
+}
+
+func returnHeadRender(AppTitle string, PageTitle string, LangCode string, SystemTheme string) HeadRender {
+	return HeadRender{AppTitle, PageTitle, LangCode, SystemTheme}
+}
+
+func isThemeSystem(themeName string) bool {
+	if strings.HasPrefix(themeName, "system-") {
+		return true
+	}
+	return false
+}
+
 func fileExists(name string) bool {
 	if _, err := os.Stat(name); err != nil {
 		if os.IsNotExist(err) {
@@ -110,7 +129,11 @@ func getIDfromURL(path string) (id int, err error) {
 
 func getTextIDfromURL(path string) string {
 	arrayPathElems := strings.Split(path, "/")
-	return arrayPathElems[len(arrayPathElems)-1]
+	res := arrayPathElems[len(arrayPathElems)-1]
+	if res == "approval" {
+		res = arrayPathElems[len(arrayPathElems)-2]
+	}
+	return res
 }
 
 func throwAccessDenied(w http.ResponseWriter, logmsg string, userID int, resourceID int) {
@@ -256,4 +279,11 @@ func replaceBBCodeWithHTML(cont string) string {
 	}
 
 	return cont
+}
+
+func intToBool(v int) bool {
+	if v != 0 {
+		return true
+	}
+	return false
 }

@@ -31,6 +31,7 @@ type DocsPage struct {
 	Categories    []string
 	DocTypes      []string
 	Currencies    map[int]string
+	ApprovalSign  []string
 }
 
 func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
@@ -48,17 +49,21 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	var Page = DocsPage{
-		AppTitle:   bs.text.AppTitle,
-		PageTitle:  bs.text.DocsPageTitle,
-		Categories: bs.text.Categories,
-		DocTypes:   bs.text.DocTypes,
-		Currencies: bs.currencies,
-		SortedBy:   "RegDate",
-		SortedHow:  0, // 0 - DESC, 1 - ASC
+		AppTitle:     bs.text.AppTitle,
+		PageTitle:    bs.text.DocsPageTitle,
+		Categories:   bs.text.Categories,
+		DocTypes:     bs.text.DocTypes,
+		Currencies:   bs.currencies,
+		ApprovalSign: bs.text.ApprovalSign,
+		SortedBy:     "RegDate",
+		SortedHow:    0, // 0 - DESC, 1 - ASC
 		Filters: sqla.Filter{
 			ClassFilter: []sqla.ClassFilter{
 				{Name: "categories", Column: "Category"},
 				{Name: "doctypes", Column: "DocType"},
+				{Name: "approver", Column: "Approver"},
+				{Name: "approved", Column: "Approved"},
+				{Name: "creator", Column: "Creator"},
 			},
 			DateFilter: []sqla.DateFilter{
 				{Name: "regDates", Column: "RegDate"},
@@ -168,18 +173,32 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 		OFFSET = 0
 	}
 
+	columns := "documents.ID, RegNo, RegDate, IncNo, IncDate, Category, DocType, About, Authors, Addressee, DocSum, Currency, EndDate, Creator, documents.Note, FileList"
+	joins := ""
+
+	if r.URL.Query().Get("approver") != "" || r.URL.Query().Get("approved") != "" {
+		joins = "LEFT JOIN approvals ON approvals.DocID = documents.ID"
+	}
+
+	distinct := false
+	columnsToCount := "*"
+	if r.URL.Query().Get("approver") == "" && r.URL.Query().Get("approved") != "" {
+		distinct = true
+		columnsToCount = "documents.ID"
+	}
+
 	sq, sqcount, args, argscount := sqla.ConstructSELECTquery(
 		bs.dbt,
 		"documents",
-		"ID, RegNo, RegDate, IncNo, IncDate, Category, DocType, About, Authors, Addressee, DocSum, Currency, EndDate, Creator, Note, FileList",
-		"*",
-		"",
+		columns,
+		columnsToCount,
+		joins,
 		Page.Filters,
 		SQLSortedBy,
 		Page.SortedHow,
 		Page.UserConfig.ElemsOnPage,
 		OFFSET,
-		false,
+		distinct,
 		sqla.Seek{UseSeek: false})
 
 	// Loading objects

@@ -38,8 +38,14 @@
         <h2 class="margintop">Installation of a release package</h2>
         <p>Installing in Windows is easy: run the downloaded distribution file, select a folder to install, and then it runs automatically. This way of installation is more for presentation purposes.</p>
         <p>On Linux/Mac/BSD: unpack the app somewhere and run <code>./edm</code> executable. If there is no build for your system or it does not work, you need to build it yourself. It is recommended to create a separate user for the server (e.g. with the name <code>edm</code>), like for other servers and configure the software as a service on your system. You should refer to your system administration guides or manuals about how to do that.</p>
+        <p>In order to connect to a database server instead of using SQLite, create database on your server, fill the requred data in config file, and run <code>./edm --createdb --consolelog</code> before the first launch. After that you can launch <code>./edm</code> server.</p>
         <p>Default login after installation: <b>admin</b>, and the password is empty (there is no password).</p>
 
+        <h2 class="margintop">Upgrading to a new version</h2>
+        <p>Stop the server. Replace the application and all files distributed with it.</p>
+        <p>If a new version includes new features, before launching a new version, run <code>./edm --createdb --consolelog</code> in order to create new tables, indexes, etc.</p>
+        <p>After that you can launch <code>./edm</code> server.</p>
+        
         <h2 class="margintop">Configuration file</h2>
         <p>Configuration file by default is located in the <b>.edm</b> directory of a user home directory. The name of this file is <b>edm-system.cfg</b>.</p>
         <p>If there is no configuration file found on launch, the file will be created with default values.</p>

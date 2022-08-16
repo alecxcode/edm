@@ -7,10 +7,33 @@
         "LoninFieldLabel": "Usuario",
         "PasswordFieldLabel": "Contraseña",
         "LoginButton": "Iniciar sesión",
-        "WrongLoginMsg": "Datos de inicio de sesión incorrectos",
+        "WrongLoginMsg": "Datos de inicio de sesión incorrectos"
     },
+    "DocCaption": "Documento",
     "TaskCaption": "Tarea",
     "CommentCaption": "Comentario",
+    "Categories": [
+        "Ninguno",
+        "Entrante",
+        "Saliente",
+        "Interno"
+    ],
+    "DocTypes": [
+        "Otro",
+        "Carta",
+        "Solicitud",
+        "Reclamación",
+        "Contrato, adenda a él",
+        "Contabilidad, financiera",
+        "Técnica, ingeniería",
+        "Decreto, acto legal",
+        "Decisión corporativa",
+        "Notas de reuniones",
+        "Poder legal",
+        "Escrito judicial",
+        "Judicial (de una corte)",
+        "Plantilla"
+    ],
     "TaskStatuses": [
         "Creado",
         "Asignado",
@@ -30,11 +53,19 @@
             "TaskStatusChanged": "El estado de la tarea ha sido cambiado",
             "ParticipantToAdded": "Ha sido agregado a la lista de participantes de la tarea",
             "ProfileRegistered": "Acceso al Sistema de GDE",
-            "SecurityAlert": "Alerta de seguridad"
+            "SecurityAlert": "Alerta de seguridad",
+            "NewApproval": "Nueva aprobación",
+            "Approved": "Aprobado",
+            "Rejected": "Rechazado"
         },
         "Cont": {
             "ProfileRegistered": "Puede iniciar sesión en el sistema utilizando el siguiente enlace. Su nombre de usuario y contraseña son: ",
-            "LoginPasswdChanged": "Esto es para notificarle sobre su nombre de usuario o cambio de contraseña. Si sabe por qué sucedió, entonces no se requiere ninguna acción."
+            "LoginPasswdChanged": "Esto es para notificarle sobre su nombre de usuario o cambio de contraseña. Si sabe por qué sucedió, entonces no se requiere ninguna acción.",
+            "ApproveThis": "Por favor revise y apruebe",
+            "ByApprover": "por aprobador",
+            "Approved": "se ha aprobado",
+            "Rejected": "se ha rechazado",
+            "InfoLink": "Abre este enlace para más detalles"
         },
         "Captions": {
             "CreatedTime": "Tiempo creado",

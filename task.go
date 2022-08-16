@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -424,6 +423,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 		DONE
 		CANCELLED
 	)
+	const ADMIN = 1
 
 	allow, id := bs.authVerify(w, r)
 	if !allow {
@@ -463,11 +463,11 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 
 	user := bs.team.getByID(Page.LoggedinID)
 	Page.UserConfig = user.UserConfig
-	if user.UserRole == 1 || Page.New || Page.Task.GiveCreatorID() == Page.LoggedinID {
+	if user.UserRole == ADMIN || Page.New || Page.Task.GiveCreatorID() == Page.LoggedinID {
 		Page.Editable = true
 	}
 	Page.RemoveAllowed, _ = strconv.ParseBool(bs.cfg.RemoveAllowed)
-	if user.UserRole == 1 {
+	if user.UserRole == ADMIN {
 		Page.RemoveAllowed = true
 	}
 	Page.IamAssignee = Page.Task.GiveAssigneeID() == Page.LoggedinID
@@ -541,24 +541,8 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 					if t.Assignee.Contacts.Email != "" && t.Assignee.UserLock == 0 {
 						email.SendTo = append(email.SendTo, UserToSend{t.Assignee.FirstName + " " + t.Assignee.Surname, t.Assignee.Contacts.Email})
 					}
-					if len(email.SendTo) > 0 || len(email.SendCc) > 0 {
-						taskMail := TaskMail{email.Subj, t, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
-						var tmpl bytes.Buffer
-						if err := bs.taskmailtmpl.Execute(&tmpl, taskMail); err != nil {
-							log.Println("executing task mail template [toassignee]:", err)
-						}
-						email.Cont = tmpl.String()
-						cont := bs.regexes.emailCont.FindStringSubmatch(email.Cont)
-						if cont != nil && len(cont) >= 1 {
-							email.Cont = strings.Replace(email.Cont, cont[1], replaceBBCodeWithHTML(cont[1]), 1)
-						}
-						select {
-						case bs.mailchan <- email:
-						default:
-							log.Println("Channel is full. While creating task with eventAssigneeSet handling cannot send message.")
-							email.saveToDBandLog(bs.db, bs.dbt)
-						}
-					}
+					taskMail := TaskMail{email.Subj, t, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
+					taskMail.constructToChannel(bs.db, bs.dbt, bs.taskmailtmpl, bs.mailchan, email, bs.regexes.emailCont)
 				}
 				moveUploadedFilesToFinalDest(defaultUploadPath,
 					filepath.Join(bs.cfg.ServerRoot, "files", "tasks", strconv.Itoa(t.ID)),
@@ -830,24 +814,8 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 				email.SendCc = append(email.SendCc, UserToSend{Page.Participants[i].FirstName + " " + Page.Participants[i].Surname, Page.Participants[i].Contacts.Email})
 			}
 		}
-		if len(email.SendTo) > 0 || len(email.SendCc) > 0 {
-			taskMail := TaskMail{email.Subj, Page.Task, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
-			var tmpl bytes.Buffer
-			if err := bs.taskmailtmpl.Execute(&tmpl, taskMail); err != nil {
-				log.Println("executing task mail template [main]:", err)
-			}
-			email.Cont = tmpl.String()
-			cont := bs.regexes.emailCont.FindStringSubmatch(email.Cont)
-			if cont != nil && len(cont) >= 1 {
-				email.Cont = strings.Replace(email.Cont, cont[1], replaceBBCodeWithHTML(cont[1]), 1)
-			}
-			select {
-			case bs.mailchan <- email:
-			default:
-				log.Println("Channel is full. While task events handling cannot send message.")
-				email.saveToDBandLog(bs.db, bs.dbt)
-			}
-		}
+		taskMail := TaskMail{email.Subj, Page.Task, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
+		taskMail.constructToChannel(bs.db, bs.dbt, bs.taskmailtmpl, bs.mailchan, email, bs.regexes.emailCont)
 	}
 
 	if eventAssigneeSet {
@@ -855,24 +823,8 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 		if Page.Task.Assignee != nil && Page.Task.Assignee.Contacts.Email != "" && Page.Task.Assignee.UserLock == 0 {
 			email.SendTo = append(email.SendTo, UserToSend{Page.Task.Assignee.FirstName + " " + Page.Task.Assignee.Surname, Page.Task.Assignee.Contacts.Email})
 		}
-		if len(email.SendTo) > 0 || len(email.SendCc) > 0 {
-			taskMail := TaskMail{email.Subj, Page.Task, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
-			var tmpl bytes.Buffer
-			if err := bs.taskmailtmpl.Execute(&tmpl, taskMail); err != nil {
-				log.Println("executing task mail template [toassignee]:", err)
-			}
-			email.Cont = tmpl.String()
-			cont := bs.regexes.emailCont.FindStringSubmatch(email.Cont)
-			if cont != nil && len(cont) >= 1 {
-				email.Cont = strings.Replace(email.Cont, cont[1], replaceBBCodeWithHTML(cont[1]), 1)
-			}
-			select {
-			case bs.mailchan <- email:
-			default:
-				log.Println("Channel is full. While task eventAssigneeSet handling cannot send message.")
-				email.saveToDBandLog(bs.db, bs.dbt)
-			}
-		}
+		taskMail := TaskMail{email.Subj, Page.Task, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
+		taskMail.constructToChannel(bs.db, bs.dbt, bs.taskmailtmpl, bs.mailchan, email, bs.regexes.emailCont)
 	}
 
 	if eventParticipantToAdded {
@@ -883,24 +835,8 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
-		if len(email.SendTo) > 0 || len(email.SendCc) > 0 {
-			taskMail := TaskMail{email.Subj, Page.Task, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
-			var tmpl bytes.Buffer
-			if err := bs.taskmailtmpl.Execute(&tmpl, taskMail); err != nil {
-				log.Println("executing task mail template [toparticipant]:", err)
-			}
-			email.Cont = tmpl.String()
-			cont := bs.regexes.emailCont.FindStringSubmatch(email.Cont)
-			if cont != nil && len(cont) >= 1 {
-				email.Cont = strings.Replace(email.Cont, cont[1], replaceBBCodeWithHTML(cont[1]), 1)
-			}
-			select {
-			case bs.mailchan <- email:
-			default:
-				log.Println("Channel is full. While task eventParticipantToAdded handling cannot send message.")
-				email.saveToDBandLog(bs.db, bs.dbt)
-			}
-		}
+		taskMail := TaskMail{email.Subj, Page.Task, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
+		taskMail.constructToChannel(bs.db, bs.dbt, bs.taskmailtmpl, bs.mailchan, email, bs.regexes.emailCont)
 	}
 
 	if eventNewTaskComment {
@@ -925,21 +861,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 			}
-			var tmpl bytes.Buffer
-			if err := bs.commmailtmpl.Execute(&tmpl, commMail); err != nil {
-				log.Println("executing comment mail template [comment]:", err)
-			}
-			email.Cont = tmpl.String()
-			cont := bs.regexes.emailCont.FindStringSubmatch(email.Cont)
-			if cont != nil && len(cont) >= 1 {
-				email.Cont = strings.Replace(email.Cont, cont[1], replaceBBCodeWithHTML(cont[1]), 1)
-			}
-			select {
-			case bs.mailchan <- email:
-			default:
-				log.Println("Channel is full. While task eventNewTaskComment handling cannot send message.")
-				email.saveToDBandLog(bs.db, bs.dbt)
-			}
+			commMail.constructToChannel(bs.db, bs.dbt, bs.commmailtmpl, bs.mailchan, email, bs.regexes.emailCont)
 		}
 	}
 

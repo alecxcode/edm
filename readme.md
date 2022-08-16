@@ -4,10 +4,11 @@ EDM System is an electronic document management and task tracking server applica
 It is extremely easy to install and configure.
 
 The application has the following functions:
-* Documents: create, upload files, edit, delete
+* Documents: create, upload files, edit, delete, approve
+* Approval list for documents
 * User profiles, companies, departments: create, edit, delete
 * Tasks: create, edit, upload files, assign, forward, change status (mark as done, cancel, etc.), add comments with files attached
-* Notifications by e-mail: about user creation to that user, about changes in a task to related users
+* Notifications by e-mail: about user creation to that user, about approvals, about changes and comments in a task to related users
 * Themes and localization support
 * UX/UI features: bb-code, search results highlighting, etc.
 * Some basic bruteforce protection

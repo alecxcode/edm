@@ -1,12 +1,16 @@
 /* Highlights current website block */
 (function(){
   let addr = window.location.pathname;
+  let currentItem;
   if (addr.includes("/docs")) {
-    document.querySelector("#textmenu a[href^='/docs']").classList.add("chosenmenu");
+    currentItem = document.querySelector("#textmenu a[href^='/docs']");
+    if (currentItem) currentItem.classList.add("chosenmenu");
   } else if (addr.includes("/team")) {
-    document.querySelector("#textmenu a[href^='/team']").classList.add("chosenmenu");
+    currentItem = document.querySelector("#textmenu a[href^='/team']");
+    if (currentItem) currentItem.classList.add("chosenmenu");
   } else if (addr.includes("/task")) {
-    document.querySelector("#textmenu a[href^='/task']").classList.add("chosenmenu");
+    currentItem = document.querySelector("#textmenu a[href^='/task']");
+    if (currentItem) currentItem.classList.add("chosenmenu");
   }
 })();
 

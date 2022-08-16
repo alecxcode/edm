@@ -10,7 +10,30 @@
         "WrongLoginMsg": "Wrong login data"
     },
     "TaskCaption": "Task",
+    "DocCaption": "Document",
     "CommentCaption": "Comment",
+    "Categories": [
+        "None",
+        "Incoming",
+        "Outgoing",
+        "Internal"
+    ],
+    "DocTypes": [
+        "Other",
+        "Letter",
+        "Application",
+        "Claim",
+        "Contract, addendum to it",
+        "Accounting, financial",
+        "Technical, engineering",
+        "Order, regulation",
+        "Corporate decision",
+        "Minutes, meeting notes",
+        "Power of Attorney",
+        "Pleading",
+        "Judicial (from a court)",
+        "Template"
+    ],
     "TaskStatuses": [
         "Created",
         "Assigned",
@@ -30,11 +53,19 @@
             "TaskStatusChanged": "Task status has been changed",
             "ParticipantToAdded": "You have been added to the task participants list",
             "ProfileRegistered": "EDM system access",
-            "SecurityAlert": "Security alert"
+            "SecurityAlert": "Security alert",
+            "NewApproval": "New approval",
+            "Approved": "Approved",
+            "Rejected": "Rejected"
         },
         "Cont": {
             "ProfileRegistered": "You can login to the system using the link below. Your login and password are: ",
-            "LoginPasswdChanged": "This is to notify you about your login or password change. If you know why is it happened, then no action required."
+            "LoginPasswdChanged": "This is to notify you about your login or password change. If you know why is it happened, then no action required.",
+            "ApproveThis": "Please review and approve",
+            "ByApprover": "by approver",
+            "Approved": "has been approved",
+            "Rejected": "has been rejected",
+            "InfoLink": "Open this link for details"
         },
         "Captions": {
             "CreatedTime": "Created time",

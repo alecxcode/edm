@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="{{.UserConfig.LangCode}}">
-{{template "head" .}}
+{{template "head" returnHeadRender .AppTitle .PageTitle .UserConfig.LangCode .UserConfig.SystemTheme}}
 <body>
 
+{{template "loading" .UserConfig.LangCode}}
 {{template "menus" .}}
 
 <div id="container">

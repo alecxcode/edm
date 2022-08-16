@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="{{.UserConfig.LangCode}}">
-{{template "head" .}}
+{{template "head" returnHeadRender .AppTitle .PageTitle .UserConfig.LangCode .UserConfig.SystemTheme}}
 <body>
 
+{{template "loading" .UserConfig.LangCode}}
 {{template "menus" .}}
 
 <div id="container">
@@ -12,7 +13,7 @@
 
   <div id="control">
     <h1>{{.PageTitle}}</h1>
-    <p class="breadcrumbs"><a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-text="allTasks">all tasks</a> / <span i18n-text="companyPage">task page</span></p>
+    <p class="breadcrumbs"><a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-text="allTasks">all tasks</a> / <span i18n-text="taskPage">task page</span></p>
 
     {{if and (not .New) (or .Editable .IamAssignee)}}
     <form id="statuses" action="/tasks/task/{{.Task.ID}}" method="POST">
@@ -94,9 +95,6 @@
       <h2 i18n-text="content">Content:</h2>
       <div class="elem"><div class="subelem multilineContent">{{.Task.Content}}</div></div>
 
-      <div id="appliedElems"><span i18n-text="participants">Participants:</span>
-        {{range .Participants}}<a class="chosen-withrm" href="/team/profile/{{.ID}}">{{.GiveSelfNameJob}}</a>{{if or $.Editable $.IamAssignee}}<span class="rm" i18n-title="delete" title="Delete" onclick="makeFormAndSubmit('{{.ID}}', 'participantRemove', '/tasks/task/{{$.Task.ID}}');">×</span>{{end}} {{end}}
-      </div>
       {{if or .Editable .IamAssignee}}<div>
         <span class="nowrap"><select id="selectedParticipant" class="numberbox">
           <option value="" i18n-text="selectParticipantToAdd">Select a participant to add</option>
@@ -106,6 +104,10 @@
         <input type="button" class ="sbut greenish smaller" i18n-value="addParticipant" value="Add participant"
         onclick="makeFormAndSubmit(document.getElementById('selectedParticipant').value, 'participantAdd', '/tasks/task/{{.Task.ID}}');">
       </div>{{end}}
+      <div id="appliedElems"><span i18n-text="participants">Participants:</span>{{if .Participants}}
+        {{range .Participants}}<a class="chosen {{if $.Editable}}withrm{{end}}" href="/team/profile/{{.ID}}">{{.GiveSelfNameJob}}</a>{{if or $.Editable $.IamAssignee}}<span class="rm" i18n-title="delete" title="Delete" onclick="makeFormAndSubmit('{{.ID}}', 'participantRemove', '/tasks/task/{{$.Task.ID}}');">×</span>{{end}} {{end}}
+        {{else}} <span i18n-text="no">no</span>{{end}}
+      </div>
 
       <h2 i18n-text="taskFiles">Task files:</h2>
       {{if not .Task.FileList}}<div class="afile-inline-block" i18n-text="noFiles">No files</div>{{else}}
@@ -131,7 +133,7 @@
         {{$comID := .ID}}
         <div class="elem" id="comment{{.Inci $i}}">
         <h3><a href="#comment{{.Inci $i}}">#{{.Inci $i}}</a>: {{.GiveDateTime $.UserConfig.DateFormat $.UserConfig.TimeFormat $vtsep}}
-          <span i18n-text="postedBy">by:</span> {{if $cc}}<a href="/team/profile/{{$cc}}">{{.Creator.GiveSelfNameJob}}</a>{{end}}</h3>
+          <span i18n-text="postedBy">by:</span> {{if $cc}}<a href="/team/profile/{{$cc}}">{{.Creator.GiveSelfNameJob}}</a>{{else}}...{{end}}</h3>
         <span class="subelem multilineContent">{{.Content}}</span>
         {{if .FileList}} <div class="subelem"><div i18n-text="attachedFiles">Attached files:</div>
         {{range .FileList}}<span class="afile-inline-block">
@@ -238,8 +240,9 @@ if (document.documentElement.lang != 'en') {
     }
   });
 }
+</script>
 
-
+<script>
 /* Page loading function for read */
 (function() {
   updateMultilines('multilineContent');

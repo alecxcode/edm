@@ -5,6 +5,7 @@
   --defaultBackgroundColor: #ddc;
   --darkerBackgroundColor: #a98;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: none;
 }
 * {
@@ -38,7 +39,7 @@ pre, code {
 }
 #control {
   padding: 40px 20px 0px 20px;
-  color: #444;
+  color: #111;
   display: block;
   margin: 0;
   font-size: 14px;
@@ -46,7 +47,7 @@ pre, code {
 }
 #main {
   padding: 10px 20px 0px 20px;
-  color: #444;
+  color: #111;
   display: block;
   margin: 0;
   font-size: 14px;

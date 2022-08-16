@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -9,7 +8,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
 
 	"github.com/alecxcode/sqla"
 )
@@ -193,6 +191,9 @@ WHERE tasks.TaskStatus <> ` + sqla.MakeParam(bs.dbt, 1) + " "
 						if updated > 0 {
 							Page.Message = "statusUpdated"
 							Page.UpdatedNum = updated
+							for i := 0; i < len(tasks); i++ {
+								tasks[i].TaskStatus = statusCode
+							}
 							for i := range idstoupd {
 								t := tasks[i]
 								participants, _ := t.loadParticipants(bs.db, bs.dbt)
@@ -208,24 +209,8 @@ WHERE tasks.TaskStatus <> ` + sqla.MakeParam(bs.dbt, 1) + " "
 										email.SendCc = append(email.SendCc, UserToSend{participants[i].FirstName + " " + participants[i].Surname, participants[i].Contacts.Email})
 									}
 								}
-								if len(email.SendTo) > 0 || len(email.SendCc) > 0 {
-									taskMail := TaskMail{email.Subj, t, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
-									var tmpl bytes.Buffer
-									if err := bs.taskmailtmpl.Execute(&tmpl, taskMail); err != nil {
-										log.Println("executing task mail template [multstatuses]:", err)
-									}
-									email.Cont = tmpl.String()
-									cont := bs.regexes.emailCont.FindStringSubmatch(email.Cont)
-									if cont != nil && len(cont) >= 1 {
-										email.Cont = strings.Replace(email.Cont, cont[1], replaceBBCodeWithHTML(cont[1]), 1)
-									}
-									select {
-									case bs.mailchan <- email:
-									default:
-										log.Println("Channel is full. While multiple tasks status updating cannot send message.")
-										email.saveToDBandLog(bs.db, bs.dbt)
-									}
-								}
+								taskMail := TaskMail{email.Subj, t, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
+								taskMail.constructToChannel(bs.db, bs.dbt, bs.taskmailtmpl, bs.mailchan, email, bs.regexes.emailCont)
 							}
 						} else {
 							Page.Message = "statusUpdateError"

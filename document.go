@@ -99,6 +99,20 @@ func (d Document) GiveSum() string {
 	}
 }
 
+func (d Document) makeTitle(categories []string, docTypes []string, document string) (fullTitle string) {
+	fullTitle = d.GiveType(docTypes, "Unknown")
+	if d.DocType == 0 {
+		fullTitle = document + " " + fullTitle
+	}
+	if d.Category != 0 {
+		fullTitle += " (" + d.GiveCategory(categories, "") + ")"
+	}
+	if d.RegNo != "" {
+		fullTitle += " No. " + d.RegNo
+	}
+	return fullTitle
+}
+
 func (d *Document) create(db *sql.DB, DBType byte) (lastid int, rowsaff int) {
 	var args sqla.AnyTslice
 	args = args.AppendNonEmptyString("RegNo", d.RegNo)
@@ -227,23 +241,216 @@ WHERE documents.ID = `+sqla.MakeParam(DBType, 1), d.ID)
 	return nil
 }
 
+// Approval is an approval item to a document
+type Approval struct {
+	//sql generate
+	ID           int
+	Written      DateTime `sql-gen:"bigint"`
+	Approver     *Profile `sql-gen:"FK_NULL"`
+	ApproverSign string
+	DocID        int `sql-gen:"IDX,FK_CASCADE,fktable(documents)"`
+	Approved     int
+	Note         string `sql-gen:"varchar(max)"`
+}
+
+func (a *Approval) create(db *sql.DB, DBType byte) (lastid int, rowsaff int) {
+	const NOACTION = 0
+	var args sqla.AnyTslice
+	if a.Approver != nil {
+		args = args.AppendInt("Approver", a.Approver.ID)
+	}
+	args = args.AppendInt("DocID", a.DocID)
+	args = args.AppendInt("Approved", NOACTION)
+	lastid, rowsaff = sqla.InsertObject(db, DBType, "approvals", args)
+	return lastid, rowsaff
+}
+
+func (a *Approval) sign(db *sql.DB, DBType byte) (rowsaff int) {
+	var args sqla.AnyTslice
+	if a.Written.Day != 0 {
+		args = args.AppendInt64("Written", dateTimeToInt64(a.Written))
+	}
+	args = args.AppendStringOrNil("ApproverSign", a.ApproverSign)
+	args = args.AppendInt("DocID", a.DocID)
+	args = args.AppendInt("Approved", a.Approved)
+	args = args.AppendStringOrNil("Note", a.Note)
+	rowsaff = sqla.UpdateObject(db, DBType, "approvals", args, a.ID)
+	return rowsaff
+}
+
+// GiveApproverID executes in a template to deliver the approver ID of this object
+func (a Approval) GiveApproverID() int {
+	if a.Approver == nil {
+		return 0
+	} else {
+		return a.Approver.ID
+	}
+}
+
+func (d *Document) loadApprovals(db *sql.DB, DBType byte) (ApprovalList []Approval, err error) {
+
+	rows, err := db.Query(`SELECT a.ID, a.Written, a.Approver, a.ApproverSign, a.Approved, a.Note,
+p.ID, p.FirstName, p.Surname, p.JobTitle
+FROM approvals a
+LEFT JOIN profiles p ON p.ID = a.Approver
+WHERE DocID = `+sqla.MakeParam(DBType, 1)+` ORDER BY a.Written ASC, a.ID ASC`, d.ID)
+	if err != nil {
+		return ApprovalList, err
+	}
+	defer rows.Close()
+
+	var ID sql.NullInt64
+	var Written sql.NullInt64
+	var Approver sql.NullInt64
+	var ApproverSign sql.NullString
+	var Approved sql.NullInt64
+	var Note sql.NullString
+
+	var ApproverID sql.NullInt64
+	var ApproverFirstName sql.NullString
+	var ApproverSurname sql.NullString
+	var ApproverJobTitle sql.NullString
+
+	for rows.Next() {
+		err = rows.Scan(&ID, &Written, &Approver, &ApproverSign, &Approved, &Note,
+			&ApproverID, &ApproverFirstName, &ApproverSurname, &ApproverJobTitle)
+		if err != nil {
+			return ApprovalList, err
+		}
+		a := Approval{
+			ID:           int(ID.Int64),
+			Written:      int64ToDateTime(Written.Int64),
+			ApproverSign: ApproverSign.String,
+			DocID:        d.ID,
+			Approved:     int(Approved.Int64),
+			Note:         Note.String,
+		}
+		if Approver.Valid {
+			a.Approver = &Profile{
+				ID:        int(ApproverID.Int64),
+				FirstName: ApproverFirstName.String,
+				Surname:   ApproverSurname.String,
+				JobTitle:  ApproverJobTitle.String,
+			}
+		}
+		ApprovalList = append(ApprovalList, a)
+	}
+
+	return ApprovalList, nil
+}
+
+// GiveDateTime executes in a template to deliver the queried date and time of an approval
+func (a Approval) GiveDateTime(dateFmt string, timeFmt string, sep string) string {
+	var dt = a.Written
+	var rt string
+	if timeFmt == "12h am/pm" {
+		rt = timeToString12(dt.Hour, dt.Minute)
+	} else if timeFmt == "24h" {
+		rt = timeToString24(dt.Hour, dt.Minute)
+	} else {
+		rt = timeToString24(dt.Hour, dt.Minute)
+	}
+	if dt.Day == 0 {
+		return ""
+	}
+	return dateToString(Date{dt.Year, dt.Month, dt.Day}, dateFmt) + sep + rt
+}
+
+type approvals []Approval
+
+func (as approvals) getApprovalsIDsSlice() []int {
+	appids := make([]int, len(as))
+	for i := 0; i < len(as); i++ {
+		appids[i] = as[i].ID
+	}
+	return appids
+}
+
+func (as approvals) getApprovalsIDsSliceApproved() []int {
+	const APPROVED = 1
+	appids := []int{}
+	for i := 0; i < len(as); i++ {
+		if as[i].Approved == APPROVED {
+			appids = append(appids, as[i].ID)
+		}
+	}
+	return appids
+}
+
+func (as approvals) getApproversIDsSlice() []int {
+	cids := make([]int, len(as))
+	for i := 0; i < len(as); i++ {
+		cids[i] = as[i].GiveApproverID()
+	}
+	return cids
+}
+
+func (as approvals) getApprovalIDbyDocIDandApproverID(docID int, pID int) int {
+	for _, a := range as {
+		if a.Approver != nil && a.DocID == docID && a.Approver.ID == pID {
+			return a.ID
+		}
+	}
+	return 0
+}
+
+func (as approvals) getApprovalByID(aID int) Approval {
+	for _, a := range as {
+		if a.ID == aID {
+			return a
+		}
+	}
+	return Approval{ID: 0}
+}
+
+func (as approvals) approved(docID int, pID int) int {
+	const NOACTION = 0
+	for _, a := range as {
+		if a.Approver != nil && a.DocID == docID && a.Approver.ID == pID {
+			return a.Approved
+		}
+	}
+	return NOACTION
+}
+
+func (as approvals) GetApprovalNote(docID int, pID int) string {
+	for _, a := range as {
+		if a.Approver != nil && a.DocID == docID && a.Approver.ID == pID {
+			return a.Note
+		}
+	}
+	return ""
+}
+
 // DocumentPage is passed into template
 type DocumentPage struct {
 	AppTitle      string
 	PageTitle     string
 	LoggedinID    int
 	UserConfig    UserConfig
-	Document      Document //payload
+	Document      Document  //payload
+	Approvals     approvals //payload
 	Message       string
 	RemoveAllowed bool
 	Editable      bool
+	IamApprover   bool
+	YouApproved   int
 	New           bool
 	Categories    []string
 	DocTypes      []string
 	Currencies    map[int]string
+	ApprovalSign  []string
+	UserList      []UserListElem
 }
 
 func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
+
+	const NOACTION = 0
+	const APPROVED = 1
+	const REJECTED = 2
+	const BROKEN = 3
+
+	const ADMIN = 1
 
 	allow, id := bs.authVerify(w, r)
 	if !allow {
@@ -258,13 +465,14 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	var Page = DocumentPage{
-		AppTitle:   bs.text.AppTitle,
-		LoggedinID: id,
-		Editable:   false,
-		New:        false,
-		Categories: bs.text.Categories,
-		DocTypes:   bs.text.DocTypes,
-		Currencies: bs.currencies,
+		AppTitle:     bs.text.AppTitle,
+		LoggedinID:   id,
+		Editable:     false,
+		New:          false,
+		Categories:   bs.text.Categories,
+		DocTypes:     bs.text.DocTypes,
+		Currencies:   bs.currencies,
+		ApprovalSign: bs.text.ApprovalSign,
 	}
 
 	TextID := getTextIDfromURL(r.URL.Path)
@@ -279,20 +487,29 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
+		Page.Approvals, err = Page.Document.loadApprovals(bs.db, bs.dbt)
+		if err != nil {
+			log.Println(currentFunction()+":", err)
+			throwServerError(w, "loading document approvals", Page.LoggedinID, Page.Document.ID)
+			return
+		}
+		Page.IamApprover = intToBool(Page.Approvals.getApprovalIDbyDocIDandApproverID(IntID, Page.LoggedinID))
+		Page.YouApproved = Page.Approvals.approved(IntID, Page.LoggedinID)
 	}
 
 	user := bs.team.getByID(Page.LoggedinID)
 	Page.UserConfig = user.UserConfig
-	if user.UserRole == 1 || Page.New || Page.Document.GiveCreatorID() == Page.LoggedinID {
+	if user.UserRole == ADMIN || Page.New || Page.Document.GiveCreatorID() == Page.LoggedinID {
 		Page.Editable = true
 	}
 	Page.RemoveAllowed, _ = strconv.ParseBool(bs.cfg.RemoveAllowed)
-	if user.UserRole == 1 {
+	if user.UserRole == ADMIN {
 		Page.RemoveAllowed = true
 	}
 
 	var created int
 	var updated int
+	shallBreakApproval := false
 	defaultUploadPath := filepath.Join(bs.cfg.ServerRoot, "files", "docs", TextID)
 
 	if r.Method == "POST" || r.Method == "PUT" || r.Method == "PATCH" {
@@ -364,7 +581,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	// Create or update code ==================================
+	// Delete files ==================================
 	if r.Method == "POST" && r.FormValue("deleteFiles") != "" {
 		if Page.Editable == false {
 			throwAccessDenied(w, "writing document", Page.LoggedinID, IntID)
@@ -378,6 +595,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 			updated = sqla.UpdateSingleJSONListStr(bs.db, bs.dbt, "documents", "FileList", FileList, IntID)
 			if updated > 0 {
 				Page.Message = "dataWritten"
+				shallBreakApproval = true
 				Page.Document.load(bs.db, bs.dbt)
 			} else {
 				Page.Message = "dataNotWritten"
@@ -387,21 +605,132 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Add approval ===========================================
+	if r.Method == "POST" && r.FormValue("approvalAdd") != "" {
+		if Page.Editable || Page.IamApprover {
+			pID := strToInt(r.FormValue("approvalAdd"))
+			a := Approval{
+				Approver: &Profile{ID: pID},
+				DocID:    IntID,
+			}
+			if sliceContainsInt(Page.Approvals.getApproversIDsSlice(), pID) {
+				Page.Message = "approverAlreadyInList"
+			} else {
+				id, res := a.create(bs.db, bs.dbt)
+				if res > 0 {
+					a.ID = id
+					Page.Message = "dataWritten"
+					p := Profile{ID: pID}
+					p.preload(bs.db, bs.dbt)
+					title := Page.Document.makeTitle(bs.i18n.Categories, bs.i18n.DocTypes, bs.i18n.DocCaption)
+					mail := AnyMail{bs.i18n.Messages.Subj.NewApproval + ": " + title,
+						bs.i18n.Messages.Cont.ApproveThis + ": " + title + ". " + bs.i18n.Messages.Cont.InfoLink + ": ",
+						bs.systemURL + "/docs/document/" + strconv.Itoa(Page.Document.ID), bs.i18n.Messages.DoNotReply, bs.systemURL, bs.i18n.Messages.MailerName}
+					mail.constructToChannel(bs.db, bs.dbt, bs.anymailtmpl, bs.mailchan, p)
+				} else {
+					Page.Message = "dataNotWritten"
+				}
+			}
+		} else {
+			throwAccessDenied(w, "adding approval", Page.LoggedinID, IntID)
+			return
+		}
+	}
+
+	// Approve (sign) ===========================================
+	if r.Method == "POST" && r.FormValue("approvalSign") != "" {
+		if Page.Editable || Page.IamApprover {
+			a := Approval{
+				ID:       Page.Approvals.getApprovalIDbyDocIDandApproverID(IntID, Page.LoggedinID),
+				Written:  getCurrentDateTime(),
+				Approver: &Profile{ID: Page.LoggedinID},
+				DocID:    IntID,
+				Approved: strToInt(r.FormValue("approvalSign")),
+				Note:     r.FormValue("approvalNote"),
+			}
+			if Page.YouApproved == APPROVED {
+				Page.Message = "dataNotWritten"
+			} else {
+				if a.Approved == APPROVED {
+					a.Approver.load(bs.db, bs.dbt)
+					a.Approver.Login = "no access"
+					a.Approver.Passwd = "no access"
+					a.ApproverSign = a.Approver.GiveSelfNameJob()
+					if a.Approver.GiveUnitID() != 0 {
+						a.ApproverSign += "; " + a.Approver.GiveUnitName()
+					}
+				}
+				res := a.sign(bs.db, bs.dbt)
+				if res > 0 {
+					if Page.Document.Creator != nil && (a.Approved == APPROVED || a.Approved == REJECTED) {
+						Page.Message = "dataWritten"
+						p := Profile{ID: Page.Document.Creator.ID}
+						p.preload(bs.db, bs.dbt)
+						ResultSubj := map[int]string{APPROVED: bs.i18n.Messages.Subj.Approved, REJECTED: bs.i18n.Messages.Subj.Rejected}
+						ResultCont := map[int]string{APPROVED: bs.i18n.Messages.Cont.Approved, REJECTED: bs.i18n.Messages.Cont.Rejected}
+						title := Page.Document.makeTitle(bs.i18n.Categories, bs.i18n.DocTypes, bs.i18n.DocCaption)
+						mail := AnyMail{ResultSubj[a.Approved] + ": " + title,
+							bs.i18n.DocCaption + ": " + title + " " + ResultCont[a.Approved] + " " + bs.i18n.Messages.Cont.ByApprover + ": " + a.Approver.GiveSelfNameJob() + ". " + bs.i18n.Messages.Cont.InfoLink + ": ",
+							bs.systemURL + "/docs/document/" + strconv.Itoa(Page.Document.ID), bs.i18n.Messages.DoNotReply, bs.systemURL, bs.i18n.Messages.MailerName}
+						mail.constructToChannel(bs.db, bs.dbt, bs.anymailtmpl, bs.mailchan, p)
+					}
+				} else {
+					Page.Message = "dataNotWritten"
+				}
+			}
+		} else {
+			throwAccessDenied(w, "signing approval", Page.LoggedinID, IntID)
+			return
+		}
+	}
+
+	// Remove approval ===========================================
+	if r.Method == "POST" && r.FormValue("approvalRemove") != "" {
+		aID := strToInt(r.FormValue("approvalRemove"))
+		if Page.Editable && Page.Approvals.getApprovalByID(aID).Approved == NOACTION {
+			res := sqla.DeleteObject(bs.db, bs.dbt, "approvals", "ID", aID)
+			if res > 0 {
+				Page.Message = "dataWritten"
+			} else {
+				Page.Message = "dataNotWritten"
+			}
+		} else {
+			throwAccessDenied(w, "removing approval", Page.LoggedinID, IntID)
+			return
+		}
+	}
+
+	// Reset approvals ===========================================
+	if shallBreakApproval {
+		sqla.UpdateMultipleWithOneInt(bs.db, bs.dbt, "approvals", "Approved", BROKEN, "Written", dateTimeToInt64(getCurrentDateTime()), Page.Approvals.getApprovalsIDsSliceApproved())
+	}
+
 	// Other fields code ============================================
 	if TextID == "new" {
 		Page.New = true
 		Page.PageTitle = bs.text.NewDocument
 	} else {
-		Page.PageTitle = Page.Document.GiveType(Page.DocTypes, bs.text.Document)
-		if Page.Document.DocType == 0 {
-			Page.PageTitle = bs.text.Document + " " + Page.PageTitle
+		Page.PageTitle = Page.Document.makeTitle(Page.Categories, Page.DocTypes, bs.text.Document)
+		Page.Approvals, err = Page.Document.loadApprovals(bs.db, bs.dbt)
+		if err != nil {
+			log.Println(currentFunction()+":", err)
+			throwServerError(w, "loading document approvals", Page.LoggedinID, Page.Document.ID)
+			return
 		}
-		if Page.Document.Category != 0 {
-			Page.PageTitle += " (" + Page.Document.GiveCategory(Page.Categories, "") + ")"
-		}
-		if Page.Document.RegNo != "" {
-			Page.PageTitle += " No. " + Page.Document.RegNo
-		}
+		Page.IamApprover = intToBool(Page.Approvals.getApprovalIDbyDocIDandApproverID(IntID, Page.LoggedinID))
+		Page.YouApproved = Page.Approvals.approved(IntID, Page.LoggedinID)
+	}
+	Page.UserList = bs.team.returnUserList()
+
+	template := "document.tmpl"
+	if strings.HasSuffix(r.URL.Path, "approval") || strings.HasSuffix(r.URL.Path, "approval/") {
+		Page.PageTitle = "Approval list"
+		template = "approval.tmpl"
+		Page.Document.Creator.load(bs.db, bs.dbt)
+		Page.Document.Creator.Login = "no access"
+		Page.Document.Creator.Passwd = "no access"
+		Page.Document.Creator.BirthDate.Year = 0
+		Page.Document.Creator.UserConfig = UserConfig{}
 	}
 
 	// JSON output
@@ -414,10 +743,10 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// HTML output
-	err = bs.templates.ExecuteTemplate(w, "document.tmpl", Page)
+	err = bs.templates.ExecuteTemplate(w, template, Page)
 	if err != nil {
 		log.Println(currentFunction()+":", err)
-		throwServerError(w, "executing document template", Page.LoggedinID, Page.Document.ID)
+		throwServerError(w, "executing "+template[0:len(template)-5]+" template", Page.LoggedinID, Page.Document.ID)
 		return
 	}
 
