@@ -30,7 +30,6 @@ pre, code {
   -webkit-box-shadow: 0 0 15px 1px #111;
   -moz-box-shadow: 0 0 15px 1px #111;
   box-shadow: 0 0 15px 1px #111;
-  filter: progid:DXImageTransform.Microsoft.shadow(direction=0, color=#556, strength=10);
   max-width: 1140px;
   min-width: 320px;
 }

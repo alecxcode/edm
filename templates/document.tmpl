@@ -43,9 +43,9 @@
         </div>
       </div>
       {{end}}
-      {{if eq .YouApproved 1}} <span class="txtgreen" i18n-text="youApproved">Approved by you.</span>{{end}}
-      {{if eq .YouApproved 2}} <span class="txtred" i18n-text="youRejected">Rejected by you.</span>{{end}}
-      {{if eq .YouApproved 3}} <span class="txtred" i18n-text="yourApprovalBroken">Your approval is broken.</span>{{end}}
+      {{if eq .YouApproved 1}} <span class="txtgreen nowrap" i18n-text="youApproved">Approved by you.</span>{{end}}
+      {{if eq .YouApproved 2}} <span class="txtred nowrap" i18n-text="youRejected">Rejected by you.</span>{{end}}
+      {{if eq .YouApproved 3}} <span class="txtred nowrap" i18n-text="yourApprovalBroken">Your approval is broken.</span>{{end}}
       {{end}}
 
       {{if .Editable}}

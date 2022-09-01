@@ -79,7 +79,7 @@
     "totalElemsFound": "Total des objets par critère de recherche",
     "onThisPage": "Sur cette page",
     "totalPages": "Pages totales",
-    "appliedFilters": "Filtres appliqués: ",
+    "appliedFilters": "Filtres appliqués",
     "noFiltersApplied": "Aucun filtre appliqué.",
     "seeAlso": "Voir également:",
 
@@ -229,8 +229,8 @@
     "category": "Catégorie",
     "docAbout": "À propos",
     "docSum": "Somme",
-    "currencyLabel": "devise: ",
-    "sumLabel": "somme: ",
+    "currencyLabel": "devise",
+    "sumLabel": "somme",
     "authors": "Auteurs",
     "addressees": "Destinataires",
     "note": "Remarque",
@@ -255,7 +255,7 @@
     "myApprovals": "Mes approbations",
     "approvalBreak": "Cela cassera toute approbation si elle est présente!",
     "approvalSign": [
-        "Pour approbation",
+        "En cours",
         "Approuvé",
         "Rejeté",
         "Cassé"

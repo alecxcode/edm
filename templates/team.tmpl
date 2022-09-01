@@ -88,31 +88,30 @@
     <form id="datagridForm" name="datagridForm" action="/team/" method="post" onsubmit="addSortingOnSubmut('datagridForm');
     addFiltersOnSubmut('datagridForm'); addPaginationOnSubmut('datagridForm'); removeEmptyInputs(this);
     sessionStorage.setItem('lastQuery', location.search);">
-    <table id="mainTable">
-      <tr class="thead">
-        <th align="center" id="Chooser"><input type="checkbox" class="chead" id="chead"></th>
-        <th align="left" id="FullName"><span i18n-text="fullName">Full name</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
-        <th align="left" id="JobTitle"><span i18n-text="jobTitle">Job title</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
-        <th align="left" id="Unit"><span i18n-text="unitDepartment">Unit (department)</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
-        <th align="left" id="Contacts"><span i18n-text="contacts">Contacts</span></th>
-      </tr>
+    <div id="mainTable" style="grid-template-columns: min-content repeat(4, auto);">
+        <div class="gridheader center" id="Chooser"><input type="checkbox" class="chead" id="chead"></div>
+        <div class="gridheader" id="FullName"><span i18n-text="fullName">Full name</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
+        <div class="gridheader" id="JobTitle"><span i18n-text="jobTitle">Job title</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
+        <div class="gridheader" id="Unit"><span i18n-text="unitDepartment">Unit (department)</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
+        <div class="gridheader" id="Contacts"><span i18n-text="contacts">Contacts</span></div>
+      
+      {{$seq := "grideven"}}
       {{range .Team}}
-      <tr>
         {{$ui := .GiveUnitID}}
         {{$fn := (print .Surname .FirstName .OtherName)}}
-        <td i18n-label="select" label="Select" align="center"><input type="checkbox" class="chbox" id="{{.ID}}" name="ids" value="{{.ID}}"></td>
-        <td i18n-label="fullName" label="Full name" align="left"><a href="/team/profile/{{.ID}}">{{if $fn}}{{.Surname}} {{.FirstName}} {{.OtherName}}{{else}}ID: {{.ID}}{{end}}</a></td>
-        <td i18n-label="jobTitle" label="Job title" align="left">{{.JobTitle}}</td>
-        <td i18n-label="unitDept" label="Unit (dept.)" align="left">{{if $ui}}<a href="/companies/company/{{.JobUnit.Company.ID}}#unit{{$ui}}">{{.GiveUnitName}}</a>{{end}}</td>
-        <td i18n-label="contacts" label="Contacts" align="left">
-          {{if .Contacts.TelOffice}}<span class="afile"><span i18n-text="officePhone">Office phone:</span> {{.Contacts.TelOffice}}</span>{{end}}
-          {{if .Contacts.TelMobile}}<span class="afile"><span i18n-text="mobilePhone">Mobile phone:</span> {{.Contacts.TelMobile}}</span>{{end}}
+        <div class="row-{{.ID}} {{$seq}} center select"><input type="checkbox" class="chbox" id="{{.ID}}" name="ids" value="{{.ID}}"></div>
+        <div class="row-{{.ID}} {{$seq}} firstcell textsearch"><span class="mobile" i18n-text="fullName">Full name: </span><a href="/team/profile/{{.ID}}">{{if $fn}}{{.Surname}} {{.FirstName}} {{.OtherName}}{{else}}ID: {{.ID}}{{end}}</a></div>
+        <div class="row-{{.ID}} {{$seq}} textsearch"><span class="mobile" i18n-text="jobTitle">Job title: </span><span>{{.JobTitle}}</span></div>
+        <div class="row-{{.ID}} {{$seq}} textsearch"><span class="mobile" i18n-text="unitDept">Unit (dept.): </span>{{if $ui}}<a href="/companies/company/{{.JobUnit.Company.ID}}#unit{{$ui}}">{{.GiveUnitName}}</a>{{end}}</div>
+        <div class="row-{{.ID}} {{$seq}} lastcell textsearch"><span class="mobile" i18n-text="contacts">Contacts: </span>
+          {{if .Contacts.TelOffice}}<span class="afile"><span i18n-text="officePhone">Office phone:</span> <span>{{.Contacts.TelOffice}}</span></span>{{end}}
+          {{if .Contacts.TelMobile}}<span class="afile"><span i18n-text="mobilePhone">Mobile phone:</span> <span>{{.Contacts.TelMobile}}</span></span>{{end}}
           {{if .Contacts.Email}}<span class="afile"><a href="mailto:{{.Contacts.Email}}">{{.Contacts.Email}}</a></span>{{end}}
           {{if .Contacts.Other}}<span class="afile">{{.Contacts.Other}}</span>{{end}}
-        </td>
-      </tr>
+        </div>
+      {{if eq $seq "grideven"}}{{$seq = "gridodd"}}{{else}}{{$seq = "grideven"}}{{end}}
       {{end}}
-    </table>
+    </div>
     </form>
 
     <div id="stat" class="stat margintop"><span i18n-text="totalElemsFound">Total objects by search criteria:</span> {{.FilteredNum}}</div>
@@ -154,7 +153,7 @@
 
     let loggedinAdmin = {{.LoggedinAdmin}};
     if (!loggedinAdmin) {
-      disableControlButtons();
+      disableControlButtons(mainTablePresent);
     }
 
     document.getElementById('filterReset').addEventListener("click", function() {
@@ -169,7 +168,7 @@
     applyAllFilters(filters, classFilterArr, dateFilterArr, sumFilterArr);
 
     if (textFilter && mainTablePresent) {
-      highlightSearchResults(textFilter, [1, 2, 3, 4]);
+      highlightSearchResults(textFilter);
     }
     printAppliedFilters(classFilterArr, dateFilterArr, sumFilterArr, textFilter);
     

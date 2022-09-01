@@ -123,7 +123,7 @@ func newTextStruct() text {
 			"Template",
 		},
 		ApprovalSign: []string{
-			"For approval",
+			"Pending",
 			"Approved",
 			"Rejected",
 			"Broken",

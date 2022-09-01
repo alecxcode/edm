@@ -117,7 +117,6 @@ pre, code {
   -webkit-box-shadow: 0 0 15px 1px #e7e7e7;
   -moz-box-shadow: 0 0 15px 1px #e7e7e7;
   box-shadow: 0 0 15px 1px #e7e7e7;
-  filter: progid:DXImageTransform.Microsoft.shadow(direction=0, color=#e7e7e7, strength=10);
   max-width: 1140px;
   min-width: 320px;
 }
@@ -239,21 +238,20 @@ h2 {
   margin-top: 6px;
   margin-bottom: 4px;
 }
-table {
-  width: 100%;
-  border-spacing: 0px;
-  border-collapse: separate;
-  border: 0.5px solid #b7b7b7;
-}
-tr:nth-child(even) {background-color: var(--tableOddRowBkgColor);}
 
-th {white-space: nowrap;}
-th, td {border: 0.5px solid #b7b7b7;}
-
-.thead {
-  background-color: #002848;
-  color: #eed;
+#mainTable {
+  display: grid;
+  gap: 1px;
+  background-color: #b7b7b7;
+  border: 1px solid #b7b7b7;
+  border-radius: calc(1px + var(--elements-radius));
+  overflow: hidden;
 }
+#mainTable div {background-color: #fff; padding: 0px 1px;}
+.gridheader {background-color: #002848 !important; color: #eed; font-weight: bold;}
+.grideven {background-color: var(--defaultBackgroundColor);}
+.gridodd {background-color: var(--tableOddRowBkgColor);}
+.mobile {display: none;}
 
 .clamp {
   overflow: hidden;
@@ -335,6 +333,8 @@ input[type=text], input[type=button], input[type=submit], button {
   border-radius: var(--elements-radius);
 }
 
+input[type='checkbox'] {margin-top: 1px;}
+
 select {
   max-width: 99%;
 }
@@ -360,8 +360,8 @@ select {
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
+  -webkit-transition: .1s;
+  transition: .1s;
   border-radius: 19px;
 }
 .slider:before {
@@ -372,8 +372,8 @@ select {
   left: 2px;
   bottom: 2px;
   background-color: #fff;
-  -webkit-transition: .4s;
-  transition: .4s;
+  -webkit-transition: .1s;
+  transition: .1s;
   border-radius: 50%;
 }
 input:checked + .slider {
@@ -621,49 +621,9 @@ h3 a:focus {
 
 
 @media screen and (max-width: 960px) {
-  th {
-    width: unset;
-  }
-  .ofname {
-    width: 100%;
-    border-right: none;
-  }
-  .ofval {
-    width: 100%;
-    max-width: unset;
-  }
-  #main p {
-    min-width: 100%;
-    max-width: 100%;
-  }
-}
-
-@media screen and (max-width: 640px) {
-  table th {
-    display: none;
-  }
-  table td {
-    border: 0.7px solid #eee;
-    display: flex;
-    flex-wrap: wrap;
-    border-spacing: 1px;
-    border-collapse: separate;
-  }
-  table td div, table td span {
-    margin-left: 2px;
-    margin-right: 2px;
-  }
-  table td::before {
-    content: attr(label);
-    text-align: left;
-    font-weight: bold;
-    width: 90px;
-    min-width: 90px;
-  }
   .textmenu a {
     display: none;
   }
-  
   .mobileMenuButton {
     cursor: pointer;
     display: inline;
@@ -677,7 +637,44 @@ h3 a:focus {
     display: block;
     margin-top: 0.7em;
   }
+}
+
+@media screen and (max-width: 640px) {
+  #mainTable {
+    display: grid;
+    grid-template-columns: 1fr !important;
+    gap: 1px;
+    overflow: visible;
+  }
+  /* #mainTable div::before {
+    content: attr(label) ": ";
+    text-align: left;
+    font-weight: bold;
+  } */
+  .gridheader {display: none;}
+  .select {display: none;}
+  .mobile {display: initial; font-weight: bold;}
+  .firstcell {
+    margin-top: 0px;
+    border-radius: var(--elements-radius) var(--elements-radius) 0 0;
+  }
+  .lastcell {
+    margin-bottom: 4px;
+    border-radius: 0 0 var(--elements-radius) var(--elements-radius);
+  }
+  .lastcell:last-child {margin-bottom: 0px;}
   
+  .ofname {
+    width: 100%;
+  }
+  .ofval {
+    width: 100%;
+    max-width: unset;
+  }
+  #main p {
+    min-width: 100%;
+    max-width: 100%;
+  }
 }
 
 

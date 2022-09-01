@@ -316,6 +316,7 @@ func getLoginTemplate() *template.Template {
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
 <title>{{.AppTitle}}: {{.LoginPageTitle}}</title>
 <link rel="shortcut icon" href="/assets/favicon.png">
+<link rel="icon" href="/assets/favicon.png">
 <link rel="stylesheet" href="/assets/fonts.css">
 <link rel="stylesheet" href="/assets/system-dark.css">
 </head>
@@ -329,7 +330,7 @@ func getLoginTemplate() *template.Template {
 </form></div>
 <div id="bottom">
 <span>© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></span>
-<span>v1.1.0.</span>
+<span>v1.2.0.</span>
 <span><a href="/assets/manual.html">Manual</a></span>
 </div>
 </div></body></html>`
@@ -485,8 +486,9 @@ func writeBruteForceStub(w http.ResponseWriter) {
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
 	<title>EDM: System Bruteforce Attack Shield</title>
 	<link rel="shortcut icon" href="/assets/favicon.png">
+	<link rel="icon" href="/assets/favicon.png">
 	<link rel="stylesheet" href="/assets/fonts.css">
-	<link rel="stylesheet" href="/assets/system-pastel.css">
+	<link rel="stylesheet" href="/assets/system-dark.css">
 	</head>
 	<body><div id="container"><div id="control"><h1>System Bruteforce Attack Shield</h1>
 	<br><p class="msgredfx">System login function is temporarily locked due to bruteforce attack. Normally, this should not happen. Please, contact system admin.</p><br><br><br>

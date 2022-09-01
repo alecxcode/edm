@@ -277,6 +277,9 @@ func (p *Profile) loadByIDorLogin(db *sql.DB, DBType byte, what string) (err err
 	var Passwd sql.NullString
 	err = row.Scan(&p.ID, &FirstName, &OtherName, &Surname, &UserRole, &UserLock, &UserConfig, &Login, &Passwd)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
 		return err
 	}
 	p.FirstName = FirstName.String
@@ -745,7 +748,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// JSON output
-	if r.URL.Query().Get("api") == "json" {
+	if r.URL.Query().Get("api") == "json" || r.FormValue("api") == "json" {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(Page)
 		//jsonOut, _ := json.Marshal(Page)
@@ -824,7 +827,7 @@ func (bs *BaseStruct) userConfigHandler(w http.ResponseWriter, r *http.Request) 
 	Page.UserConfig = user.UserConfig
 
 	// JSON output
-	if r.URL.Query().Get("api") == "json" {
+	if r.URL.Query().Get("api") == "json" || r.FormValue("api") == "json" {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(Page)
 		//jsonOut, _ := json.Marshal(Page)

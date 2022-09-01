@@ -4,14 +4,12 @@
   let currentItem;
   if (addr.includes("/docs")) {
     currentItem = document.querySelector("#textmenu a[href^='/docs']");
-    if (currentItem) currentItem.classList.add("chosenmenu");
   } else if (addr.includes("/team")) {
     currentItem = document.querySelector("#textmenu a[href^='/team']");
-    if (currentItem) currentItem.classList.add("chosenmenu");
   } else if (addr.includes("/task")) {
     currentItem = document.querySelector("#textmenu a[href^='/task']");
-    if (currentItem) currentItem.classList.add("chosenmenu");
   }
+  if (currentItem) currentItem.classList.add("chosenmenu");
 })();
 
 /* Translates the page - aka i18n */
@@ -59,7 +57,8 @@ function translateAll(rootElem, lang) {
     if (c0 == '+' && s.charAt(0) != '+') s = '+ ' + s;
     if (c0 == '×' && s.charAt(0) != '×') s = '× ' + s;
     if (c1 == ':' && c2 != '*' && s.charAt(s.length - 1) != ':') {s += ':';
-    } else if (c1 == ':' && c2 == '*' && s.charAt(s.length - 2) != '*') {s += '*:';}
+    } else if (c1 == ':' && c2 == '*' && s.charAt(s.length - 2) != '*') {s += '*:';
+    } else if (c1 == ' ' && c2 == ':') {s += ': ';}
     return s;
   }
 
@@ -301,31 +300,48 @@ function processTableSelection(removeAllowed) {
   const checkhead = document.getElementById('chead');
   const checkboxes = document.querySelectorAll('input[class="chbox"]');
   const styleRoot = getComputedStyle(document.body);
+  const tableEvenRowBkgColor = styleRoot.getPropertyValue('--defaultBackgroundColor');
   const tableOddRowBkgColor = styleRoot.getPropertyValue('--tableOddRowBkgColor');
   const tableSelectionColor = styleRoot.getPropertyValue('--tableSelectionColor');
   const cbListLength = checkboxes.length;
   const deleteButton = document.getElementById('deleteButton');
   const statusButtons = document.querySelectorAll('input[class="sbut statusMultiControl"]');
+
+  document.getElementById("mainTable").addEventListener("click", function (event) {
+    if (event.target.classList.contains('grideven') || event.target.classList.contains('gridodd')) {
+      let id = (+event.target.classList[0].split('-')[1]);
+      let cb = document.getElementById(id);
+      cb.checked = !cb.checked;
+      checkOne(cb.checked, '.' + cb.parentNode.classList[0]);
+    }
+  });
   
   for (let i = 0; i < cbListLength; i++) {
     let cb = checkboxes[i];
     cb.onclick = function() {
-      let state = cb.checked;
-      let currentRow = this.parentNode.parentNode;
-      if (state) {
-        currentRow.style.backgroundColor = tableSelectionColor;
-        if (removeAllowed) deleteButton.disabled = false;
-        if (statusButtons) statusButtons.forEach(btn => btn.disabled = false);
-      } else {
-        processAllCBDisabledCheckup();
-        currentRow.style.backgroundColor = "inherit";
-        if (currentRow.rowIndex % 2 == 0) {
-          currentRow.style.backgroundColor = "inherit";
-        } else {
-          currentRow.style.backgroundColor = tableOddRowBkgColor;
-        }
-      }
+      checkOne(this.checked, '.' + this.parentNode.classList[0]);
+    };
+  }
+
+  function checkOne(state, currentRowClass) {
+    if (state) {
+      changeRowBkgColor(currentRowClass, true);
+      if (removeAllowed) deleteButton.disabled = false;
+      if (statusButtons) statusButtons.forEach(btn => btn.disabled = false);
+    } else {
+      processAllCBDisabledCheckup();
+      changeRowBkgColor(currentRowClass, false);
     }
+  }
+
+  function changeRowBkgColor(classSelector, select){
+    document.querySelectorAll(classSelector).forEach((elem) => {
+      if (select) {
+        elem.style.backgroundColor = tableSelectionColor;
+      } else {
+        elem.style.backgroundColor = (elem.classList.contains('gridodd')) ? tableOddRowBkgColor : tableEvenRowBkgColor;
+      }
+    });
   }
   
   function processAllCBDisabledCheckup() {
@@ -340,42 +356,27 @@ function processTableSelection(removeAllowed) {
   }
   
   checkhead.onclick = function() {
-    let chstate = checkhead.checked;
-    if (chstate) {
-      checkAll();
-      if (removeAllowed) deleteButton.disabled = false;
-      if (statusButtons) statusButtons.forEach(btn => btn.disabled = false);
+    if (checkhead.checked) {
+      checkAll(true);
     } else {
-      uncheckAll();
-      if (removeAllowed) deleteButton.disabled = true;
-      if (statusButtons) statusButtons.forEach(btn => btn.disabled = true);
+      checkAll(false);
     }
   }
   
-  function checkAll() {
+  function checkAll(select) {
+    if (removeAllowed) deleteButton.disabled = !select;
+    if (statusButtons) statusButtons.forEach(btn => btn.disabled = !select);
     checkboxes.forEach(function(cb) {
-      cb.checked = true;
-      let currentRow = cb.parentNode.parentNode;
-      currentRow.style.backgroundColor = tableSelectionColor;
-    });
-  }
-  
-  function uncheckAll() {
-    checkboxes.forEach(function(cb) {
-      cb.checked = false;
-      let currentRow = cb.parentNode.parentNode;
-      if (currentRow.rowIndex % 2 == 0) {
-        currentRow.style.backgroundColor = "inherit";
-      } else {
-        currentRow.style.backgroundColor = tableOddRowBkgColor;
-      }
+      cb.checked = select;
+      let currentRowClass = '.' + cb.parentNode.classList[0];
+      changeRowBkgColor(currentRowClass, select);
     });
   }
   
 }
 
 /* Hides control buttons and disables checkboxes */
-function disableControlButtons() {
+function disableControlButtons(mainTablePresent) {
   document.getElementById('controlButtons').style.display = 'none';
   if (mainTablePresent) {
     const checkhead = document.getElementById('chead');
@@ -581,23 +582,28 @@ function applyTextFilter(searchPhrase) {
 }
 
 /* Iterate over table data cells to insert a highlight tag */
-function highlightSearchResults(textFilter, columns) {
+function highlightSearchResults(textFilter) {
   textFilter = textFilter.toLowerCase().replace('<', '&lt;').replace('>', '&gt;');
-  let tds;
-  const tb = document.getElementById('mainTable');
-  if (tb) {
-    tds = tb.getElementsByTagName('td');
+  let elems;
+  const content = document.getElementById('mainTable');
+  if (content) {
+    elems = content.getElementsByClassName('textsearch');
   }
-  if (textFilter && tds) {
-    for (let td of tds) {
-      if (columns.indexOf(td.cellIndex) !== -1) {
-        td.innerHTML = insertCaseInsensitive(td.innerHTML.replace('&amp;', '&'), textFilter, '<span class="highlight">', '</span>');
-        let subElems = td.children;
-        for (let i = 0; i < subElems.length; i++) {
-          subElems[i].classList.add('clampbig');
-        }
-      }
+  if (textFilter && elems) {
+    for (let elem of elems) {
+      recursiveChildrenSearch(elem, textFilter);
     }
+  }
+}
+
+function recursiveChildrenSearch(elem, textFilter) {
+  if (elem.children && elem.children.length > 0) {
+    for (subelem of elem.children) {
+      recursiveChildrenSearch(subelem, textFilter);
+    }
+  } else {
+    if (elem.classList && elem.classList.contains('mobile')) return;
+    elem.innerHTML = insertCaseInsensitive(elem.innerHTML.replace('&amp;', '&'), textFilter, '<span class="highlight">', '</span>');
   }
 }
 
@@ -607,7 +613,7 @@ function insertCaseInsensitive(srcStr, lowerCaseFilter, before, after) {
   let flen = lowerCaseFilter.length;
   let i = -1;
   while ((i = lowStr.indexOf(lowerCaseFilter, i + 1)) != -1) {
-    if (insideTag(i, srcStr)) continue;
+    //if (insideTag(i, srcStr)) continue;
     srcStr = srcStr.slice(0, i) + before + srcStr.slice(i, i+flen) + after + srcStr.slice(i+flen);
     lowStr = srcStr.toLowerCase();
     i += before.length + after.length;
@@ -694,8 +700,9 @@ function addSeekPagination(formID, filteredNum){
   addHiddenElem(frm, 'filteredNum', filteredNum);
   addHiddenElem(frm, 'previousPage', pageNumber);
   const mainTable = document.getElementById('mainTable');
-  addHiddenElem(frm, 'firstElemOnPage', mainTable.rows[1].cells[1].innerText);
-  addHiddenElem(frm, 'lastElemOnPage', mainTable.rows[mainTable.rows.length-1].cells[1].innerText);
+  //console.log(mainTable.getElementsByClassName('firstcell')[0].lastElementChild.innerText, mainTable.getElementsByClassName('firstcell')[mainTable.getElementsByClassName('firstcell').length-1].lastElementChild.innerText);  
+  addHiddenElem(frm, 'firstElemOnPage', mainTable.getElementsByClassName('firstcell')[0].lastElementChild.innerText);
+  addHiddenElem(frm, 'lastElemOnPage',  mainTable.getElementsByClassName('firstcell')[mainTable.getElementsByClassName('firstcell').length-1].lastElementChild.innerText);
 }
 function processAddingFilters(frm, filters) {
 
@@ -833,7 +840,7 @@ function printAppliedFilters(classFilterArr, dateFilterArr, sumFilterArr, textFi
   if (langCode != 'en') {
     timeout = 20;
     getLang(langCode).then(lang => {
-      if (lang.appliedFilters) appliedFilters = lang.appliedFilters;
+      if (lang.appliedFilters) appliedFilters = lang.appliedFilters + ": ";
       if (lang.noFiltersApplied) noFiltersApplied = lang.noFiltersApplied;
       if (lang.diapason) diapason = lang.diapason;
       runAllowed = true;
@@ -975,7 +982,7 @@ function processPagesCalculations(elemsOnPage, filteredNum) {
 }
 
 function getElemsOnCurrentPage() {
-  return document.getElementById('mainTable').getElementsByTagName('tr').length - 1;
+  return document.getElementById('mainTable').getElementsByClassName('firstcell').length;
 }
 
 /* Text formatting in multiline elements */

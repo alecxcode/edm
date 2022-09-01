@@ -1,7 +1,8 @@
 # EDM System
 
 EDM System is an electronic document management and task tracking server application.  
-It is extremely easy to install and configure.
+It is extremely easy to install and configure.  
+See **[EDM Project website](https://edmproject.github.io)** to get the complete documentation, screenshots, downloads, etc.
 
 The application has the following functions:
 * Documents: create, upload files, edit, delete, approve

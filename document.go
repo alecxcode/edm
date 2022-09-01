@@ -734,7 +734,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// JSON output
-	if r.URL.Query().Get("api") == "json" {
+	if r.URL.Query().Get("api") == "json" || r.FormValue("api") == "json" {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(Page)
 		//jsonOut, _ := json.Marshal(Page)

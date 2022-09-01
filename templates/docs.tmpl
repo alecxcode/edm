@@ -65,7 +65,7 @@
     <span class="panel smaller"><a href="/docs/?categories=3" i18n-index="categories-3">Internal</a></span>
     <span class="panel smaller"><a href="/docs/?doctypes=4" i18n-index="docTypes-4">Contract, addendum to it</a></span>
     <span class="panel smaller"><a href="/docs/?doctypes=13" i18n-index="docTypes-13">Template</a></span>
-    <span class="panel smaller"><a href="/docs/?creator=my" i18n-many="myDocsCreated" title="Documents for which I am creator">Created by me</a></span>
+    <span class="panel smaller"><a href="/docs/?creator=my" i18n-many="myDocsCreated" title="Documents for which I am creator">My documents</a></span>
     <span class="panel smaller"><a href="/docs/?approver=my&approved=0" i18n-index="approvalSignMy-0">For my approval</a></span>
     <span class="panel smaller"><a href="/docs/?approver=my&approved=1" i18n-index="approvalSignMy-1">Approved by me</a></span>
     <span class="panel smaller"><a href="/docs/?approver=my&approved=2" i18n-index="approvalSignMy-2">Rejected by me</a></span>
@@ -114,49 +114,48 @@
     <form id="datagridForm" name="datagridForm" action="/docs/" method="post" onsubmit="addSortingOnSubmut('datagridForm');
     addFiltersOnSubmut('datagridForm');addPaginationOnSubmut('datagridForm');removeEmptyInputs(this);
     sessionStorage.setItem('lastQuery', location.search);">
-    <table id="mainTable">
-      <tr class="thead">
-        <th align="center" id="Chooser"><input type="checkbox" class="chead" id="chead"></th>
+    <div id="mainTable" style="grid-template-columns: repeat(3, min-content) 15% 20% min-content repeat(3, auto) min-content;">
+        <div class="gridheader center" id="Chooser"><input type="checkbox" class="chead" id="chead"></div>
         {{if $.ShowIncNo}}
-        <th align="left" id="IncNo"><span i18n-text="incNo">Inc.No.</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
-        <th align="left" id="IncDate"><span i18n-text="incDate">Inc.Date</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <div class="gridheader" id="IncNo"><span i18n-text="incNo">Inc.No.</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
+        <div class="gridheader" id="IncDate"><span i18n-text="incDate">Inc.Date</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
         {{else}}
-        <th align="left" id="RegNo"><span i18n-text="regNo">Reg.No.</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
-        <th align="left" id="RegDate"><span i18n-text="regDate">Reg.Date</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
+        <div class="gridheader" id="RegNo"><span i18n-text="regNo">Reg.No.</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
+        <div class="gridheader" id="RegDate"><span i18n-text="regDate">Reg.Date</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
         {{end}}
-        <th align="left" style="min-width: 15%;" id="docType"><span i18n-text="docType">Type</span></th>
-        <th align="left" id="About"><span i18n-text="docAbout">About</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
-        <th align="left" id="EndDate"><span i18n-text="endDate">Term (Exp.)</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
-        <th align="left" style="min-width: 11%;" id="DocSum"><span i18n-text="docSum">Sum</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></th>
-        <th align="left" id="Authors"><span i18n-text="authors">Authors</span></th>
-        <th align="left" id="Addressee"><span i18n-text="addressees">Addressees</span></th>
-        <th align="left" id="FileList"><span i18n-text="files">Files</span></th>
-      </tr>
+        <div class="gridheader" id="docType"><span i18n-text="docType">Type</span></div>
+        <div class="gridheader" id="About"><span i18n-text="docAbout">About</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
+        <div class="gridheader" id="EndDate"><span class="nowrap" i18n-text="endDate">Term (Exp.)</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
+        <div class="gridheader" id="DocSum"><span i18n-text="docSum">Sum</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
+        <div class="gridheader" id="Authors"><span i18n-text="authors">Authors</span></div>
+        <div class="gridheader" id="Addressee"><span i18n-text="addressees">Addressees</span></div>
+        <div class="gridheader" id="FileList"><span i18n-text="files">Files</span></div>
+
+      {{$seq := "grideven"}}
       {{range .Docs}}
-      <tr>
-        <td i18n-label="select" label="Select" align="center"><input type="checkbox" class="chbox" id="{{.ID}}" name="ids" value="{{.ID}}"></td>
+        <div class="row-{{.ID}} {{$seq}} center select"><input type="checkbox" class="chbox" id="{{.ID}}" name="ids" value="{{.ID}}"></div>
         {{if $.ShowIncNo}}
-        <td i18n-label="incNo" label="Inc.No." align="left"><a href="/docs/document/{{.ID}}">{{.IncNo}}</a></td>
-        <td i18n-label="incDate" label="Inc.Date" align="left"><span class="nowrap">{{.GiveDate "Inc" $.UserConfig.DateFormat}}</span></td>
+        <div class="row-{{.ID}} {{$seq}} textsearch firstcell"><span class="mobile" i18n-text="incNo">Inc.No.: </span><a href="/docs/document/{{.ID}}">{{.IncNo}}</a></div>
+        <div class="row-{{.ID}} {{$seq}}"><span class="mobile" i18n-text="incDate">Inc.Date: </span><span class="nowrap">{{.GiveDate "Inc" $.UserConfig.DateFormat}}</span></div>
         {{else}}
-        <td i18n-label="regNo" label="Reg.No." align="left"><a href="/docs/document/{{.ID}}">{{.RegNo}}</a></td>
-        <td i18n-label="regDate" label="Reg.Date" align="left"><span class="nowrap">{{.GiveDate "Reg" $.UserConfig.DateFormat}}</span></td>
+        <div class="row-{{.ID}} {{$seq}} firstcell textsearch"><span class="mobile" i18n-text="regNo">Reg.No.: </span><a href="/docs/document/{{.ID}}">{{.RegNo}}</a></div>
+        <div class="row-{{.ID}} {{$seq}}"><span class="mobile" i18n-text="regDate">Reg.Date: </span><span class="nowrap">{{.GiveDate "Reg" $.UserConfig.DateFormat}}</span></div>
         {{end}}
-        <td i18n-label="docType" label="Type" align="left"><a href="/docs/document/{{.ID}}" i18n-index="docTypes-{{.DocType}}">{{.GiveType $.DocTypes "Unknown"}}</a> {{if .Category}}(<span class="cat" i18n-index="categories-{{.Category}}">{{.GiveCategory $.Categories "Unknown"}}</span>){{end}}</td>
-        <td i18n-label="docAbout" label="About" align="left"><a href="/docs/document/{{.ID}}" class="clamp">{{.About}}</a></td>
-        <td i18n-label="endDate" label="Term (Exp.)" align="left"><span class="nowrap">{{.GiveDate "End" $.UserConfig.DateFormat}}</span></td>
-        <td i18n-label="docSum" label="Sum" align="right">{{if $.UserConfig.CurrencyBeforeAmount}}<span class="cur">{{if gt .Currency 0}}{{index $.Currencies .Currency}}{{end}}</span> {{end}}<span class="sum nowrap">{{.GiveSum}}</span> {{if not $.UserConfig.CurrencyBeforeAmount}}<span class="cur">{{if gt .Currency 0}}{{index $.Currencies .Currency}}{{end}}</span>{{end}}</td>
-        <td i18n-label="authors" label="Authors" align="left">{{.Authors}}</td>
-        <td i18n-label="addressees" label="Addressees" align="left">{{.Addressee}}</td>
-        <td i18n-label="files" label="Files" align="left">
+        <div class="row-{{.ID}} {{$seq}}"><span class="mobile" i18n-text="docType">Type: </span><a href="/docs/document/{{.ID}}" i18n-index="docTypes-{{.DocType}}">{{.GiveType $.DocTypes "Unknown"}}</a> {{if .Category}}(<span class="cat" i18n-index="categories-{{.Category}}">{{.GiveCategory $.Categories "Unknown"}}</span>){{end}}</div>
+        <div class="row-{{.ID}} {{$seq}} textsearch clamp"><span class="mobile" i18n-text="docAbout">About: </span><a href="/docs/document/{{.ID}}">{{.About}}</a></div>
+        <div class="row-{{.ID}} {{$seq}}"><span class="mobile" i18n-text="endDate">Term (Exp.): </span><span class="nowrap">{{.GiveDate "End" $.UserConfig.DateFormat}}</span></div>
+        <div class="row-{{.ID}} {{$seq}}"><span class="mobile" i18n-text="docSum">Sum: </span>{{if $.UserConfig.CurrencyBeforeAmount}}<span class="cur">{{if gt .Currency 0}}{{index $.Currencies .Currency}}{{end}}</span> {{end}}<span class="sum nowrap">{{.GiveSum}}</span> {{if not $.UserConfig.CurrencyBeforeAmount}}<span class="cur">{{if gt .Currency 0}}{{index $.Currencies .Currency}}{{end}}</span>{{end}}</div>
+        <div class="row-{{.ID}} {{$seq}} textsearch"><span class="mobile" i18n-text="authors">Authors: </span><span>{{.Authors}}</span></div>
+        <div class="row-{{.ID}} {{$seq}} textsearch"><span class="mobile" i18n-text="addressees">Addressees: </span><span>{{.Addressee}}</span></div>
+        <div class="row-{{.ID}} {{$seq}} lastcell textsearch"><span class="mobile" i18n-text="files">Files: </span> 
           {{$f0 := .GiveShortFileName 0}}{{$f1 := .GiveShortFileName 1}}{{$f2 := .GiveShortFileName 2}}
           {{if $f0}}<span class="afile"><a href="/files/docs/{{.ID}}/{{index .FileList 0}}">{{$f0}}</a></span>{{end}}
           {{if and $f1 (not $f2)}}<span class="afile"><a href="/files/docs/{{.ID}}/{{index .FileList 1}}">{{$f1}}</a></span>{{end}}
           {{if and $f1 $f2}}<span class="afile"><a href="/docs/document/{{.ID}}">more...</a></span>{{end}}
-        </td>
-      </tr>
+        </div>
+      {{if eq $seq "grideven"}}{{$seq = "gridodd"}}{{else}}{{$seq = "grideven"}}{{end}}
       {{end}}
-    </table>
+    </div>
     </form>
 
     <div id="stat" class="stat margintop"><span i18n-text="totalElemsFound">Total objects by search criteria:</span> {{.FilteredNum}}</div>
@@ -228,7 +227,7 @@
 
     let removeAllowed = {{.RemoveAllowed}};
     if (!removeAllowed) {
-      disableControlButtons();
+      disableControlButtons(mainTablePresent);
     }
 
     let showIncNo = {{.ShowIncNo}};
@@ -250,7 +249,7 @@
     applyAllFilters(filters, classFilterArr, dateFilterArr, sumFilterArr);
 
     if (textFilter && mainTablePresent) {
-      highlightSearchResults(textFilter, [1, 4, 7, 8, 9, 10]);
+      highlightSearchResults(textFilter);
     }
     printAppliedFilters(classFilterArr, dateFilterArr, sumFilterArr, textFilter);
    
