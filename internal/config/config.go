@@ -1,6 +1,7 @@
-package main
+package config
 
 //go:generate python3 config-gen.py
+//go:generate python3 config-env.py
 
 import (
 	"io/ioutil"
@@ -38,7 +39,8 @@ type Config struct {
 	SMTPPassword  string
 }
 
-func (cfg *Config) readConfig(configPath string, serverRoot string) error {
+// ReadConfig reads config into memory
+func (cfg *Config) ReadConfig(configPath string, serverRoot string) error {
 	const appDir = ".edm" // in this directory everything usually stored
 	const defaultiniFname = "edm-system.cfg"
 	homeDir, err := os.UserHomeDir()
@@ -111,10 +113,12 @@ func (cfg *Config) readConfig(configPath string, serverRoot string) error {
 		readMapToCfgStruct(mapOfConfig, cfg)
 
 	}
+	cfg.readOSEnv()
 	return nil
 }
 
-func (cfg *Config) writeConfig(configPath string) error {
+// WriteConfig writes config to disk
+func (cfg *Config) WriteConfig(configPath string) error {
 	const appDir = ".edm" // in this directory everything usually stored
 	const defaultiniFname = "edm-system.cfg"
 	homeDir, err := os.UserHomeDir()

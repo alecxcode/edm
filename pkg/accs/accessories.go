@@ -1,4 +1,4 @@
-package main
+package accs
 
 import (
 	"log"
@@ -22,7 +22,8 @@ type FilterRender struct {
 	Currencies           map[int]string
 }
 
-func returnFilterRender(Name string, Attri18n string, DisplayName string, UseCalendarInConrols bool, Currencies map[int]string) FilterRender {
+// ReturnFilterRender provides the function to render filter component to run in a template
+func ReturnFilterRender(Name string, Attri18n string, DisplayName string, UseCalendarInConrols bool, Currencies map[int]string) FilterRender {
 	return FilterRender{Name, Attri18n, DisplayName, UseCalendarInConrols, Currencies}
 }
 
@@ -34,18 +35,21 @@ type HeadRender struct {
 	SystemTheme string
 }
 
-func returnHeadRender(AppTitle string, PageTitle string, LangCode string, SystemTheme string) HeadRender {
+// ReturnHeadRender provides the function to render page header to run in a template
+func ReturnHeadRender(AppTitle string, PageTitle string, LangCode string, SystemTheme string) HeadRender {
 	return HeadRender{AppTitle, PageTitle, LangCode, SystemTheme}
 }
 
-func isThemeSystem(themeName string) bool {
+// IsThemeSystem checks is filename has prefix "system-"
+func IsThemeSystem(themeName string) bool {
 	if strings.HasPrefix(themeName, "system-") {
 		return true
 	}
 	return false
 }
 
-func fileExists(name string) bool {
+// FileExists checks file existence
+func FileExists(name string) bool {
 	if _, err := os.Stat(name); err != nil {
 		if os.IsNotExist(err) {
 			return false
@@ -67,20 +71,21 @@ func shellOpen(url string) {
 		err = exec.Command("xdg-open", url).Start()
 	}
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(CurrentFunction()+":", err)
 	}
 }
 
-func runClient(UseTLS string, addr string, MSecToWait int, retries int) {
+// RunClient opens a client program for the specified URL
+func RunClient(UseTLS string, addr string, MSecToWait int, retries int) {
 	protocol := "http"
 	if UseTLS == "true" {
 		protocol = "https"
 	}
 	client := http.Client{Timeout: 1 * time.Second}
-	// Before launching a browser we check if the server is running
+	// Before launching a client we check if the server is running
 	for i := 0; i < retries; i++ {
 		time.Sleep(time.Duration(MSecToWait) * time.Millisecond)
-		resp, err := client.Get(protocol + "://" + addr + "/assets/")
+		resp, err := client.Get(protocol + "://" + addr + "/static/")
 		if err == nil {
 			resp.Body.Close()
 			break
@@ -89,7 +94,8 @@ func runClient(UseTLS string, addr string, MSecToWait int, retries int) {
 	shellOpen(protocol + "://" + addr)
 }
 
-func isPrevInstanceRunning(addr string) bool {
+// IsPrevInstanceRunning checks if a port is free to run the app
+func IsPrevInstanceRunning(addr string) bool {
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return true
@@ -98,7 +104,8 @@ func isPrevInstanceRunning(addr string) bool {
 	return false
 }
 
-func isStringASCII(s string) bool {
+// IsStringASCII cheks ia a string is pure ASCII
+func IsStringASCII(s string) bool {
 	for _, r := range s {
 		if r > unicode.MaxASCII {
 			return false
@@ -107,7 +114,8 @@ func isStringASCII(s string) bool {
 	return true
 }
 
-func firstLetterIndex(r []rune) int {
+// FirstLetterIndex return the first alphabetic symbol (which is not a digit or other character)
+func FirstLetterIndex(r []rune) int {
 	ri := 0
 	for i := 0; i < len(r); i++ {
 		if unicode.IsLetter(r[i]) {
@@ -118,16 +126,24 @@ func firstLetterIndex(r []rune) int {
 	return ri
 }
 
-func getIDfromURL(path string) (id int, err error) {
+// GetIDfromURL returns last path element from URL path as int
+func GetIDfromURL(path string) (id int, err error) {
 	arrayPathElems := strings.Split(path, "/")
 	id, err = strconv.Atoi(arrayPathElems[len(arrayPathElems)-1])
 	if err != nil {
 		return id, err
+	} else if len(arrayPathElems) > 1 {
+		id, err = strconv.Atoi(arrayPathElems[len(arrayPathElems)-2])
+		if err != nil {
+			return id, err
+		}
+		return id, nil
 	}
 	return id, nil
 }
 
-func getTextIDfromURL(path string) string {
+// GetTextIDfromURL returns last path element from URL path as string
+func GetTextIDfromURL(path string) string {
 	arrayPathElems := strings.Split(path, "/")
 	res := arrayPathElems[len(arrayPathElems)-1]
 	if res == "approval" {
@@ -136,22 +152,26 @@ func getTextIDfromURL(path string) string {
 	return res
 }
 
-func throwAccessDenied(w http.ResponseWriter, logmsg string, userID int, resourceID int) {
+// ThrowAccessDenied writes http.StatusForbidden to responce writer
+func ThrowAccessDenied(w http.ResponseWriter, logmsg string, userID int, resourceID int) {
 	log.Printf("Wrong credentials while: %s, user ID:%d, resource ID:%d\n", logmsg, userID, resourceID)
 	http.Error(w, "Wrong credentials write or access attempt detected", http.StatusForbidden)
 }
 
-func throwServerError(w http.ResponseWriter, logmsg string, userID int, resourceID int) {
+// ThrowServerError writes http.StatusInternalServerError to responce writer
+func ThrowServerError(w http.ResponseWriter, logmsg string, userID int, resourceID int) {
 	log.Printf("Internal server error while: %s, user ID:%d, resource ID:%d\n", logmsg, userID, resourceID)
 	http.Error(w, "Internal server error", http.StatusInternalServerError)
 }
 
-func currentFunction() string {
+// CurrentFunction returns the name of the current function
+func CurrentFunction() string {
 	counter, _, _, _ := runtime.Caller(1)
 	return runtime.FuncForPC(counter).Name()
 }
 
-func intSlicesEqual(a, b []int) bool {
+// IntSlicesEqual compares two slices of ints for equality
+func IntSlicesEqual(a, b []int) bool {
 	if len(a) != len(b) {
 		return false
 	}
@@ -163,7 +183,8 @@ func intSlicesEqual(a, b []int) bool {
 	return true
 }
 
-func getIPAddr(r *http.Request) string {
+// GetIPAddr returns IP address from http.Request
+func GetIPAddr(r *http.Request) string {
 	forwarded := r.Header.Get("X-FORWARDED-FOR")
 	if forwarded != "" {
 		return forwarded
@@ -171,12 +192,14 @@ func getIPAddr(r *http.Request) string {
 	return r.RemoteAddr
 }
 
-func strToInt(s string) (n int) {
+// StrToInt silently converts a string to int without returning second value
+func StrToInt(s string) (n int) {
 	n, _ = strconv.Atoi(s)
 	return n
 }
 
-func filterSliceInt(srcList []int, rval int) []int {
+// FilterSliceInt removes an int from a slice
+func FilterSliceInt(srcList []int, rval int) []int {
 	var res []int
 	for _, ival := range srcList {
 		if ival != rval {
@@ -186,7 +209,8 @@ func filterSliceInt(srcList []int, rval int) []int {
 	return res
 }
 
-func sliceContainsInt(s []int, e int) bool {
+// SliceContainsInt checks if a slice contains the int
+func SliceContainsInt(s []int, e int) bool {
 	for _, a := range s {
 		if a == e {
 			return true
@@ -195,17 +219,19 @@ func sliceContainsInt(s []int, e int) bool {
 	return false
 }
 
-func filterSliceStr(srcList []string, removalList []string) []string {
+// FilterSliceStr removes strings in removalList from srcList
+func FilterSliceStrList(srcList []string, removalList []string) []string {
 	var res []string
 	for _, fname := range srcList {
-		if !sliceContainsStr(removalList, fname) {
+		if !SliceContainsStr(removalList, fname) {
 			res = append(res, fname)
 		}
 	}
 	return res
 }
 
-func sliceContainsStr(s []string, e string) bool {
+// SliceContainsStr cheks is a slice contains the string
+func SliceContainsStr(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
 			return true
@@ -214,7 +240,8 @@ func sliceContainsStr(s []string, e string) bool {
 	return false
 }
 
-func calcMaxPages(elemsOnPage int, filteredNum int) int {
+// CalcMaxPages calculate how many pages a pagination has absed on elements on page and total elements
+func CalcMaxPages(elemsOnPage int, filteredNum int) int {
 	result := 1
 	q := filteredNum / elemsOnPage
 	r := filteredNum % elemsOnPage
@@ -227,13 +254,16 @@ func calcMaxPages(elemsOnPage int, filteredNum int) int {
 	return result
 }
 
-func replaceBBCodeWithHTML(cont string) string {
+// ReplaceBBCodeWithHTML replaces bb-code in a string with HTML tags
+func ReplaceBBCodeWithHTML(cont string) string {
 	cont = strings.ReplaceAll(cont, "[b]", "<b>")
 	cont = strings.ReplaceAll(cont, "[/b]", "</b>")
 	cont = strings.ReplaceAll(cont, "[i]", "<i>")
 	cont = strings.ReplaceAll(cont, "[/i]", "</i>")
 	cont = strings.ReplaceAll(cont, "[u]", "<u>")
 	cont = strings.ReplaceAll(cont, "[/u]", "</u>")
+	cont = strings.ReplaceAll(cont, "[q]", "<q>")
+	cont = strings.ReplaceAll(cont, "[/q]", "</q>")
 	cont = strings.ReplaceAll(cont, "[code]", "<pre>")
 	cont = strings.ReplaceAll(cont, "[/code]", "</pre>")
 
@@ -281,7 +311,8 @@ func replaceBBCodeWithHTML(cont string) string {
 	return cont
 }
 
-func intToBool(v int) bool {
+// IntToBool silently converts int to bool
+func IntToBool(v int) bool {
 	if v != 0 {
 		return true
 	}

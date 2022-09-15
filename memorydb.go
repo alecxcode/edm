@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"edm/pkg/accs"
+	"edm/pkg/passwd"
 	"fmt"
 	"html/template"
 	"log"
@@ -85,19 +87,6 @@ func (m *ProfilesInMemory) delCookie(cookval string) {
 func (m *ProfilesInMemory) getByID(id int) Profile {
 	m.RLock()
 	elem := m.Aarr[id]
-	m.RUnlock()
-	return elem
-}
-
-func (m *ProfilesInMemory) getByLogin(login string) Profile {
-	var elem Profile
-	m.RLock()
-	for _, p := range m.Aarr {
-		if p.Login == login {
-			elem = p
-			break
-		}
-	}
 	m.RUnlock()
 	return elem
 }
@@ -315,10 +304,10 @@ func getLoginTemplate() *template.Template {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
 <title>{{.AppTitle}}: {{.LoginPageTitle}}</title>
-<link rel="shortcut icon" href="/assets/favicon.png">
-<link rel="icon" href="/assets/favicon.png">
-<link rel="stylesheet" href="/assets/fonts.css">
-<link rel="stylesheet" href="/assets/system-dark.css">
+<link rel="shortcut icon" href="/static/favicon.png">
+<link rel="icon" href="/static/favicon.png">
+<link rel="stylesheet" href="/static/fonts.css">
+<link rel="stylesheet" href="/static/system-dark.css">
 </head>
 <body><div id="container"><div id="control">
 <h1>{{.LoginPageTitle}}</h1><br>
@@ -330,8 +319,8 @@ func getLoginTemplate() *template.Template {
 </form></div>
 <div id="bottom">
 <span>© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></span>
-<span>v1.2.0.</span>
-<span><a href="/assets/manual.html">Manual</a></span>
+<span>v` + AppVersion + `.</span>
+<span><a href="/static/manual.html">Manual</a></span>
 </div>
 </div></body></html>`
 	return template.Must(template.New("login").Parse(logintmpl))
@@ -354,7 +343,7 @@ func writeLoginPage(w http.ResponseWriter, LoginLang LoginLang, LoginTemplate *t
 	}
 	err := LoginTemplate.ExecuteTemplate(w, "login", LoginLang)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -392,18 +381,15 @@ func (bs *BaseStruct) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == "POST" && r.FormValue("loginName") != "" {
-		user := bs.team.getByLogin(r.FormValue("loginName"))
 		var err error
 		err = nil
-		if user.Login == "" {
-			user = Profile{Login: r.FormValue("loginName")}
-			err = user.loadByIDorLogin(bs.db, bs.dbt, "Login")
-			if err != nil {
-				log.Println(currentFunction()+":", err)
-			}
+		user := Profile{Login: r.FormValue("loginName")}
+		err = user.loadByIDorLogin(bs.db, bs.dbt, "Login")
+		if err != nil {
+			log.Println(accs.CurrentFunction()+":", err)
 		}
 		if err == nil && user.Login != "" && user.UserLock == 0 && r.FormValue("loginName") == user.Login &&
-			comparePasswd(user.Passwd, r.FormValue("loginPasswd")) {
+			passwd.ComparePasswd(user.Passwd, r.FormValue("loginPasswd")) {
 			cookval, _ := uuid.NewV4()
 			var cookie = http.Cookie{
 				Name:     "sessionid",
@@ -416,7 +402,7 @@ func (bs *BaseStruct) loginHandler(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/", http.StatusFound)
 			bs.team.resetBruteForceCounterImmediately()
 		} else {
-			bs.team.increaseBruteForceCounter(getIPAddr(r), r.FormValue("loginName"))
+			bs.team.increaseBruteForceCounter(accs.GetIPAddr(r), r.FormValue("loginName"))
 			writeLoginPage(w, bs.getLoginLang(), bs.logintmpl, true)
 			return
 		}
@@ -485,10 +471,10 @@ func writeBruteForceStub(w http.ResponseWriter) {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
 	<title>EDM: System Bruteforce Attack Shield</title>
-	<link rel="shortcut icon" href="/assets/favicon.png">
-	<link rel="icon" href="/assets/favicon.png">
-	<link rel="stylesheet" href="/assets/fonts.css">
-	<link rel="stylesheet" href="/assets/system-dark.css">
+	<link rel="shortcut icon" href="/static/favicon.png">
+	<link rel="icon" href="/static/favicon.png">
+	<link rel="stylesheet" href="/static/fonts.css">
+	<link rel="stylesheet" href="/static/system-dark.css">
 	</head>
 	<body><div id="container"><div id="control"><h1>System Bruteforce Attack Shield</h1>
 	<br><p class="msgredfx">System login function is temporarily locked due to bruteforce attack. Normally, this should not happen. Please, contact system admin.</p><br><br><br>

@@ -31,6 +31,14 @@ pre, code {
   border-radius: var(--elements-radius);
   padding: 4px;
 }
+q {
+  background-color: #3d3838;
+  border: 1px solid #202022;
+  border-radius: var(--elements-radius);
+  padding-left: 2px;
+  padding-right: 2px;
+  quotes: '"' '"' "'" "'";
+}
 
 /* menu items */
 #headmenu {
@@ -689,10 +697,6 @@ h3 a:focus {
     border: 1px solid transparent;
     border-radius: var(--elements-radius);
   }
-  .mobilesorting {
-    display: block;
-    margin-top: 0.7em;
-  }
 }
 
 
@@ -704,11 +708,10 @@ h3 a:focus {
     gap: 1px;
     overflow: visible;
   }
-  /* #mainTable div::before {
-    content: attr(label) ": ";
-    text-align: left;
-    font-weight: bold;
-  } */
+  .mobilesorting {
+    display: block;
+    margin-top: 0.7em;
+  }
   .gridheader {display: none;}
   .select {display: none;}
   .mobile {display: initial; font-weight: bold;}

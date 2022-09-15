@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"edm/pkg/accs"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 // CompaniesPage is passed into template
 type CompaniesPage struct {
 	AppTitle      string
+	AppVersion    string
 	PageTitle     string
 	LoggedinID    int
 	LoggedinAdmin bool
@@ -39,6 +41,7 @@ func (bs *BaseStruct) companiesHandler(w http.ResponseWriter, r *http.Request) {
 
 	var Page = CompaniesPage{
 		AppTitle:   bs.text.AppTitle,
+		AppVersion: AppVersion,
 		PageTitle:  bs.text.CompaniesPageTitle,
 		LoggedinID: id,
 	}
@@ -137,7 +140,7 @@ ORDER BY c.ShortName ASC, c.FullName ASC, c.ForeignName ASC`)
 	}()
 
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
@@ -155,7 +158,7 @@ ORDER BY c.ShortName ASC, c.FullName ASC, c.ForeignName ASC`)
 	// HTML output
 	err = bs.templates.ExecuteTemplate(w, "companies.tmpl", Page)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return

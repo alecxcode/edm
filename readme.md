@@ -33,5 +33,5 @@ The application supports the following RDBMS:
 
 The application runs on modern browsers: Chrome, Firefox, Safari, and does not support Internet Explorer.  
 Config file, logs, uploads, sqlite database are stored in `.edm` directory of a user home directory. See the config file to modify the server configuration.  
-Themes are located in the `assets` folder.  
-Language files are located in `i18nserver` (backend) and `assets\i18n` (frontend) folders.
+Themes are located in the `static` directory.  
+Language files are located in `i18nserver` (backend) and `static/i18n` (frontend) directories.

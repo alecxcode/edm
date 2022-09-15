@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"edm/pkg/accs"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -40,7 +41,7 @@ func unmarshalNonEmptyCompanyContacts(c string) (res CompanyContacts) {
 	if c != "" {
 		err := json.Unmarshal([]byte(c), &res)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
+			log.Println(accs.CurrentFunction()+":", err)
 		}
 	}
 	return res
@@ -255,6 +256,7 @@ func (u Unit) GiveHeadNameJob() (head string) {
 // CompanyPage is passed into template
 type CompanyPage struct {
 	AppTitle   string
+	AppVersion string
 	PageTitle  string
 	LoggedinID int
 	UserConfig UserConfig
@@ -282,6 +284,7 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 
 	var Page = CompanyPage{
 		AppTitle:   bs.text.AppTitle,
+		AppVersion: AppVersion,
 		LoggedinID: id,
 		Editable:   false,
 		New:        false,
@@ -293,7 +296,7 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 		Page.Editable = true
 	}
 
-	TextID := getTextIDfromURL(r.URL.Path)
+	TextID := accs.GetTextIDfromURL(r.URL.Path)
 	IntID, _ := strconv.Atoi(TextID)
 
 	var created int
@@ -302,7 +305,7 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 	// Create or update code ==========================================================================
 	if r.Method == "POST" && (r.FormValue("createButton") != "" || r.FormValue("updateButton") != "") {
 		if Page.Editable == false {
-			throwAccessDenied(w, "writing company", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "writing company", Page.LoggedinID, IntID)
 			return
 		}
 		c := Company{
@@ -358,7 +361,7 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 	// Create or update Units =====================================================================
 	if r.Method == "POST" && (r.FormValue("createUnit") != "" || r.FormValue("updateUnit") != "") {
 		if Page.Editable == false {
-			throwAccessDenied(w, "writing unit", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "writing unit", Page.LoggedinID, IntID)
 			return
 		}
 		UnitIntID, _ := strconv.Atoi(r.FormValue("unitID"))
@@ -389,7 +392,7 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 	// Delete Unit ================+==========================
 	if r.Method == "POST" && r.FormValue("deleteUnit") != "" {
 		if Page.Editable == false {
-			throwAccessDenied(w, "writing unit", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "writing unit", Page.LoggedinID, IntID)
 			return
 		}
 		UnitIntID, _ := strconv.Atoi(r.FormValue("unitID"))
@@ -414,13 +417,13 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 		Page.Company.ID = IntID
 		err = Page.Company.load(bs.db, bs.dbt)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
+			log.Println(accs.CurrentFunction()+":", err)
 			http.NotFound(w, r)
 			return
 		}
 		Page.Units, err = Page.Company.loadUnits(bs.db, bs.dbt)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
+			log.Println(accs.CurrentFunction()+":", err)
 			http.NotFound(w, r)
 			return
 		}
@@ -448,8 +451,8 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 	// HTML output
 	err = bs.templates.ExecuteTemplate(w, "company.tmpl", Page)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
-		throwServerError(w, "executing company template", Page.LoggedinID, Page.Company.ID)
+		log.Println(accs.CurrentFunction()+":", err)
+		accs.ThrowServerError(w, "executing company template", Page.LoggedinID, Page.Company.ID)
 		return
 	}
 

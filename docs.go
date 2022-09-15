@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"edm/pkg/accs"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 // DocsPage is passed into template
 type DocsPage struct {
 	AppTitle      string
+	AppVersion    string
 	PageTitle     string
 	LoggedinID    int
 	LoggedinAdmin bool
@@ -50,6 +52,7 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var Page = DocsPage{
 		AppTitle:     bs.text.AppTitle,
+		AppVersion:   AppVersion,
 		PageTitle:    bs.text.DocsPageTitle,
 		Categories:   bs.text.Categories,
 		DocTypes:     bs.text.DocTypes,
@@ -264,7 +267,7 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
@@ -286,7 +289,7 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 	// HTML output
 	err = bs.templates.ExecuteTemplate(w, "docs.tmpl", Page)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return

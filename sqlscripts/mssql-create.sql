@@ -48,6 +48,13 @@ Note VARCHAR(max));
 
 CREATE INDEX idx_approvals_DocID ON approvals (DocID);
 
+CREATE TABLE  emailmessages
+(ID INTEGER IDENTITY PRIMARY KEY,
+SendTo VARCHAR(max),
+SendCc VARCHAR(max),
+Subj VARCHAR(4000),
+Cont VARCHAR(max));
+
 CREATE TABLE  profiles
 (ID INTEGER IDENTITY PRIMARY KEY,
 FirstName VARCHAR(255),
@@ -63,13 +70,6 @@ UserLock INTEGER,
 UserConfig VARCHAR(4000),
 Login VARCHAR(255),
 Passwd VARCHAR(255));
-
-CREATE TABLE  emailmessages
-(ID INTEGER IDENTITY PRIMARY KEY,
-SendTo VARCHAR(max),
-SendCc VARCHAR(max),
-Subj VARCHAR(4000),
-Cont VARCHAR(max));
 
 CREATE TABLE  tasks
 (ID INTEGER IDENTITY PRIMARY KEY,

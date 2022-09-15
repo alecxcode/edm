@@ -1,6 +1,7 @@
 package main
 
 import (
+	"edm/pkg/accs"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -144,12 +145,12 @@ func newi18nStruct(pathToLngFile string) i18n {
 	lng := i18n{}
 	content, err := ioutil.ReadFile(pathToLngFile)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 	}
 	if len(content) > 1 {
 		err := json.Unmarshal(content, &lng)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
+			log.Println(accs.CurrentFunction()+":", err)
 		}
 	}
 	return lng

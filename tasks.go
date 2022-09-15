@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"edm/internal/mail"
+	"edm/pkg/accs"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -15,6 +17,7 @@ import (
 // TasksPage is passed into template
 type TasksPage struct {
 	AppTitle      string
+	AppVersion    string
 	PageTitle     string
 	LoggedinID    int
 	LoggedinAdmin bool
@@ -58,6 +61,7 @@ func (bs *BaseStruct) tasksHandler(w http.ResponseWriter, r *http.Request) {
 
 	var Page = TasksPage{
 		AppTitle:     bs.text.AppTitle,
+		AppVersion:   AppVersion,
 		PageTitle:    bs.text.TasksPageTitle,
 		TaskStatuses: bs.text.TaskStatuses,
 		SortedBy:     "ID",
@@ -180,7 +184,7 @@ WHERE tasks.TaskStatus <> ` + sqla.MakeParam(bs.dbt, 1) + " "
 					}
 					tasks, numtoupd, err := loadTasks(bs.db, squpd, sqcountupd, argsupd)
 					if err != nil {
-						log.Println(currentFunction()+":", err)
+						log.Println(accs.CurrentFunction()+":", err)
 					}
 					if numtoupd > 0 {
 						idstoupd := make([]int, numtoupd, numtoupd)
@@ -197,16 +201,16 @@ WHERE tasks.TaskStatus <> ` + sqla.MakeParam(bs.dbt, 1) + " "
 							for i := range idstoupd {
 								t := tasks[i]
 								participants, _ := t.loadParticipants(bs.db, bs.dbt)
-								email := EmailMessage{Subj: bs.i18n.Messages.Subj.TaskStatusChanged + " [" + bs.i18n.TaskCaption + " #" + strconv.Itoa(t.ID) + "]"}
+								email := mail.EmailMessage{Subj: bs.i18n.Messages.Subj.TaskStatusChanged + " [" + bs.i18n.TaskCaption + " #" + strconv.Itoa(t.ID) + "]"}
 								if t.Creator != nil && t.Creator.Contacts.Email != "" && t.Creator.UserLock == 0 {
-									email.SendTo = append(email.SendTo, UserToSend{t.Creator.FirstName + " " + t.Creator.Surname, t.Creator.Contacts.Email})
+									email.SendTo = append(email.SendTo, mail.UserToSend{Name: t.Creator.FirstName + " " + t.Creator.Surname, Email: t.Creator.Contacts.Email})
 								}
 								if t.Assignee != nil && t.Assignee.Contacts.Email != "" && t.Assignee.UserLock == 0 {
-									email.SendTo = append(email.SendTo, UserToSend{t.Assignee.FirstName + " " + t.Assignee.Surname, t.Assignee.Contacts.Email})
+									email.SendTo = append(email.SendTo, mail.UserToSend{Name: t.Assignee.FirstName + " " + t.Assignee.Surname, Email: t.Assignee.Contacts.Email})
 								}
 								for i := 0; i < len(participants); i++ {
 									if participants[i].Contacts.Email != "" && participants[i].UserLock == 0 {
-										email.SendCc = append(email.SendCc, UserToSend{participants[i].FirstName + " " + participants[i].Surname, participants[i].Contacts.Email})
+										email.SendCc = append(email.SendCc, mail.UserToSend{Name: participants[i].FirstName + " " + participants[i].Surname, Email: participants[i].Contacts.Email})
 									}
 								}
 								taskMail := TaskMail{email.Subj, t, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
@@ -294,7 +298,7 @@ LEFT JOIN profiles assignee ON assignee.ID = Assignee`
 		}
 		pageDifference := Page.PageNumber - previousPageNumber
 
-		if Page.PageNumber == calcMaxPages(Page.UserConfig.ElemsOnPage, filteredNum) {
+		if Page.PageNumber == accs.CalcMaxPages(Page.UserConfig.ElemsOnPage, filteredNum) {
 			remainder := filteredNum - OFFSET
 			SEEK.UseSeek = false
 			sortedHowReverse = true
@@ -436,7 +440,7 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 	}()
 
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to an user
 		return
@@ -477,14 +481,14 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 	// HTML output
 	// tempTemplates, err := template.ParseFiles(filepath.Join(bs.cfg.ServerSystem, "templates", bs.cfg.DefaultLang, "tasks.tmpl"))
 	// if err != nil {
-	// 	log.Println(currentFunction()+":", err)
+	// 	log.Println(accs.CurrentFunction()+":", err)
 	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	// 	return
 	// }
 	// err = tempTemplates.ExecuteTemplate(w, "tasks.tmpl", Page)
 	err = bs.templates.ExecuteTemplate(w, "tasks.tmpl", Page)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
@@ -512,20 +516,20 @@ func checkStatusModifyPermissions(db *sql.DB, DBType byte, table string, Owner i
 	}
 	rows, err := db.Query(sq, args...)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 	}
 	defer rows.Close()
 	var ID sql.NullInt64
 	for rows.Next() {
 		err = rows.Scan(&ID)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
+			log.Println(accs.CurrentFunction()+":", err)
 		}
 		sqlids = append(sqlids, int(ID.Int64))
 	}
 	sort.Ints(ids)
 	sort.Ints(sqlids)
-	if intSlicesEqual(ids, sqlids) {
+	if accs.IntSlicesEqual(ids, sqlids) {
 		return true
 	}
 

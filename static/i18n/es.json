@@ -117,6 +117,7 @@
     "bbcodeI": {"value": "C", "title": "Cursiva"},
     "bbcodeU": {"value": "S", "title": "Subrayar"},
     "bbcodeCode": {"value": "Código", "title": "Fuente monoespaciada, sigue formateando"},
+    "bbcodeQuote": {"value": "Citar", "title": "Formatear como una cita"},
 
     "appearance": "Apariencia",
     "systemTheme": "Tema del sistema",

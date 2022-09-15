@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"edm/pkg/accs"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 // TeamPage is passed into template
 type TeamPage struct {
 	AppTitle      string
+	AppVersion    string
 	PageTitle     string
 	LoggedinID    int
 	LoggedinAdmin bool
@@ -50,10 +52,11 @@ func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var Page = TeamPage{
-		AppTitle:  bs.text.AppTitle,
-		PageTitle: bs.text.TeamPageTitle,
-		SortedBy:  "FullName",
-		SortedHow: 1, // 0 - DESC, 1 - ASC
+		AppTitle:   bs.text.AppTitle,
+		AppVersion: AppVersion,
+		PageTitle:  bs.text.TeamPageTitle,
+		SortedBy:   "FullName",
+		SortedHow:  1, // 0 - DESC, 1 - ASC
 		Filters: sqla.Filter{ClassFilter: []sqla.ClassFilter{
 			{Name: "jobunits", Column: "units.ID"},
 			{Name: "companies", Column: "companies.ID"},
@@ -125,7 +128,7 @@ func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
 			LastAdmins := false
 			LastAdmins, err = areTheyLastAdmins(bs.db, bs.dbt, ids)
 			if err != nil {
-				log.Println(currentFunction()+":", err)
+				log.Println(accs.CurrentFunction()+":", err)
 			}
 			if allowedToRemove && !LastAdmins {
 				removed := sqla.DeleteObjects(bs.db, bs.dbt, "profiles", "ID", ids)
@@ -242,7 +245,7 @@ LEFT JOIN companies ON companies.ID = units.Company`,
 	}()
 
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
@@ -268,7 +271,7 @@ LEFT JOIN companies ON companies.ID = units.Company`,
 	// HTML output
 	err = bs.templates.ExecuteTemplate(w, "team.tmpl", Page)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
@@ -288,7 +291,7 @@ func areTheyLastAdmins(db *sql.DB, DBType byte, ids []int) (res bool, err error)
 	var counted sql.NullInt64
 	err = row.Scan(&counted)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 		return false, nil
 	}
 	AdminsRemains := int(counted.Int64)

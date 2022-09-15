@@ -134,7 +134,7 @@
         <div class="elem" id="comment{{.Inci $i}}">
         <h3><a href="#comment{{.Inci $i}}">#{{.Inci $i}}</a>: {{.GiveDateTime $.UserConfig.DateFormat $.UserConfig.TimeFormat $vtsep}}
           <span i18n-text="postedBy">by:</span> {{if $cc}}<a href="/team/profile/{{$cc}}">{{.Creator.GiveSelfNameJob}}</a>{{else}}...{{end}}</h3>
-        <span class="subelem multilineContent">{{.Content}}</span>
+        <div class="subelem multilineContent">{{.Content}}</div>
         {{if .FileList}} <div class="subelem"><div i18n-text="attachedFiles">Attached files:</div>
         {{range .FileList}}<span class="afile-inline-block">
           <a href="/files/tasks/{{$.Task.ID}}/{{$comID}}/{{.}}">{{.}}</a></span>
@@ -206,12 +206,12 @@
 
 </div>
 
-{{template "bottom"}}
+{{template "bottom" .AppVersion}}
 
 
 </div>
 
-<script src="/assets/functions.js"></script>
+<script src="/static/functions.js"></script>
 
 
 

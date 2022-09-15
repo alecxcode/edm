@@ -1,4 +1,4 @@
-package main
+package passwd
 
 import (
 	"log"
@@ -6,19 +6,21 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func genPasswd(provided string) string {
+// GenPasswd creates password hash
+func GenPasswd(provided string) string {
 	if provided == "" {
 		return ""
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(provided), bcrypt.DefaultCost)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println("Generating password hash: ", err)
 		return provided
 	}
 	return string(hash)
 }
 
-func comparePasswd(stored string, provided string) bool {
+// ComparePasswd compares password to match hash
+func ComparePasswd(stored string, provided string) bool {
 	if provided == "" && stored == "" {
 		return true
 	}
@@ -29,7 +31,7 @@ func comparePasswd(stored string, provided string) bool {
 	if err == nil {
 		return true
 	} else {
-		log.Println(currentFunction()+":", err)
+		log.Println("Comparing password hash: ", err)
 		return false
 	}
 }

@@ -10,14 +10,15 @@
 </head>
 <body><div id="container">
     <div id="control">
-    <p class="center somemargins">
-        <a class="sbut smaller" href="/">EDM System Home</a>
-        <strong class="panel smaller">User documentation</strong>
-        <a class="sbut smaller" href="manual-admin.html">Administrator documentation</a>
-    </p>
+    <div class="center somemargins">
+        <a class="sbut smaller inline-block" href="/">EDM System Home</a>
+        <strong class="panel smaller inline-block">User documentation</strong>
+        <a class="sbut smaller inline-block" href="manual-admin.html">Administrator documentation</a>
+    </div>
     <h1>User documentation</h1>
     </div>
     <div id="main">
+
         <h2 class="margintop">Application Description</h2>
         <p>This software is an electronic document management and task tracking multiuser web-based environment.</p>
         <p>Usually is it easy to use and user experience is quite intuitive, so this manual is only to clarify some functions.</p>
@@ -52,10 +53,20 @@
         <p>A task has a creator (owner) who initiated it, an assignee who is the main person responsible for task to be done, and other participants, who may do part of the job, or approve, or discuss the process.</p>
         <p>Task commenting is only available to creators, assignees and participants of the task.</p>
         <p>Task creators or assignees can forward task to another assignee, add participants, change task status.</p>
+
     </div>
     <div id="bottom">
         <span>© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></span>
-        <span>v1.2.0.</span>
-        <span><a href="/assets/manual.html">Manual</a></span>
+        <span id="ver">v0.0.0.</span>
+        <span><a href="/static/manual.html">Manual</a></span>
     </div>
-</div></body></html>
+</div></body>
+<script>
+fetch('/appversion').then((response) => response.json())
+.then((data) => {
+  if (data.ver) {
+    document.getElementById('ver').innerText = 'v'+data.ver+'.';
+  }
+});
+</script>
+</html>

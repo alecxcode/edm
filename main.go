@@ -2,6 +2,10 @@ package main
 
 import (
 	"database/sql"
+	"edm/internal/config"
+	"edm/internal/mail"
+	"edm/pkg/accs"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -16,6 +20,9 @@ import (
 // // AppTitle is this application name (not used for now)
 // const AppTitle = "EDM"
 
+// AppVersion is this application version
+const AppVersion = "1.3.0"
+
 // Undefined is for any unknown category, type, etc.
 const Undefined = 0
 
@@ -24,7 +31,7 @@ const DEBUG = false
 
 // BaseStruct for handlers
 type BaseStruct struct {
-	cfg        *Config
+	cfg        *config.Config
 	text       text
 	i18n       i18n
 	currencies map[int]string
@@ -42,7 +49,7 @@ type BaseStruct struct {
 		emailCont *regexp.Regexp
 	}
 	systemURL    string
-	mailchan     chan EmailMessage
+	mailchan     chan mail.EmailMessage
 	uploads      http.Handler
 	db           *sql.DB
 	dbt          byte // DB type as defined by constants in sqla package
@@ -74,7 +81,7 @@ func main() {
 	// If not specified, then the directory of user home + ".edm" (e.g. "~/.edm") will be used.
 	const SERVERROOT = ""
 
-	var cfg = Config{
+	var cfg = config.Config{
 		ServerSystem:  SERVERSYSTEM,
 		ServerRoot:    SERVERROOT,
 		ServerHost:    "127.0.0.1",
@@ -95,7 +102,7 @@ func main() {
 		uploadPath     string
 		logPath        string
 		logFile        string
-		assetsPath     string // default images, fonts, css, js, unmodifiable files
+		staticPath     string // default images, fonts, css, js, unmodifiable files
 		templatesPath  string
 		i18nPath       string
 		sqlscriptsPath string
@@ -104,9 +111,9 @@ func main() {
 		DSN            string // DB Path
 	)
 
-	err := cfg.readConfig(CONFIGPATH, cfg.ServerRoot)
+	err := cfg.ReadConfig(CONFIGPATH, cfg.ServerRoot)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 	}
 
 	// Reading command-line arguments
@@ -128,23 +135,23 @@ func main() {
 	}
 
 	// Server root path:
-	if fileExists(cfg.ServerRoot) != true {
+	if accs.FileExists(cfg.ServerRoot) != true {
 		os.Mkdir(cfg.ServerRoot, 0700)
 	}
 	// Upload files path:
 	uploadPath = filepath.Join(cfg.ServerRoot, "files")
-	if fileExists(uploadPath) != true {
+	if accs.FileExists(uploadPath) != true {
 		os.Mkdir(uploadPath, 0700)
 	}
 	// Logging to a file:
 	logPath = filepath.Join(cfg.ServerRoot, "logs")
-	if fileExists(logPath) != true {
+	if accs.FileExists(logPath) != true {
 		os.Mkdir(logPath, 0700)
 	}
 	logFile = filepath.Join(logPath, "edm-"+getCurrentYearMStr()+".log")
 	applog, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 	}
 	defer applog.Close()
 	if !consolelog {
@@ -177,7 +184,7 @@ func main() {
 	// Creating DB if nonexistent:
 	sqliteFirstRun := false
 	if DBT == sqla.SQLITE {
-		if fileExists(DSN) != true {
+		if accs.FileExists(DSN) != true {
 			log.Println("Creating Database...")
 			sqliteFirstRun = true
 			sqla.CreateDB(DBT, DSN, getSQLinitScript(DBT, sqlscriptsPath))
@@ -244,9 +251,9 @@ func main() {
 	templatesPath = filepath.Join(cfg.ServerSystem, "templates")
 	bs.templates = template.Must(template.New("edm").
 		Funcs(template.FuncMap{
-			"returnFilterRender": returnFilterRender,
-			"returnHeadRender":   returnHeadRender,
-			"isThemeSystem":      isThemeSystem,
+			"returnFilterRender": accs.ReturnFilterRender,
+			"returnHeadRender":   accs.ReturnHeadRender,
+			"isThemeSystem":      accs.IsThemeSystem,
 		}).ParseFiles(
 		filepath.Join(templatesPath, "blocks.tmpl"),
 		filepath.Join(templatesPath, "config.tmpl"),
@@ -270,15 +277,15 @@ func main() {
 
 	err = bs.team.constructUserList(db, DBT)
 	if err != nil {
-		log.Println(currentFunction()+": constructUserList:", err)
+		log.Println(accs.CurrentFunction()+": constructUserList:", err)
 	}
 	err = bs.team.constructUnitList(db, DBT)
 	if err != nil {
-		log.Println(currentFunction()+": constructUnitList:", err)
+		log.Println(accs.CurrentFunction()+": constructUnitList:", err)
 	}
 	err = bs.team.constructCorpList(db, DBT)
 	if err != nil {
-		log.Println(currentFunction()+": constructCorpList", err)
+		log.Println(accs.CurrentFunction()+": constructCorpList", err)
 	}
 
 	// Filling database with test data
@@ -289,10 +296,10 @@ func main() {
 	}
 
 	// Server code:
-	if isPrevInstanceRunning(cfg.ServerHost + ":" + cfg.ServerPort) {
+	if accs.IsPrevInstanceRunning(cfg.ServerHost + ":" + cfg.ServerPort) {
 		log.Println("server is already running, quiting")
 		if cfg.RunBrowser == "true" {
-			runClient(cfg.UseTLS, "127.0.0.1:"+cfg.ServerPort, 1, 2)
+			accs.RunClient(cfg.UseTLS, "127.0.0.1:"+cfg.ServerPort, 1, 2)
 		}
 		return
 	} else {
@@ -300,20 +307,20 @@ func main() {
 	}
 
 	// Launching mailer monitor:
-	bs.mailchan = make(chan EmailMessage, 1024)
-	go mailerMonitor(bs.mailchan, bs.cfg.SMTPHost, strToInt(bs.cfg.SMTPPort), bs.cfg.SMTPUser, bs.cfg.SMTPPassword, bs.cfg.SMTPEmail, bs.i18n.Messages.MailerName, bs.db, bs.dbt)
+	bs.mailchan = make(chan mail.EmailMessage, 1024)
+	go mail.MailerMonitor(bs.mailchan, bs.cfg.SMTPHost, accs.StrToInt(bs.cfg.SMTPPort), bs.cfg.SMTPUser, bs.cfg.SMTPPassword, bs.cfg.SMTPEmail, bs.i18n.Messages.MailerName, bs.db, bs.dbt, DEBUG)
 	if cfg.SMTPHost != "" {
-		go readMailFromDB(bs.mailchan, 30, bs.db, bs.dbt)
+		go mail.ReadMailFromDB(bs.mailchan, 30, bs.db, bs.dbt, DEBUG)
 	}
 
 	// Launching browser:
 	if cfg.RunBrowser == "true" {
-		go runClient(cfg.UseTLS, "127.0.0.1:"+cfg.ServerPort, 100, 2)
+		go accs.RunClient(cfg.UseTLS, "127.0.0.1:"+cfg.ServerPort, 100, 2)
 	}
 
 	// Static files handler:
-	assetsPath = filepath.Join(cfg.ServerSystem, "assets")
-	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(assetsPath))))
+	staticPath = filepath.Join(cfg.ServerSystem, "static")
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticPath))))
 
 	// Uploads dir handler (func below: serveUploads):
 	bs.uploads = http.StripPrefix("/files/", http.FileServer(http.Dir(uploadPath)))
@@ -321,6 +328,7 @@ func main() {
 	// Routing handlers:
 	http.HandleFunc("/", bs.indexHandler)
 	http.HandleFunc("/favicon.ico", bs.serveFavIcon)
+	http.HandleFunc("/appversion", appVersion)
 	http.HandleFunc("/docs/", bs.docsHandler)
 	http.HandleFunc("/docs/document/", bs.documentHandler)
 	http.HandleFunc("/tasks/", bs.tasksHandler)
@@ -370,8 +378,15 @@ func (bs *BaseStruct) indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func appVersion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(struct {
+		Ver string `json:"ver"`
+	}{AppVersion})
+}
+
 func (bs *BaseStruct) serveFavIcon(w http.ResponseWriter, r *http.Request) {
-	favIconPath := filepath.Join(bs.cfg.ServerSystem, "assets", "favicon.png")
+	favIconPath := filepath.Join(bs.cfg.ServerSystem, "static", "favicon.png")
 	http.ServeFile(w, r, favIconPath)
 }
 

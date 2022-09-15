@@ -4,11 +4,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>{{.AppTitle}}: {{.PageTitle}}</title>
-  <link rel="shortcut icon" href="/assets/favicon.png">
-  <link rel="icon" href="/assets/favicon.png">
-  {{if not (eq .LangCode "en")}}<link rel="preload" href="/assets/i18n/{{.LangCode}}.json" as="fetch">{{end}}
-  <link rel="stylesheet" href="/assets/fonts.css">
-  <link rel="stylesheet" href="/assets/{{if isThemeSystem .SystemTheme}}{{.SystemTheme}}{{else}}theme-{{.SystemTheme}}{{end}}.css">
+  <link rel="shortcut icon" href="/static/favicon.png">
+  <link rel="icon" href="/static/favicon.png">
+  {{if not (eq .LangCode "en")}}<link rel="preload" href="/static/i18n/{{.LangCode}}.json" as="fetch">{{end}}
+  <link rel="stylesheet" href="/static/fonts.css">
+  <link rel="stylesheet" href="/static/{{if isThemeSystem .SystemTheme}}{{.SystemTheme}}{{else}}theme-{{.SystemTheme}}{{end}}.css">
 </head>
 {{end}}
 
@@ -27,16 +27,16 @@
   <div id="headmenu">
     <div class="boxinmenu">
     <div id="evenly">
-      <div class="mobileMenuButton" id="mobileMenuButtonMenu" onclick="showMobileMenu();"><img class="vector" src="/assets/menu.svg" i18n-alt="menu" alt="Menu"></div>
+      <div class="mobileMenuButton" id="mobileMenuButtonMenu" onclick="showMobileMenu();"><img class="vector" src="/static/menu.svg" i18n-alt="menu" alt="Menu"></div>
       <div class="textmenu" id="textmenu">
       <a href="/docs/" i18n-text="docs">Documents</a>
       <a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-text="tasks">Tasks</a>
       <a href="/team/" i18n-text="team">Team</a>
       </div>
       <div class="graphicmenu">
-        <a href="/config" i18n-title="config" title="Settings"><img class="vector" src="/assets/settings.svg" i18n-alt="config" alt="Settings"></a>
-        <a href="/team/profile/{{.LoggedinID}}" i18n-title="profile" title="Profile"><img class="vector" src="/assets/profile.svg" i18n-alt="profile" alt="Profile"></a>
-        <a href="/logout" i18n-title="logOutButton" title="Log out"><img class="vector" src="/assets/quit.svg" i18n-alt="logOutButton" alt="Log out"></a>
+        <a href="/config" i18n-title="config" title="Settings"><img class="vector" src="/static/settings.svg" i18n-alt="config" alt="Settings"></a>
+        <a href="/team/profile/{{.LoggedinID}}" i18n-title="profile" title="Profile"><img class="vector" src="/static/profile.svg" i18n-alt="profile" alt="Profile"></a>
+        <a href="/logout" i18n-title="logOutButton" title="Log out"><img class="vector" src="/static/quit.svg" i18n-alt="logOutButton" alt="Log out"></a>
       </div>
     </div>
     </div>
@@ -47,8 +47,8 @@
 {{define "bottom"}}
 <div id="bottom">
   <span>© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></span>
-  <span>v1.2.0.</span>
-  <span><a href="/assets/manual.html">Manual</a></span>
+  <span>v{{.}}.</span>
+  <span><a href="/static/manual.html">Manual</a></span>
 </div>
 {{end}}
 
@@ -216,4 +216,5 @@
 <input type="button" class="sbut pg smaller" i18n-many="bbcodeI" value="I" title="Italic" onclick="insertBBCode('i', '{{.}}')">
 <input type="button" class="sbut pg smaller" i18n-many="bbcodeU" value="U" title="Underline" onclick="insertBBCode('u', '{{.}}')">
 <input type="button" class="sbut pg smaller" i18n-many="bbcodeCode" value="Code" title="Monospace font, keep formatting" onclick="insertBBCode('code', '{{.}}')">
+<input type="button" class="sbut pg smaller" i18n-many="bbcodeQuote" value="Quote" title="Format as a citation" onclick="insertBBCode('q', '{{.}}')">
 {{end}}

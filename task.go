@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"edm/internal/mail"
+	"edm/pkg/accs"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -397,6 +399,7 @@ WHERE Task = `+sqla.MakeParam(DBType, 1)+` ORDER BY c.Created ASC, c.ID ASC`, t.
 // TaskPage is passed into template
 type TaskPage struct {
 	AppTitle       string
+	AppVersion     string
 	PageTitle      string
 	LoggedinID     int
 	UserConfig     UserConfig
@@ -439,6 +442,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 
 	var Page = TaskPage{
 		AppTitle:       bs.text.AppTitle,
+		AppVersion:     AppVersion,
 		LoggedinID:     id,
 		Editable:       false,
 		IamAssignee:    false,
@@ -447,7 +451,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 		TaskStatuses:   bs.text.TaskStatuses,
 	}
 
-	TextID := getTextIDfromURL(r.URL.Path)
+	TextID := accs.GetTextIDfromURL(r.URL.Path)
 	IntID, _ := strconv.Atoi(TextID)
 	if TextID == "new" {
 		Page.New = true
@@ -455,7 +459,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 		Page.Task = Task{ID: IntID}
 		err = Page.Task.load(bs.db, bs.dbt)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
+			log.Println(accs.CurrentFunction()+":", err)
 			http.NotFound(w, r)
 			return
 		}
@@ -471,7 +475,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 		Page.RemoveAllowed = true
 	}
 	Page.IamAssignee = Page.Task.GiveAssigneeID() == Page.LoggedinID
-	Page.IamParticipant = sliceContainsInt(Page.Task.Participants, Page.LoggedinID)
+	Page.IamParticipant = accs.SliceContainsInt(Page.Task.Participants, Page.LoggedinID)
 
 	var created int
 	var updated int
@@ -495,7 +499,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 	// Create or update code ==========================================================================
 	if r.Method == "POST" && (r.FormValue("createButton") != "" || r.FormValue("updateButton") != "") {
 		if Page.Editable == false {
-			throwAccessDenied(w, "writing task", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "writing task", Page.LoggedinID, IntID)
 			return
 		}
 		t := Task{
@@ -509,7 +513,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 			TaskStatus: Page.Task.TaskStatus,
 		}
 		if r.FormValue("assignee") != "" && r.FormValue("assignee") != "0" {
-			t.Assignee = &Profile{ID: strToInt(r.FormValue("assignee"))}
+			t.Assignee = &Profile{ID: accs.StrToInt(r.FormValue("assignee"))}
 			if t.Assignee.ID != Page.Task.GiveAssigneeID() && Page.Task.TaskStatus < DONE {
 				t.TaskStatus = ASSIGNED
 				t.StatusSet = getCurrentDateTime()
@@ -526,7 +530,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 
 		t.FileList, err = uploader(r, defaultUploadPath, "fileList")
 		if err != nil {
-			log.Println(currentFunction()+":", err)
+			log.Println(accs.CurrentFunction()+":", err)
 			Page.Message = "uploadError"
 		}
 
@@ -537,9 +541,9 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 				if eventAssigneeSet {
 					t.Creator.preload(bs.db, bs.dbt)
 					t.Assignee.preload(bs.db, bs.dbt)
-					email := EmailMessage{Subj: bs.i18n.Messages.Subj.AssigneeToSet + " [" + bs.i18n.TaskCaption + " #" + strconv.Itoa(t.ID) + "]"}
+					email := mail.EmailMessage{Subj: bs.i18n.Messages.Subj.AssigneeToSet + " [" + bs.i18n.TaskCaption + " #" + strconv.Itoa(t.ID) + "]"}
 					if t.Assignee.Contacts.Email != "" && t.Assignee.UserLock == 0 {
-						email.SendTo = append(email.SendTo, UserToSend{t.Assignee.FirstName + " " + t.Assignee.Surname, t.Assignee.Contacts.Email})
+						email.SendTo = append(email.SendTo, mail.UserToSend{Name: t.Assignee.FirstName + " " + t.Assignee.Surname, Email: t.Assignee.Contacts.Email})
 					}
 					taskMail := TaskMail{email.Subj, t, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
 					taskMail.constructToChannel(bs.db, bs.dbt, bs.taskmailtmpl, bs.mailchan, email, bs.regexes.emailCont)
@@ -582,14 +586,14 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 	// Delete files ===========================================
 	if r.Method == "POST" && r.FormValue("deleteFiles") != "" {
 		if Page.Editable == false {
-			throwAccessDenied(w, "writing task", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "writing task", Page.LoggedinID, IntID)
 			return
 		}
 		r.ParseForm()
 		filesToRemove := r.Form["filesToRemove"]
 		err = removeUploadedFiles(defaultUploadPath, filesToRemove)
 		if err == nil {
-			FileList := filterSliceStr(Page.Task.FileList, filesToRemove)
+			FileList := accs.FilterSliceStrList(Page.Task.FileList, filesToRemove)
 			updated = sqla.UpdateSingleJSONListStr(bs.db, bs.dbt, "tasks", "FileList", FileList, IntID)
 			if updated > 0 {
 				Page.Message = "dataWritten"
@@ -607,7 +611,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" && r.FormValue("assigneeForward") != "" && r.FormValue("assigneeForward") != "0" {
 		if Page.Editable || Page.IamAssignee {
 			oID := Page.Task.GiveAssigneeID()
-			aID := strToInt(r.FormValue("assigneeForward"))
+			aID := accs.StrToInt(r.FormValue("assigneeForward"))
 			if oID != aID {
 				res := sqla.UpdateSingleInt(bs.db, bs.dbt, "tasks", "Assignee", aID, IntID)
 				if res > 0 {
@@ -630,7 +634,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		} else {
-			throwAccessDenied(w, "forwarding task", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "forwarding task", Page.LoggedinID, IntID)
 			return
 		}
 	}
@@ -655,13 +659,13 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			c.FileList, err = uploader(r, filepath.Join(defaultUploadPath, strconv.Itoa(c.ID)), "fileListComm")
 			if err != nil {
-				log.Println(currentFunction()+":", err)
+				log.Println(accs.CurrentFunction()+":", err)
 				Page.Message = "uploadError"
 			} else {
 				sqla.UpdateSingleJSONListStr(bs.db, bs.dbt, "comments", "FileList", c.FileList, c.ID)
 			}
 		} else {
-			throwAccessDenied(w, "writing comment", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "writing comment", Page.LoggedinID, IntID)
 			return
 		}
 	}
@@ -669,8 +673,8 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 	// Add participant ===========================================
 	if r.Method == "POST" && r.FormValue("participantAdd") != "" {
 		if Page.Editable || Page.IamAssignee {
-			pID := strToInt(r.FormValue("participantAdd"))
-			if sliceContainsInt(Page.Task.Participants, pID) {
+			pID := accs.StrToInt(r.FormValue("participantAdd"))
+			if accs.SliceContainsInt(Page.Task.Participants, pID) {
 				Page.Message = "participantAlreadyInList"
 			} else {
 				participants := append(Page.Task.Participants, pID)
@@ -685,7 +689,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		} else {
-			throwAccessDenied(w, "adding participant", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "adding participant", Page.LoggedinID, IntID)
 			return
 		}
 	}
@@ -693,8 +697,8 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 	// Remove participant ===========================================
 	if r.Method == "POST" && r.FormValue("participantRemove") != "" {
 		if Page.Editable || Page.IamAssignee {
-			pID := strToInt(r.FormValue("participantRemove"))
-			participants := filterSliceInt(Page.Task.Participants, pID)
+			pID := accs.StrToInt(r.FormValue("participantRemove"))
+			participants := accs.FilterSliceInt(Page.Task.Participants, pID)
 			res := sqla.UpdateSingleJSONListInt(bs.db, bs.dbt, "tasks", "participants", participants, IntID)
 			if res > 0 {
 				Page.Task.Participants = participants
@@ -704,7 +708,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 		} else {
-			throwAccessDenied(w, "removing participant", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "removing participant", Page.LoggedinID, IntID)
 			return
 		}
 	}
@@ -712,7 +716,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 	// Other fields code ============================================
 	Page.UserList = bs.team.returnUserList()
 	Page.IamAssignee = Page.Task.GiveAssigneeID() == Page.LoggedinID
-	Page.IamParticipant = sliceContainsInt(Page.Task.Participants, Page.LoggedinID)
+	Page.IamParticipant = accs.SliceContainsInt(Page.Task.Participants, Page.LoggedinID)
 	if TextID == "new" {
 		Page.New = true
 		Page.PageTitle = bs.text.NewTask
@@ -735,14 +739,14 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		Page.Comments, err = Page.Task.loadComments(bs.db, bs.dbt)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
-			throwServerError(w, "loading task comments", Page.LoggedinID, Page.Task.ID)
+			log.Println(accs.CurrentFunction()+":", err)
+			accs.ThrowServerError(w, "loading task comments", Page.LoggedinID, Page.Task.ID)
 			return
 		}
 		Page.Participants, err = Page.Task.loadParticipants(bs.db, bs.dbt)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
-			throwServerError(w, "loading task participants", Page.LoggedinID, Page.Task.ID)
+			log.Println(accs.CurrentFunction()+":", err)
+			accs.ThrowServerError(w, "loading task participants", Page.LoggedinID, Page.Task.ID)
 			return
 		}
 		//Statuses all
@@ -795,7 +799,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Email messages ================================================
 	if eventTaskEdited || eventTaskStatusChanged || eventAssigneeSet {
-		email := EmailMessage{}
+		email := mail.EmailMessage{}
 		if eventTaskEdited {
 			email.Subj = bs.i18n.Messages.Subj.TaskEdited + " [" + bs.i18n.TaskCaption + " #" + strconv.Itoa(Page.Task.ID) + "]"
 		} else if eventAssigneeSet {
@@ -804,14 +808,14 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 			email.Subj = bs.i18n.Messages.Subj.TaskStatusChanged + " [" + bs.i18n.TaskCaption + " #" + strconv.Itoa(Page.Task.ID) + "]"
 		}
 		if Page.Task.Creator != nil && Page.Task.Creator.Contacts.Email != "" && Page.Task.Creator.UserLock == 0 {
-			email.SendTo = append(email.SendTo, UserToSend{Page.Task.Creator.FirstName + " " + Page.Task.Creator.Surname, Page.Task.Creator.Contacts.Email})
+			email.SendTo = append(email.SendTo, mail.UserToSend{Name: Page.Task.Creator.FirstName + " " + Page.Task.Creator.Surname, Email: Page.Task.Creator.Contacts.Email})
 		}
 		if Page.Task.Assignee != nil && Page.Task.Assignee.Contacts.Email != "" && !eventAssigneeSet && Page.Task.Assignee.UserLock == 0 {
-			email.SendTo = append(email.SendTo, UserToSend{Page.Task.Assignee.FirstName + " " + Page.Task.Assignee.Surname, Page.Task.Assignee.Contacts.Email})
+			email.SendTo = append(email.SendTo, mail.UserToSend{Name: Page.Task.Assignee.FirstName + " " + Page.Task.Assignee.Surname, Email: Page.Task.Assignee.Contacts.Email})
 		}
 		for i := 0; i < len(Page.Participants); i++ {
 			if Page.Participants[i].Contacts.Email != "" && Page.Participants[i].UserLock == 0 {
-				email.SendCc = append(email.SendCc, UserToSend{Page.Participants[i].FirstName + " " + Page.Participants[i].Surname, Page.Participants[i].Contacts.Email})
+				email.SendCc = append(email.SendCc, mail.UserToSend{Name: Page.Participants[i].FirstName + " " + Page.Participants[i].Surname, Email: Page.Participants[i].Contacts.Email})
 			}
 		}
 		taskMail := TaskMail{email.Subj, Page.Task, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
@@ -819,19 +823,19 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if eventAssigneeSet {
-		email := EmailMessage{Subj: bs.i18n.Messages.Subj.AssigneeToSet + " [" + bs.i18n.TaskCaption + " #" + strconv.Itoa(Page.Task.ID) + "]"}
+		email := mail.EmailMessage{Subj: bs.i18n.Messages.Subj.AssigneeToSet + " [" + bs.i18n.TaskCaption + " #" + strconv.Itoa(Page.Task.ID) + "]"}
 		if Page.Task.Assignee != nil && Page.Task.Assignee.Contacts.Email != "" && Page.Task.Assignee.UserLock == 0 {
-			email.SendTo = append(email.SendTo, UserToSend{Page.Task.Assignee.FirstName + " " + Page.Task.Assignee.Surname, Page.Task.Assignee.Contacts.Email})
+			email.SendTo = append(email.SendTo, mail.UserToSend{Name: Page.Task.Assignee.FirstName + " " + Page.Task.Assignee.Surname, Email: Page.Task.Assignee.Contacts.Email})
 		}
 		taskMail := TaskMail{email.Subj, Page.Task, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
 		taskMail.constructToChannel(bs.db, bs.dbt, bs.taskmailtmpl, bs.mailchan, email, bs.regexes.emailCont)
 	}
 
 	if eventParticipantToAdded {
-		email := EmailMessage{Subj: bs.i18n.Messages.Subj.ParticipantToAdded + " [" + bs.i18n.TaskCaption + " #" + strconv.Itoa(Page.Task.ID) + "]"}
+		email := mail.EmailMessage{Subj: bs.i18n.Messages.Subj.ParticipantToAdded + " [" + bs.i18n.TaskCaption + " #" + strconv.Itoa(Page.Task.ID) + "]"}
 		for i := 0; i < len(Page.Participants); i++ {
 			if Page.Participants[i].ID == newParticipantID && Page.Participants[i].Contacts.Email != "" && Page.Participants[i].UserLock == 0 {
-				email.SendTo = append(email.SendTo, UserToSend{Page.Participants[i].FirstName + " " + Page.Participants[i].Surname, Page.Participants[i].Contacts.Email})
+				email.SendTo = append(email.SendTo, mail.UserToSend{Name: Page.Participants[i].FirstName + " " + Page.Participants[i].Surname, Email: Page.Participants[i].Contacts.Email})
 				break
 			}
 		}
@@ -840,16 +844,16 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if eventNewTaskComment {
-		email := EmailMessage{Subj: bs.i18n.Messages.Subj.NewTaskComment + " [" + bs.i18n.TaskCaption + " #" + strconv.Itoa(Page.Task.ID) + "]"}
+		email := mail.EmailMessage{Subj: bs.i18n.Messages.Subj.NewTaskComment + " [" + bs.i18n.TaskCaption + " #" + strconv.Itoa(Page.Task.ID) + "]"}
 		if Page.Task.Creator != nil && Page.Task.Creator.Contacts.Email != "" && Page.Task.Creator.UserLock == 0 {
-			email.SendTo = append(email.SendTo, UserToSend{Page.Task.Creator.FirstName + " " + Page.Task.Creator.Surname, Page.Task.Creator.Contacts.Email})
+			email.SendTo = append(email.SendTo, mail.UserToSend{Name: Page.Task.Creator.FirstName + " " + Page.Task.Creator.Surname, Email: Page.Task.Creator.Contacts.Email})
 		}
 		if Page.Task.Assignee != nil && Page.Task.Assignee.Contacts.Email != "" && Page.Task.Assignee.UserLock == 0 {
-			email.SendTo = append(email.SendTo, UserToSend{Page.Task.Assignee.FirstName + " " + Page.Task.Assignee.Surname, Page.Task.Assignee.Contacts.Email})
+			email.SendTo = append(email.SendTo, mail.UserToSend{Name: Page.Task.Assignee.FirstName + " " + Page.Task.Assignee.Surname, Email: Page.Task.Assignee.Contacts.Email})
 		}
 		for i := 0; i < len(Page.Participants); i++ {
 			if Page.Participants[i].Contacts.Email != "" && Page.Participants[i].UserLock == 0 {
-				email.SendCc = append(email.SendCc, UserToSend{Page.Participants[i].FirstName + " " + Page.Participants[i].Surname, Page.Participants[i].Contacts.Email})
+				email.SendCc = append(email.SendCc, mail.UserToSend{Name: Page.Participants[i].FirstName + " " + Page.Participants[i].Surname, Email: Page.Participants[i].Contacts.Email})
 			}
 		}
 		if len(email.SendTo) > 0 || len(email.SendCc) > 0 {
@@ -877,8 +881,8 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 	// HTML output
 	err = bs.templates.ExecuteTemplate(w, "task.tmpl", Page)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
-		throwServerError(w, "executing task template", Page.LoggedinID, Page.Task.ID)
+		log.Println(accs.CurrentFunction()+":", err)
+		accs.ThrowServerError(w, "executing task template", Page.LoggedinID, Page.Task.ID)
 		return
 	}
 

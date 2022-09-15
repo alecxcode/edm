@@ -1,6 +1,7 @@
 package main
 
 import (
+	"edm/pkg/accs"
 	"fmt"
 	"io"
 	"log"
@@ -73,7 +74,7 @@ func uploader(r *http.Request, uploadDest string, inputName string) ([]string, e
 		ext := filepath.Ext(fileHeader.Filename)
 		saveFilename := fileHeader.Filename
 		saveDest := filepath.Join(uploadDest, saveFilename)
-		for i := 1; fileExists(saveDest); i++ {
+		for i := 1; accs.FileExists(saveDest); i++ {
 			saveFilename = strings.TrimSuffix(fileHeader.Filename, ext) + "-" + strconv.Itoa(i) + ext
 			saveDest = filepath.Join(uploadDest, saveFilename)
 		}
@@ -103,14 +104,14 @@ func moveUploadedFilesToFinalDest(origDir string, destDir string, fileList []str
 		if os.IsNotExist(err) {
 			err := os.MkdirAll(destDir, 0700)
 			if err != nil {
-				log.Println(currentFunction()+":", err, "dir:"+destDir)
+				log.Println(accs.CurrentFunction()+":", err, "dir:"+destDir)
 			}
 		}
 	}
 	for _, fileName := range fileList {
 		err := os.Rename(filepath.Join(origDir, fileName), filepath.Join(destDir, fileName))
 		if err != nil {
-			log.Println(currentFunction()+":", err, "dir:"+destDir, "file:"+fileName)
+			log.Println(accs.CurrentFunction()+":", err, "dir:"+destDir, "file:"+fileName)
 		}
 	}
 }
@@ -120,13 +121,13 @@ func removeUploadedFiles(dir string, fileList []string) error {
 		return nil
 	}
 	if _, err := os.Stat(dir); err != nil {
-		log.Println(currentFunction()+":", err, "dir:"+dir)
+		log.Println(accs.CurrentFunction()+":", err, "dir:"+dir)
 		return err
 	}
 	for _, fileName := range fileList {
 		err := os.Remove(filepath.Join(dir, fileName))
 		if err != nil {
-			log.Println(currentFunction()+":", err, "dir:"+dir, "file:"+fileName)
+			log.Println(accs.CurrentFunction()+":", err, "dir:"+dir, "file:"+fileName)
 			return err
 		}
 	}
@@ -140,13 +141,13 @@ func removeUploadedDirs(objectsDir string, ids []int) {
 			if os.IsNotExist(err) {
 				return
 			} else {
-				log.Println(currentFunction()+":", err, "dir:"+dir)
+				log.Println(accs.CurrentFunction()+":", err, "dir:"+dir)
 				return
 			}
 		}
 		err := os.RemoveAll(dir)
 		if err != nil {
-			log.Println(currentFunction()+":", err, "dir:"+dir)
+			log.Println(accs.CurrentFunction()+":", err, "dir:"+dir)
 			return
 		}
 	}

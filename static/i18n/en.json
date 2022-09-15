@@ -117,6 +117,7 @@
     "bbcodeI": {"value": "I", "title": "Italic"},
     "bbcodeU": {"value": "U", "title": "Underline"},
     "bbcodeCode": {"value": "Code", "title": "Monospace font, keep formatting"},
+    "bbcodeQuote": {"value": "Quote", "title": "Format as a citation"},
 
     "appearance": "Appearance",
     "systemTheme": "System theme",

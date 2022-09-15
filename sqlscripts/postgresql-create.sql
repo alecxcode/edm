@@ -48,6 +48,13 @@ Note TEXT);
 
 CREATE INDEX idx_approvals_DocID ON approvals (DocID);
 
+CREATE TABLE IF NOT EXISTS emailmessages
+(ID SERIAL PRIMARY KEY,
+SendTo TEXT,
+SendCc TEXT,
+Subj TEXT,
+Cont TEXT);
+
 CREATE TABLE IF NOT EXISTS profiles
 (ID SERIAL PRIMARY KEY,
 FirstName TEXT,
@@ -63,13 +70,6 @@ UserLock INTEGER,
 UserConfig TEXT,
 Login TEXT,
 Passwd TEXT);
-
-CREATE TABLE IF NOT EXISTS emailmessages
-(ID SERIAL PRIMARY KEY,
-SendTo TEXT,
-SendCc TEXT,
-Subj TEXT,
-Cont TEXT);
 
 CREATE TABLE IF NOT EXISTS tasks
 (ID SERIAL PRIMARY KEY,

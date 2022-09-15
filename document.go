@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"edm/pkg/accs"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -425,6 +426,7 @@ func (as approvals) GetApprovalNote(docID int, pID int) string {
 // DocumentPage is passed into template
 type DocumentPage struct {
 	AppTitle      string
+	AppVersion    string
 	PageTitle     string
 	LoggedinID    int
 	UserConfig    UserConfig
@@ -466,6 +468,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 
 	var Page = DocumentPage{
 		AppTitle:     bs.text.AppTitle,
+		AppVersion:   AppVersion,
 		LoggedinID:   id,
 		Editable:     false,
 		New:          false,
@@ -475,7 +478,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 		ApprovalSign: bs.text.ApprovalSign,
 	}
 
-	TextID := getTextIDfromURL(r.URL.Path)
+	TextID := accs.GetTextIDfromURL(r.URL.Path)
 	IntID, _ := strconv.Atoi(TextID)
 	if TextID == "new" {
 		Page.New = true
@@ -483,17 +486,17 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 		Page.Document = Document{ID: IntID}
 		err = Page.Document.load(bs.db, bs.dbt)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
+			log.Println(accs.CurrentFunction()+":", err)
 			http.NotFound(w, r)
 			return
 		}
 		Page.Approvals, err = Page.Document.loadApprovals(bs.db, bs.dbt)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
-			throwServerError(w, "loading document approvals", Page.LoggedinID, Page.Document.ID)
+			log.Println(accs.CurrentFunction()+":", err)
+			accs.ThrowServerError(w, "loading document approvals", Page.LoggedinID, Page.Document.ID)
 			return
 		}
-		Page.IamApprover = intToBool(Page.Approvals.getApprovalIDbyDocIDandApproverID(IntID, Page.LoggedinID))
+		Page.IamApprover = accs.IntToBool(Page.Approvals.getApprovalIDbyDocIDandApproverID(IntID, Page.LoggedinID))
 		Page.YouApproved = Page.Approvals.approved(IntID, Page.LoggedinID)
 	}
 
@@ -519,7 +522,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 	// Create or update code ==========================================================================
 	if r.Method == "POST" && (r.FormValue("createButton") != "" || r.FormValue("updateButton") != "") {
 		if Page.Editable == false {
-			throwAccessDenied(w, "writing document", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "writing document", Page.LoggedinID, IntID)
 			return
 		}
 		d := Document{
@@ -528,13 +531,13 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 			RegDate:   stringToDate(r.FormValue("regDate")),
 			IncNo:     r.FormValue("incNo"),
 			IncDate:   stringToDate(r.FormValue("incDate")),
-			Category:  strToInt(r.FormValue("category")),
-			DocType:   strToInt(r.FormValue("docType")),
+			Category:  accs.StrToInt(r.FormValue("category")),
+			DocType:   accs.StrToInt(r.FormValue("docType")),
 			About:     r.FormValue("about"),
 			Authors:   r.FormValue("authors"),
 			Addressee: r.FormValue("addressee"),
 			DocSum:    processFormSumInt(r.FormValue("docSum")),
-			Currency:  strToInt(r.FormValue("currencyCode")),
+			Currency:  accs.StrToInt(r.FormValue("currencyCode")),
 			EndDate:   stringToDate(r.FormValue("endDate")),
 			Creator:   &Profile{ID: Page.LoggedinID},
 			Note:      r.FormValue("note"),
@@ -547,7 +550,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 
 		d.FileList, err = uploader(r, defaultUploadPath, "fileList")
 		if err != nil {
-			log.Println(currentFunction()+":", err)
+			log.Println(accs.CurrentFunction()+":", err)
 			Page.Message = "uploadError"
 		}
 
@@ -584,14 +587,14 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 	// Delete files ==================================
 	if r.Method == "POST" && r.FormValue("deleteFiles") != "" {
 		if Page.Editable == false {
-			throwAccessDenied(w, "writing document", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "writing document", Page.LoggedinID, IntID)
 			return
 		}
 		r.ParseForm()
 		filesToRemove := r.Form["filesToRemove"]
 		err = removeUploadedFiles(defaultUploadPath, filesToRemove)
 		if err == nil {
-			FileList := filterSliceStr(Page.Document.FileList, filesToRemove)
+			FileList := accs.FilterSliceStrList(Page.Document.FileList, filesToRemove)
 			updated = sqla.UpdateSingleJSONListStr(bs.db, bs.dbt, "documents", "FileList", FileList, IntID)
 			if updated > 0 {
 				Page.Message = "dataWritten"
@@ -608,12 +611,12 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 	// Add approval ===========================================
 	if r.Method == "POST" && r.FormValue("approvalAdd") != "" {
 		if Page.Editable || Page.IamApprover {
-			pID := strToInt(r.FormValue("approvalAdd"))
+			pID := accs.StrToInt(r.FormValue("approvalAdd"))
 			a := Approval{
 				Approver: &Profile{ID: pID},
 				DocID:    IntID,
 			}
-			if sliceContainsInt(Page.Approvals.getApproversIDsSlice(), pID) {
+			if accs.SliceContainsInt(Page.Approvals.getApproversIDsSlice(), pID) {
 				Page.Message = "approverAlreadyInList"
 			} else {
 				id, res := a.create(bs.db, bs.dbt)
@@ -632,7 +635,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		} else {
-			throwAccessDenied(w, "adding approval", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "adding approval", Page.LoggedinID, IntID)
 			return
 		}
 	}
@@ -645,7 +648,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 				Written:  getCurrentDateTime(),
 				Approver: &Profile{ID: Page.LoggedinID},
 				DocID:    IntID,
-				Approved: strToInt(r.FormValue("approvalSign")),
+				Approved: accs.StrToInt(r.FormValue("approvalSign")),
 				Note:     r.FormValue("approvalNote"),
 			}
 			if Page.YouApproved == APPROVED {
@@ -679,14 +682,14 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		} else {
-			throwAccessDenied(w, "signing approval", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "signing approval", Page.LoggedinID, IntID)
 			return
 		}
 	}
 
 	// Remove approval ===========================================
 	if r.Method == "POST" && r.FormValue("approvalRemove") != "" {
-		aID := strToInt(r.FormValue("approvalRemove"))
+		aID := accs.StrToInt(r.FormValue("approvalRemove"))
 		if Page.Editable && Page.Approvals.getApprovalByID(aID).Approved == NOACTION {
 			res := sqla.DeleteObject(bs.db, bs.dbt, "approvals", "ID", aID)
 			if res > 0 {
@@ -695,7 +698,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 				Page.Message = "dataNotWritten"
 			}
 		} else {
-			throwAccessDenied(w, "removing approval", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "removing approval", Page.LoggedinID, IntID)
 			return
 		}
 	}
@@ -713,11 +716,11 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 		Page.PageTitle = Page.Document.makeTitle(Page.Categories, Page.DocTypes, bs.text.Document)
 		Page.Approvals, err = Page.Document.loadApprovals(bs.db, bs.dbt)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
-			throwServerError(w, "loading document approvals", Page.LoggedinID, Page.Document.ID)
+			log.Println(accs.CurrentFunction()+":", err)
+			accs.ThrowServerError(w, "loading document approvals", Page.LoggedinID, Page.Document.ID)
 			return
 		}
-		Page.IamApprover = intToBool(Page.Approvals.getApprovalIDbyDocIDandApproverID(IntID, Page.LoggedinID))
+		Page.IamApprover = accs.IntToBool(Page.Approvals.getApprovalIDbyDocIDandApproverID(IntID, Page.LoggedinID))
 		Page.YouApproved = Page.Approvals.approved(IntID, Page.LoggedinID)
 	}
 	Page.UserList = bs.team.returnUserList()
@@ -745,8 +748,8 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 	// HTML output
 	err = bs.templates.ExecuteTemplate(w, template, Page)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
-		throwServerError(w, "executing "+template[0:len(template)-5]+" template", Page.LoggedinID, Page.Document.ID)
+		log.Println(accs.CurrentFunction()+":", err)
+		accs.ThrowServerError(w, "executing "+template[0:len(template)-5]+" template", Page.LoggedinID, Page.Document.ID)
 		return
 	}
 

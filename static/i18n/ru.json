@@ -117,6 +117,7 @@
     "bbcodeI": {"value": "К", "title": "Курсивный шрифт"},
     "bbcodeU": {"value": "Ч", "title": "Подчеркивание"},
     "bbcodeCode": {"value": "Код", "title": "Моноширинный шрифт, сохранять форматирование"},
+    "bbcodeQuote": {"value": "Цитировать", "title": "Оформить как цитату"},
 
     "appearance": "Внешний вид",
     "systemTheme": "Тема оформления",

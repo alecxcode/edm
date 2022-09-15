@@ -23,6 +23,7 @@ pre, code {
   -webkit-font-smoothing: auto;
   -moz-osx-font-smoothing: auto;
 }
+q {quotes: '"' '"' "'" "'";}
 
 /* page content and control blocks */
 #container {

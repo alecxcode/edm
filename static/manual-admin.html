@@ -34,7 +34,8 @@
             <li>PostgreSQL</li>
         </ul>
         <p>On the client-side it is necessary to use modern web browsers like Chrome, Firefox, Safari with enabled JavaScript. Internet Exprorer is not supported.</p>
-        <p>Basic bruteforce protection by default blocks login capability for any users from any IP addresses for 60 minutes after 100 attempts to enter with wrong login or password.</p>
+        <h3 class="margintop">Basic bruteforce protection</h3>
+        <p>This bruteforce protection by default blocks login capability for any users from any IP addresses for 60 minutes after 100 attempts to enter with wrong login or password.</p>
         
         <h2 class="margintop">Installation of a release package</h2>
         <p>Installing in Windows is easy: run the downloaded distribution file, select a folder to install, and then it runs automatically. This way of installation is more for presentation purposes.</p>
@@ -89,8 +90,25 @@
         <p><code>SMTPUser</code> - SMTP server user. Should be specified in order to make notifications work properly.</p>
         <p><code>SMTPPassword</code> - SMTP server password. Should be specified in order to make notifications work properly.</p>
         
+        <h2 class="margintop">Environment variables</h2>
+        <p>After reading configuration file the server tries to read environment variables, which, if present, override corresponding configuration file values.</p>
+        <p>This might be useful when deploying on a system where you should not store your sensitive data in a configuration file.</p>
+        <p>The following variables are available (values are the same as for configuration file):</p>
+        <p><code>EDM_DB_TYPE</code> - RDBMS type.</p>
+        <p><code>EDM_DB_NAME</code> - database name to connect. For Oracle it is a service name.</p>
+        <p><code>EDM_DB_HOST</code> - host address of the database server.</p>
+        <p><code>EDM_DB_PORT</code> - port of the database server.</p>
+        <p><code>EDM_DB_USER</code> - database user to connect.</p>
+        <p><code>EDM_DB_PASSWORD</code> - password of the database user.</p>
+        <p><code>EDM_SMTP_EMAIL</code> - email address to use in notification emails.</p>
+        <p><code>EDM_SMTP_HOST</code> - SMTP server host address.</p>
+        <p><code>EDM_SMTP_PORT</code> - SMTP server port.</p>
+        <p><code>EDM_SMTP_USER</code> - SMTP server user.</p>
+        <p><code>EDM_SMTP_PASSWORD</code> - SMTP server password.</p>
+        <p>If you require to use other configuration options as environment variables you can edit <b>config-env.py</b> from <b>internal/config</b> directory. The file has predefined list of prefixes for environment variables. For instance, you can set it to <code>[""]</code> in order to make all config options available as environment variables.</p>
+
         <h2 class="margintop">Command line arguments</h2>
-        <p>Command-line arguments have higher priority over (overwrite) configuration file values.</p>
+        <p>Command-line arguments have higher priority over (overwrite) configuration file values and environment variables.</p>
         <p><code>--createdb</code> - the server will create database table to initialize empty database.</p>
 		<p><code>--filldb</code> - fill database with showcase data. Useful only for presentation and testing.</p>
         <p><code>--nobrowser</code> - the server should not run a browser on launch.</p>
@@ -109,21 +127,31 @@
         <p><b>run-unix.sh</b> is a more convenient way to run the software while developing it.</p>
         <p>In order to know some constants and structs of the app read the package documentation available in source files, for example with <code>go doc --all</code> command.</p>
         <p>If you add some structs which requires creating tables in a database, you can use <code>go generate</code> command to run <b>sql-gen.py</b> python script to create sql scripts. This runs python3 and requires it to be installed on your system.</p>
-        <p>If you modify server config code, you can use <code>go generate</code> command to run <b>config-gen.py</b> python script to rewrite config loading and saving functions. This runs python3 and requires it to be installed on your system.</p>
+        <p>If you modify server config code, you can use <code>go generate</code> command from <b>internal/config</b> directory to run <b>config-gen.py</b> and <b>config-env.py</b> python scripts to rewrite config loading and saving functions. This runs python3 and requires it to be installed on your system.</p>
         <p>All compilers, interpreters, executables which are necessary to build the software should be available in a path variable of you environment.</p>
         <h3 class="margintop">Themes</h3>
-        <p>Any theme is a single css file which name starts with <b>theme-</b> prefix and which is located in the <b>assets</b> directory.</p>
+        <p>Any theme is a single css file which name starts with <b>theme-</b> prefix and which is located in the <b>static</b> directory.</p>
         <p>To add a new theme you need to create that file with selectors like in other files. Theme list is defined in <code>main()</code> function of the program. You need to add theme name to the list, and rebuild the application.</p>
         <h3 class="margintop">Localization</h3>
         <p>There are two JSON files wich contain language-specific strings. Name of these files is two-letter language code and .json extension.
             Server-side files are located in <b>i18nserver</b> directory, and they are relatively small as they are used only for login page and email notifications.
-            Frontend localization files are located in <b>assets/i18n</b> directory, and they contain a lot more strings, almost everything user interface language. Users can easily switch their interface language on settings page.
+            Frontend localization files are located in <b>static/i18n</b> directory, and they contain a lot more strings, almost everything user interface language. Users can easily switch their interface language on settings page.
         </p>
         <p>To add a new language you need to create those two JSON files with the same structure as existing files. Language codes list is defined in <code>main()</code> function of the program. You need to add language code to the list, and rebuild the application. You also need to edit <b>config.tmpl</b> file to add a language name there.</p>
+
     </div>
     <div id="bottom">
         <span>© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></span>
-        <span>v1.2.0.</span>
-        <span><a href="/assets/manual.html">Manual</a></span>
+        <span id="ver">v0.0.0.</span>
+        <span><a href="/static/manual.html">Manual</a></span>
     </div>
-</div></body></html>
+</div></body>
+<script>
+fetch('/appversion').then((response) => response.json())
+.then((data) => {
+  if (data.ver) {
+    document.getElementById('ver').innerText = 'v'+data.ver+'.';
+  }
+});
+</script>
+</html>

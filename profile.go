@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"edm/pkg/accs"
+	"edm/pkg/passwd"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -57,7 +59,7 @@ func unmarshalNonEmptyProfileContacts(c string) (res UserContacts) {
 	if c != "" {
 		err := json.Unmarshal([]byte(c), &res)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
+			log.Println(accs.CurrentFunction()+":", err)
 		}
 	}
 	return res
@@ -229,7 +231,7 @@ WHERE p.ID = `+sqla.MakeParam(DBType, 1), p.ID)
 	if UserConfig.String != "" {
 		err := json.Unmarshal([]byte(UserConfig.String), &p.UserConfig)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
+			log.Println(accs.CurrentFunction()+":", err)
 		}
 	}
 	p.Login = Login.String
@@ -290,7 +292,7 @@ func (p *Profile) loadByIDorLogin(db *sql.DB, DBType byte, what string) (err err
 	if UserConfig.String != "" {
 		err := json.Unmarshal([]byte(UserConfig.String), &p.UserConfig)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
+			log.Println(accs.CurrentFunction()+":", err)
 		}
 	}
 	p.UserConfig.correctIfEmpty()
@@ -350,7 +352,7 @@ func (p *Profile) isTheLastAdmin(db *sql.DB, DBType byte) (res bool, err error) 
 	var counted sql.NullInt64
 	err = row.Scan(&counted)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
+		log.Println(accs.CurrentFunction()+":", err)
 		return false, nil
 	}
 	AdminsRemains := int(counted.Int64)
@@ -449,6 +451,7 @@ func (p Profile) GiveBirthDate() string {
 // ProfilePage is passed into template
 type ProfilePage struct {
 	AppTitle      string
+	AppVersion    string
 	PageTitle     string
 	LoggedinID    int
 	UserConfig    UserConfig
@@ -477,6 +480,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 
 	var Page = ProfilePage{
 		AppTitle:      bs.text.AppTitle,
+		AppVersion:    AppVersion,
 		LoggedinID:    id,
 		LoggedinAdmin: false,
 		Editable:      false,
@@ -489,7 +493,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 		Page.LoggedinAdmin = true
 	}
 
-	TextID := getTextIDfromURL(r.URL.Path)
+	TextID := accs.GetTextIDfromURL(r.URL.Path)
 	IntID, _ := strconv.Atoi(TextID)
 	if Page.LoggedinID == IntID || Page.LoggedinAdmin {
 		Page.Editable = true
@@ -504,7 +508,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 	// Create code =============================================
 	if r.Method == "POST" && r.FormValue("createButton") != "" {
 		if Page.LoggedinAdmin == false {
-			throwAccessDenied(w, "creating profile", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "creating profile", Page.LoggedinID, IntID)
 			return
 		}
 		p := Profile{
@@ -521,10 +525,10 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 			JobTitle:  r.FormValue("jobTitle"),
 		}
 		if r.FormValue("jobUnit") != "" && r.FormValue("jobUnit") != "0" {
-			p.JobUnit = &Unit{ID: strToInt(r.FormValue("jobUnit"))}
+			p.JobUnit = &Unit{ID: accs.StrToInt(r.FormValue("jobUnit"))}
 		}
 		if r.FormValue("boss") != "" && r.FormValue("boss") != "0" {
-			p.Boss = &Profile{ID: strToInt(r.FormValue("boss"))}
+			p.Boss = &Profile{ID: accs.StrToInt(r.FormValue("boss"))}
 		}
 		p.UserConfig = UserConfig{
 			SystemTheme:          "dark",
@@ -542,11 +546,11 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 		if r.FormValue("loginSameEmail") == "true" {
 			p.Login = p.Contacts.Email
 		}
-		p.Passwd = genPasswd(r.FormValue("passwd"))
+		p.Passwd = passwd.GenPasswd(r.FormValue("passwd"))
 		uniqueLogin, err = p.isLoginUniqueorBlank(bs.db, bs.dbt)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
-			throwServerError(w, "checking unique login in DB", Page.LoggedinID, IntID)
+			log.Println(accs.CurrentFunction()+":", err)
+			accs.ThrowServerError(w, "checking unique login in DB", Page.LoggedinID, IntID)
 			return
 		}
 		if uniqueLogin == false {
@@ -577,7 +581,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 	// Update code =============================================
 	if r.Method == "POST" && r.FormValue("updateButton") != "" {
 		if Page.Editable == false {
-			throwAccessDenied(w, "updating profile", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "updating profile", Page.LoggedinID, IntID)
 			return
 		}
 		p := Profile{ID: IntID,
@@ -608,15 +612,15 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 	// Update lock =============================================
 	if r.Method == "POST" && r.FormValue("updateLock") != "" {
 		if Page.LoggedinAdmin == false {
-			throwAccessDenied(w, "updating UserLock", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "updating UserLock", Page.LoggedinID, IntID)
 			return
 		}
 		LastAdmin := false
-		p := Profile{ID: IntID, UserLock: strToInt(r.FormValue("userLock"))}
+		p := Profile{ID: IntID, UserLock: accs.StrToInt(r.FormValue("userLock"))}
 		if p.UserLock == 1 {
 			LastAdmin, err = p.isTheLastAdmin(bs.db, bs.dbt)
 			if err != nil {
-				log.Println(currentFunction()+":", err)
+				log.Println(accs.CurrentFunction()+":", err)
 			}
 		}
 		if LastAdmin {
@@ -630,15 +634,15 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 	// Update role =============================================
 	if r.Method == "POST" && r.FormValue("updateRole") != "" {
 		if Page.LoggedinAdmin == false {
-			throwAccessDenied(w, "updating UserRole", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "updating UserRole", Page.LoggedinID, IntID)
 			return
 		}
 		LastAdmin := false
-		p := Profile{ID: IntID, UserRole: strToInt(r.FormValue("userRole"))}
+		p := Profile{ID: IntID, UserRole: accs.StrToInt(r.FormValue("userRole"))}
 		if p.UserRole == 0 {
 			LastAdmin, err = p.isTheLastAdmin(bs.db, bs.dbt)
 			if err != nil {
-				log.Println(currentFunction()+":", err)
+				log.Println(accs.CurrentFunction()+":", err)
 			}
 		}
 		if LastAdmin {
@@ -668,24 +672,24 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 	// Update login and passwd =================================
 	if r.Method == "POST" && r.FormValue("updatePasswd") != "" {
 		if Page.Editable == false {
-			throwAccessDenied(w, "updating passwd", Page.LoggedinID, IntID)
+			accs.ThrowAccessDenied(w, "updating passwd", Page.LoggedinID, IntID)
 			return
 		}
 		p := Profile{ID: IntID}
 		p.Login = r.FormValue("login")
 		rawpasswd := r.FormValue("passwd")
-		p.Passwd = genPasswd(rawpasswd)
+		p.Passwd = passwd.GenPasswd(rawpasswd)
 		uniqueLogin, err = p.isLoginUniqueorBlank(bs.db, bs.dbt)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
-			throwServerError(w, "checking unique login in DB", Page.LoggedinID, IntID)
+			log.Println(accs.CurrentFunction()+":", err)
+			accs.ThrowServerError(w, "checking unique login in DB", Page.LoggedinID, IntID)
 			return
 		}
 		LastAdmin := false
 		if p.Login == "" {
 			LastAdmin, err = p.isTheLastAdmin(bs.db, bs.dbt)
 			if err != nil {
-				log.Println(currentFunction()+":", err)
+				log.Println(accs.CurrentFunction()+":", err)
 			}
 		}
 		if !uniqueLogin {
@@ -726,7 +730,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 		Page.Profile.ID = IntID
 		err = Page.Profile.load(bs.db, bs.dbt)
 		if err != nil {
-			log.Println(currentFunction()+":", err)
+			log.Println(accs.CurrentFunction()+":", err)
 			http.NotFound(w, r)
 			return
 		}
@@ -759,8 +763,8 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 	// HTML output
 	err = bs.templates.ExecuteTemplate(w, "profile.tmpl", Page)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
-		throwServerError(w, "executing profile template", Page.LoggedinID, Page.Profile.ID)
+		log.Println(accs.CurrentFunction()+":", err)
+		accs.ThrowServerError(w, "executing profile template", Page.LoggedinID, Page.Profile.ID)
 		return
 	}
 
@@ -769,6 +773,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 // UserConfigPage is passed into template
 type UserConfigPage struct {
 	AppTitle    string
+	AppVersion  string
 	PageTitle   string
 	LoggedinID  int
 	Message     string
@@ -788,6 +793,7 @@ func (bs *BaseStruct) userConfigHandler(w http.ResponseWriter, r *http.Request) 
 
 	var Page = UserConfigPage{
 		AppTitle:   bs.text.AppTitle,
+		AppVersion: AppVersion,
 		LoggedinID: id,
 	}
 
@@ -799,8 +805,8 @@ func (bs *BaseStruct) userConfigHandler(w http.ResponseWriter, r *http.Request) 
 		p := Profile{ID: Page.LoggedinID}
 		p.UserConfig = UserConfig{
 			SystemTheme:     r.FormValue("systemTheme"),
-			ElemsOnPage:     strToInt(r.FormValue("elemsOnPage")),
-			ElemsOnPageTeam: strToInt(r.FormValue("elemsOnPageTeam")),
+			ElemsOnPage:     accs.StrToInt(r.FormValue("elemsOnPage")),
+			ElemsOnPageTeam: accs.StrToInt(r.FormValue("elemsOnPageTeam")),
 			DateFormat:      r.FormValue("dateFormat"),
 			TimeFormat:      r.FormValue("timeFormat"),
 			LangCode:        r.FormValue("langCode"),
@@ -838,8 +844,8 @@ func (bs *BaseStruct) userConfigHandler(w http.ResponseWriter, r *http.Request) 
 	// HTML output
 	err = bs.templates.ExecuteTemplate(w, "config.tmpl", Page)
 	if err != nil {
-		log.Println(currentFunction()+":", err)
-		throwServerError(w, "executing profile template", Page.LoggedinID, Page.LoggedinID)
+		log.Println(accs.CurrentFunction()+":", err)
+		accs.ThrowServerError(w, "executing profile template", Page.LoggedinID, Page.LoggedinID)
 		return
 	}
 

@@ -7,15 +7,20 @@
 # or project go source files for examples).
 # Run go generate in project folder.
 
-import sys
 import os
 import re
 
+def recursiveFileList(d):
+    flist = [os.path.join(d, f) for f in os.listdir(d)]
+    for f in flist:
+        if os.path.isdir(f):
+            flist += recursiveFileList(f)
+    return flist
+
 def makeFileList():
-    flist = []
-    for f in os.listdir('.'):
-        if f.endswith('.go'):
-            flist.append(f)
+    flist = [f for f in os.listdir() if f.endswith('.go')]
+    flist += [f for f in recursiveFileList('internal') if f.endswith('.go')]
+    flist += [f for f in recursiveFileList('pkg') if f.endswith('.go')]
     flist.sort()
     return flist
 
@@ -172,10 +177,10 @@ def genFile(fname, cont):
     f.write(cont)
     f.close()
 
-genFile("sqlscripts/sqlite-create.sql", createFileContent('SQLITE'))
-genFile("sqlscripts/mssql-create.sql", createFileContent('MSSQL'))
-genFile("sqlscripts/mysql-create.sql", createFileContent('MYSQL'))
-genFile("sqlscripts/oracle-create.sql", createFileContent('ORACLE'))
-genFile("sqlscripts/postgresql-create.sql", createFileContent('POSTGRESQL'))
+genFile(os.path.join("sqlscripts", "sqlite-create.sql"), createFileContent('SQLITE'))
+genFile(os.path.join("sqlscripts", "mssql-create.sql"), createFileContent('MSSQL'))
+genFile(os.path.join("sqlscripts", "mysql-create.sql"), createFileContent('MYSQL'))
+genFile(os.path.join("sqlscripts", "oracle-create.sql"), createFileContent('ORACLE'))
+genFile(os.path.join("sqlscripts", "postgresql-create.sql"), createFileContent('POSTGRESQL'))
 
 print("sqlscripts files generated")

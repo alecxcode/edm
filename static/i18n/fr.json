@@ -117,6 +117,7 @@
     "bbcodeI": {"value": "I", "title": "Italique"},
     "bbcodeU": {"value": "S", "title": "Souligner"},
     "bbcodeCode": {"value": "Code", "title": "Police monospace, continuez à formater"},
+    "bbcodeQuote": {"value": "Citer", "title": "Formater comme une citation"},
 
     "appearance": "Apparence",
     "systemTheme": "Thème système",

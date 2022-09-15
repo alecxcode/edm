@@ -4,6 +4,7 @@ package main
 
 import (
 	"database/sql"
+	"edm/pkg/accs"
 	"io/ioutil"
 	"log"
 	"path/filepath"
@@ -36,11 +37,11 @@ func getSQLinitScript(DBType byte, scriptsPath string) string {
 func postgresqlMakeDatabase(DSN string, DBName string, sqlStmt string) {
 	db, err := sql.Open("postgres", DSN)
 	if err != nil {
-		log.Fatal(currentFunction()+":", err)
+		log.Fatal(accs.CurrentFunction()+":", err)
 	}
 	defer db.Close()
 	if err = db.Ping(); err != nil {
-		log.Fatal(currentFunction()+":", err)
+		log.Fatal(accs.CurrentFunction()+":", err)
 	}
 	checkStmt := "SELECT EXISTS(SELECT datname FROM pg_catalog.pg_database WHERE datname = '" + DBName + "');"
 	var res sql.NullBool
@@ -60,7 +61,7 @@ func postgresqlMakeDatabase(DSN string, DBName string, sqlStmt string) {
 		}
 		db, err = sql.Open("postgres", DSN)
 		if err != nil {
-			log.Fatal(currentFunction()+":", err)
+			log.Fatal(accs.CurrentFunction()+":", err)
 		}
 		_, err = db.Exec(sqlStmt)
 		if err != nil {

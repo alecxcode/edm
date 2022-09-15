@@ -12,6 +12,12 @@
   if (currentItem) currentItem.classList.add("chosenmenu");
 })();
 
+/* Remove faded out messages */
+/* (function(){
+  const newDiv = document.querySelector(".msgred, .msgok");
+  if (newDiv) setTimeout(()=> newDiv.remove(), 8000);
+})(); */
+
 /* Translates the page - aka i18n */
 (function(){
   const langCode = document.documentElement.lang;
@@ -34,7 +40,7 @@ function translateElem(rootElem) {
 }
 
 async function getLang(langCode) {
-  const request = new Request(`/assets/i18n/${langCode}.json`);
+  const request = new Request(`/static/i18n/${langCode}.json`);
   const response = await fetch(request, {method: 'GET', credentials: 'include', mode: 'no-cors'});
   if (response.ok) {
     const lang = await response.json();
@@ -1002,13 +1008,14 @@ function updateMultilines(className) {
   if (multiLineLabels) {
     
     for (let elem of multiLineLabels) {
-      /*.replace(/\n/g, "<br>")*/
       elem.innerHTML = elem.innerHTML
       .replace(/\[b\]/g, '<b>').replace(/\[\/b\]/g, '</b>')
       .replace(/\[i\]/g, '<i>').replace(/\[\/i\]/g, '</i>')
       .replace(/\[u\]/g, '<u>').replace(/\[\/u\]/g, '</u>')
+      .replace(/\[q\]/g, '<q>').replace(/\[\/q\]/g, '</q>')
       .replace(/\[code\]/g, '<pre>').replace(/\[\/code\]/g, '</pre>');
-      elem.innerHTML = replaceNewlinesWithBR(elem.innerHTML);
+      replaceNewlinesWithBR(elem);
+      displayAsBlockQuoteIfBreaks(elem);
       if (urlREGex.test(elem.innerHTML)) {
         elem.innerHTML = elem.innerHTML.replace(urlREGex, '$1<a href="$2" target="_blank">$2</a>');
       }
@@ -1019,36 +1026,34 @@ function updateMultilines(className) {
   }
 }
 
-function replaceNewlinesWithBR(cont) {
-  let arr = [' ', ' ', ' ', ' ', ' ', ' ', ' '];
-	let insidetagname = false;
-	let outsidecode = true;
-  let arrcounter = 0;
-	for (let i = 0; i < cont.length; i++) {
-		if (cont[i] == '<') {
-			arr[0] = '<';
-			insidetagname = true;
-      arrcounter = 0;
-		}
-		if (insidetagname) {
-			arr[arrcounter] = cont[i];
-      arrcounter++;
-      if (arrcounter > 6) arrcounter = 1;
-			if (cont[i] == '>') {
-        insidetagname = false;
-        arrcounter = 0;
+function replaceNewlinesWithBR(elem) {
+  let childNodes = elem.childNodes;
+  for (let node of childNodes) {
+    if (node.nodeType == 3) {
+      let textArr = node.nodeValue.replace(/\r/g, '').split('\n');
+      const fragment = document.createDocumentFragment();
+      for (let i = 0; i < textArr.length; i++) {
+        if (i != 0) {
+          const br = document.createElement('br');
+          fragment.appendChild(br);
+        }
+        const text = document.createTextNode(textArr[i]);
+        fragment.appendChild(text);
       }
-		}
-		if (arr.join('') == "<code> " || arr.join('') == "<pre>  ") outsidecode = false;
-		if (arr.join('') == "</code>" || arr.join('') == "</pre> ") outsidecode = true;
-		if (!insidetagname) arr = arr.map(() => ' ');
-		if (outsidecode && cont[i] == '\r') cont = cont.slice(0,i) + cont.slice(i+1);
-		if (outsidecode && cont[i] == '\n') {
-			cont = cont.slice(0,i) + "<br>" +  cont.slice(i+1);
-			i += 3;
-		}
-	}
-	return cont;
+      node.parentNode.replaceChild(fragment, node);
+    } else if (node.nodeName != 'CODE' && node.nodeName != 'PRE') {
+      replaceNewlinesWithBR(node);
+    }
+  }
+}
+
+function displayAsBlockQuoteIfBreaks(elem) {
+  const quotes = elem.querySelectorAll('q');
+  for (q of quotes){
+    if (q.innerHTML.includes('<br>') || q.innerHTML.length > 32) {
+      q.style.display = 'block';
+    }
+  }
 }
 
 function clearBBCode(queryName) {
@@ -1058,6 +1063,7 @@ function clearBBCode(queryName) {
     .replace(/\[b\]/g, '').replace(/\[\/b\]/g, '')
     .replace(/\[i\]/g, '').replace(/\[\/i\]/g, '')
     .replace(/\[u\]/g, '').replace(/\[\/u\]/g, '')
+    .replace(/\[q\]/g, '"').replace(/\[\/q\]/g, '"')
     .replace(/\[code\]/g, '').replace(/\[\/code\]/g, '');
   });
 }

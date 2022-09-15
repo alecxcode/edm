@@ -2,15 +2,15 @@
   font-size: 14px;
   --elements-radius: 2px;
   --standard-font: Roboto, "Segoe UI", Ubuntu, "-apple-system", BlinkMacSystemFont, Arial, sans-serif;
-  --tableOddRowBkgColor: #fff;
-  --tableSelectionColor: #e0e0e0;
-  --defaultBackgroundColor: #fff;
-  --darkerBackgroundColor: #fff;
-  --menuBackgroundColor: #fff;
+  --tableOddRowBkgColor: #000;
+  --tableSelectionColor: #151515;
+  --defaultBackgroundColor: #000;
+  --darkerBackgroundColor: #000;
+  --menuBackgroundColor: #000;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: none;
-  color-scheme: light;
+  color-scheme: dark;
 }
 * {
   margin: 0;
@@ -24,20 +24,28 @@ body {
 pre, code {
   font-family: 'Courier New', Courier, monospace;
   overflow-x: auto;
-  background-color: #fff;
-  border: 1px solid #000;
+  background-color: #000;
+  border: 1px solid #999;
   border-top-width: 1em;
   border-radius: var(--elements-radius);
   padding: 4px;
 }
+q {
+  background-color: #000;
+  border: 1px dotted #999;
+  border-radius: var(--elements-radius);
+  padding-left: 2px;
+  padding-right: 2px;
+  quotes: '"' '"' "'" "'";
+}
 
 /* menu items */
 #headmenu {
-  background-color: #fff;
+  background-color: #000;
   width:100%;
   height: 42px;
   padding: 6px;
-  border-bottom: 1px dashed #000;
+  border-bottom: 1px dashed #999;
   text-align: left;
   position: fixed;
   top: 0;
@@ -64,15 +72,15 @@ pre, code {
 }
 #textmenu a, #mobilemenu a, .mobileMenuButton {
   text-decoration: none;
-  color: #000;
+  color: #999;
   padding: 5px 8px;
   border: 1px solid transparent;
   border-radius: var(--elements-radius);
 }
 #textmenu .chosenmenu, #mobilemenu .chosenmenu {
-  color: #000;
-  border: 1px dashed #000;
-  background-color: #fff;
+  color: #fff;
+  border: 1px dashed #999;
+  background-color: #000;
   border-radius: var(--elements-radius);
 }
 #mobilemenu {
@@ -94,9 +102,9 @@ pre, code {
 
 #textmenu a:hover, #textmenu a:focus, #mobilemenu a:hover, #mobilemenu a:focus, .mobileMenuButton:hover, .mobileMenuButton:focus {
   text-decoration: none;
-  color: #333;
-  background-color: #fff;
-  border: 1px solid #000;
+  color: #fff;
+  background-color: #000;
+  border: 1px solid #999;
   border-radius: var(--elements-radius);
   outline: 0;
 }
@@ -104,15 +112,15 @@ pre, code {
   vertical-align: middle;
   width: 20px;
   height: 20px;
-  filter: invert(0%) sepia(100%) saturate(7459%) hue-rotate(59deg) brightness(89%) contrast(111%);
+  filter: invert(56%) sepia(0%) saturate(0%) hue-rotate(236deg) brightness(96%) contrast(94%);
 }
 .vector:hover, a:focus .vector {
-  filter: invert(14%) sepia(26%) saturate(12%) hue-rotate(340deg) brightness(94%) contrast(83%);
+  filter: invert(100%) sepia(100%) saturate(2%) hue-rotate(359deg) brightness(106%) contrast(101%);
 }
 
 /* page content and control blocks */
 #container {
-  border: 1px solid #fff;
+  border: 1px solid #000;
   border-radius: var(--elements-radius);
   margin: 0 auto;
   background-color: var(--defaultBackgroundColor);
@@ -121,7 +129,7 @@ pre, code {
 }
 #control {
   padding: 58px 20px 0px 20px;
-  color: #000;
+  color: #999;
   display: block;
   margin: 0;
   font-size: 14px;
@@ -129,7 +137,7 @@ pre, code {
 }
 #main {
   padding: 10px 20px 0px 20px;
-  color: #000;
+  color: #999;
   display: block;
   margin: 0;
   font-size: 14px;
@@ -137,25 +145,24 @@ pre, code {
 }
 a, a:visited {
   text-decoration: underline;
-  color: #000;
+  color: #999;
 }
 a:hover, a:focus {
   text-decoration: underline;
-  color: #333;
+  color: #fff;
   outline: 0;
 }
-a:focus-visible {text-decoration-thickness: 1.5px;}
 .breadcrumbs {margin-bottom: 10px; text-transform:lowercase;}
-.scroller {height: 11em; overflow-y: scroll; padding: 4px; background-color: #fff;}
+.scroller {height: 11em; overflow-y: scroll; padding: 4px; background-color: #000;}
 
-.txtred {color: #000;}
-.txtgreen {color: #000;}
-.txtblue {color: #000;}
-.txtbw {color: #000;}
+.txtred {color: #fff;}
+.txtgreen {color: #fff;}
+.txtblue {color: #fff;}
+.txtbw {color: #fff;}
 
-.msgredfx {color: #000;}
-.msgred {color: #000; opacity: 0; animation: 8s linear fadeout;}
-.msgok {color: #000; opacity: 0; animation: 8s linear fadeout;}
+.msgredfx {color: #fff;}
+.msgred {color: #fff; opacity: 0; animation: 8s linear fadeout;}
+.msgok {color: #fff; opacity: 0; animation: 8s linear fadeout;}
 @keyframes fadeout {
   0% {opacity: 1; transform: scale(1, 1);}
   80% {opacity: 1; transform: scale(1, 1);}
@@ -164,23 +171,23 @@ a:focus-visible {text-decoration-thickness: 1.5px;}
 
 /* applied filter, some lists */
 .af {
-  color: #aaa;
-  background-color: #000;
+  color: #000;
+  background-color: #999;
   border-radius: var(--elements-radius);
   padding: 0px 5px 0px 5px;
   white-space: nowrap;
 }
 .chosen-block {
   max-width: fit-content;
-  color: #aaa;
-  background-color: #000;
+  color: #000;
+  background-color: #999;
   border-radius: var(--elements-radius);
   padding: 0px 5px 0px 5px;
   white-space: nowrap;
 }
 .chosen, #control .chosen, #main .chosen {
-  color: #aaa;
-  background-color: #000;
+  color: #000;
+  background-color: #999;
   border-radius: var(--elements-radius);
   padding: 0px 5px 0px 5px;
   white-space: nowrap;
@@ -188,8 +195,8 @@ a:focus-visible {text-decoration-thickness: 1.5px;}
 .withrm, #control .withrm, #main .withrm {border-radius: var(--elements-radius) 0 0 var(--elements-radius);}
 .rm{ 
   cursor: pointer;
-  color:#aaa; 
-  background-color: #000;
+  color:#000; 
+  background-color: #999;
   border-radius: 0 var(--elements-radius) var(--elements-radius) 0;
   padding-left: 3px;
   padding-right: 3px;
@@ -202,8 +209,8 @@ a:focus-visible {text-decoration-thickness: 1.5px;}
   margin-bottom: 0.2em;
 }
 
-.sort {color: #aaa;} /* sort class for sorting arrows in a table header */
-.sortchosen {color: #fff; border: 1px dotted #fff; border-radius: 30%;}
+.sort {color: #999;} /* sort class for sorting arrows in a table header */
+.sortchosen {color: #fff; border: 1px dotted #999; border-radius: 30%;}
 .sort, .sortchosen {cursor: pointer;}
 .sort:hover, .sort:focus, .sortchosen:hover, .sortchosen:focus {
   color: #fff;
@@ -211,7 +218,7 @@ a:focus-visible {text-decoration-thickness: 1.5px;}
 }
 #bottom {
   padding: 20px;
-  color: #333;
+  color: #999;
   display: block;
   margin: 0;
   font-size: 14px;
@@ -219,21 +226,21 @@ a:focus-visible {text-decoration-thickness: 1.5px;}
 }
 #bottom a, #bottom a:visited {
   text-decoration: underline;
-  color: #000;
+  color: #999;
 }
 #bottom a:hover, #bottom a:focus {
   text-decoration: underline;
-  color: #333;
+  color: #fff;
   outline: 0;
 }
 h1 {
-  color: #000;
+  color: #fff;
   font-size: 22px;
   font-weight: bold;
   margin-bottom: 10px;
 }
 h2 {
-  color: #000;
+  color: #999;
   font-size: 18px;
   font-weight: bold;
   margin-top: 6px;
@@ -243,13 +250,13 @@ h2 {
 #mainTable {
   display: grid;
   gap: 1px;
-  background-color: #000;
-  border: 1px solid #000;
+  background-color: #999;
+  border: 1px solid #999;
   border-radius: calc(1px + var(--elements-radius));
   overflow: hidden;
 }
-#mainTable div {background-color: #fff; padding: 0px 1px;}
-.gridheader {background-color: #000 !important; color: #fff; font-weight: bold;}
+#mainTable div {background-color: #000; padding: 0px 1px;}
+.gridheader {background-color: #000 !important; color: #999; font-weight: bold;}
 .grideven {background-color: var(--defaultBackgroundColor);}
 .gridodd {background-color: var(--tableOddRowBkgColor);}
 .mobile {display: none;}
@@ -270,19 +277,19 @@ h2 {
   display: block; 
   margin: 1px; 
   border-radius: 2px; 
-  border: 1px dotted #000;
+  border: 1px dotted #999;
 }
 .afile-inline-block {
   display: inline-block; 
   margin: 1px; 
   border-radius: 2px; 
-  border: 1px dotted #000;
+  border: 1px dotted #999;
 }
 .someaction {
   text-decoration: underline;
   text-decoration-style: dotted;
   cursor: pointer;
-  color: #000;
+  color: #999;
 }
 
 
@@ -291,9 +298,9 @@ h2 {
   width: 100%;
   min-height: 8em;
   position: relative;
-  color: #000;
-  border: 2px dashed #000;
-  background-color: #fff;
+  color: #fff;
+  border: 2px dashed #999;
+  background-color: #000;
   cursor: pointer;
   padding: 8px;
 }
@@ -348,12 +355,12 @@ input[type='checkbox'] {
   margin-top: 1px;
   width: 14px;
   height: 14px;
-  background-color: #fff;
-  border: 1px solid #000;
+  background-color: #000;
+  border: 1px solid #999;
 }
 input[type='checkbox']:checked {
-  background-color: #fff;
-  border: 1px solid #000;
+  background-color: #999;
+  border: 1px solid #fff;
 }
 
 input[type='checkbox']:checked::before {
@@ -380,11 +387,11 @@ select {
   content: '•••';
   font-family: 'Courier New', Courier, monospace;
   font-size: 10px;
-  color: #000;
+  color: #999;
   right: 0px;
   top: 2px;
   padding: 0px;
-  border-bottom: 1px solid #000;
+  border-bottom: 1px solid #999;
   -webkit-transform: rotate(90deg);
   -moz-transform: rotate(90deg);
   transform: rotate(90deg);
@@ -412,7 +419,7 @@ select {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #aaa;
+  background-color: #999;
   -webkit-transition: .1s;
   transition: .1s;
   border-radius: 19px;
@@ -424,14 +431,14 @@ select {
   width: 16px;
   left: 2px;
   bottom: 2px;
-  background-color: #fff;
+  background-color: #000;
   -webkit-transition: .1s;
   transition: .1s;
   border-radius: 50%;
 }
 input:focus-visible + .slider {outline-style: auto;}
 input:checked + .slider {
-  background-color: #000;
+  background-color: #fff;
 }
 input:checked + .slider:before {
   -webkit-transform: translateX(18px);
@@ -442,50 +449,50 @@ input:checked + .slider:before {
 /* all inputs */
 input, button {
   font: inherit;
-  border: 1px solid #000;
+  border: 1px solid #999;
   border-radius: var(--elements-radius);
 }
 
 /* text fields */
 .field {
   margin: 2px 0;
-  color: #000;
+  color: #999;
   display: inline-block;
-  background-color: #fff;
-  border: 1px solid #000;
+  background-color: #000;
+  border: 1px solid #999;
   border-radius: var(--elements-radius);
   padding: 5px 8px;
 }
 .field:hover {
-  border: 1px solid #000;
+  border: 1px solid #fff;
 }
 .field:focus, .field:active {
-  border: 1px solid #000;
+  border: 1px solid #fff;
   outline: 0;
 }
 .multiline {
   max-width: 100%;
   margin: 2px 0;
-  color: #000;
+  color: #999;
   display: inline-block;
-  background-color: #fff;
-  border: 1px solid #000;
+  background-color: #000;
+  border: 1px solid #999;
   border-radius: var(--elements-radius);
   font: inherit;
   padding: 3px 6px 3px 6px;
 }
 .multiline:hover {
-  border: 1px solid #000;
+  border: 1px solid #fff;
 }
 .multiline:focus, .multiline:active {
-  border: 1px solid #000;
+  border: 1px solid #fff;
   outline: 0;
 }
 
 /* styled button */
 a.sbut, a.sbut:active, a.sbut:visited {
   text-decoration: none;
-  color: #000;
+  color: #999;
   display: inline-block;
   box-sizing: border-box;
   -webkit-box-sizing: border-box;
@@ -497,37 +504,37 @@ a.sbut, a.sbut:active, a.sbut:visited {
   text-decoration: none;
   margin: 2px 0;
   display: inline-block;
-  background-color: #fff;
-  color: #000;
-  border: 1px solid #000;
+  background-color: #000;
+  color: #999;
+  border: 1px solid #999;
   border-radius: var(--elements-radius);
   padding: 5px 8px;
 }
 .sbut:hover, .sbut:focus, a.sbut:hover, a.sbut:focus {
-  background-color: #000;
-  color: #fff;
+  background-color: #999;
+  color: #000;
   outline: 0;
 }
 .greenish, a.greenish:visited {
-  color: #000;
+  color: #aaa;
 }
 .greenish:hover, .greenish:focus, a.greenish:hover, a.greenish:focus {
-  color: #fff;
+  color: #000;
 }
 .reddish, a.reddish:visited {
-  color: #000;
+  color: #aaa;
 }
 .reddish:hover, .reddish:focus, a.reddish:hover, a.reddish:focus {
-  color: #fff;
+  color: #000;
 }
 .pg {
-  color: #000;
-  background-color: #fff;
+  color: #999;
+  background-color: #000;
   padding: 5px 2px;
 }
 .pg:hover, .pg:focus, a.pg:hover, a.pg:focus {
-  color: #fff;
-  background-color: #000;
+  color: #000;
+  background-color: #999;
 }
 
 /* panel */
@@ -536,8 +543,8 @@ a.sbut, a.sbut:active, a.sbut:visited {
   margin: 2px 0;
   display: inline-block;
   background-color: var(--defaultBackgroundColor);
-  color: #000;
-  border: 1px solid #000;
+  color: #999;
+  border: 1px solid #999;
   border-radius: var(--elements-radius);
   padding: 5px 8px;
 }
@@ -545,25 +552,25 @@ a.sbut, a.sbut:active, a.sbut:visited {
 /* other things */
 #stat {
   font-size: 13px;
-  color: #333;
+  color: #999;
 }
 .numberbox {
-  color: #000;
-  background-color: #fff;
+  color: #999;
+  background-color: #000;
   height: 24px;
   margin: 1px;
   font: inherit;
-  border: 1px solid #000;
+  border: 1px solid #999;
   border-radius: var(--elements-radius);
 }
 .numberbox:hover, .numberbox:focus {
-  border: 1px solid #000;
+  border: 1px solid #fff;
   outline: 0;
 }
 
 .highlight {
-  color: #fff;
-  background-color: #000;
+  color: #000;
+  background-color: #999;
 }
 
 .filter {
@@ -578,9 +585,9 @@ a.sbut, a.sbut:active, a.sbut:visited {
 }
 
 input:disabled, .numberbox:disabled, .sbut:disabled, .field:disabled {
-  color: #333 !important;
-  background-color: #fff !important;
-  border: 1px dotted #333 !important;
+  color: #555 !important;
+  background-color: #000 !important;
+  border: 1px dotted #555 !important;
   box-shadow: none;
 }
 
@@ -601,7 +608,7 @@ input:disabled, .numberbox:disabled, .sbut:disabled, .field:disabled {
 }
 #main p {
   margin-bottom: 2px;
-  border-bottom: 1px dashed #000;
+  border-bottom: 1px dashed #999;
   min-width: 168px;
   max-width: fit-content;
   padding-left: 2px;
@@ -610,15 +617,15 @@ input:disabled, .numberbox:disabled, .sbut:disabled, .field:disabled {
 }
 .wideelem {
   margin-bottom: 6px;
-  border: 1px solid #000;
-  background-color: #fff;
+  border: 1px solid #999;
+  background-color: #000;
   border-radius: var(--elements-radius);
   width: 100%;
   padding-left: 2px;
   padding-right: 2px;
 }
 .elem {
-  border: 1px solid #000;
+  border: 1px solid #999;
   border-radius: var(--elements-radius);
   margin-bottom: 18px;
 }
@@ -628,13 +635,13 @@ input:disabled, .numberbox:disabled, .sbut:disabled, .field:disabled {
 }
 h3 {
   padding: 3px 6px;
-  background-color: #000;
-  color: #fff;
+  background-color: #999;
+  color: #000;
 }
 h3 a, h3 a:hover, h3 a:active, h3 a:visited {
-  background-color: #000;
+  background-color: #999;
   text-decoration: underline;
-  color: #fff;
+  color: #000;
 }
 h3 a:focus {
   text-decoration: underline;
@@ -657,14 +664,10 @@ h3 a:focus {
     cursor: pointer;
     display: inline;
     text-decoration: none;
-    color: #000;
+    color: #999;
     padding: 5px 8px;
     border: 1px solid transparent;
     border-radius: var(--elements-radius);
-  }
-  .mobilesorting {
-    display: block;
-    margin-top: 0.7em;
   }
 }
 
@@ -677,11 +680,10 @@ h3 a:focus {
     gap: 1px;
     overflow: visible;
   }
-  /* #mainTable div::before {
-    content: attr(label) ": ";
-    text-align: left;
-    font-weight: bold;
-  } */
+  .mobilesorting {
+    display: block;
+    margin-top: 0.7em;
+  }
   .gridheader {display: none;}
   .select {display: none;}
   .mobile {display: initial; font-weight: bold;}
@@ -705,7 +707,7 @@ h3 a:focus {
   #main p {
     min-width: 100%;
     max-width: 100%;
-  }  
+  }
 }
 
 
@@ -715,10 +717,10 @@ h3 a:focus {
   background-color: var(--defaultBackgroundColor);
   width: 100%; height: 100%;
 }
-.semitransparent {background-color: #FFFFFFCC}
+.semitransparent {background-color: #000000CC}
 .dialog {max-width: 640px; background-color: var(--defaultBackgroundColor); position: relative; margin: 0 auto; top: 15%;}
 .loading {
-  color: #000;
+  color: #999;
   position: relative; margin: 0 auto; top: 30%;
   background-color: var(--darkerBackgroundColor);
   height: 80px; width: 80px;
@@ -728,10 +730,10 @@ h3 a:focus {
   position: relative;
   width: 100%; height: 100%;
   border-radius: 50%;
-  border-top: 8px solid #333;
-  border-right: 8px solid #eee;
-  border-left: 8px solid #eee;
-  border-bottom: 8px solid #eee;
+  border-top: 8px solid #999;
+  border-right: 8px solid #111;
+  border-left: 8px solid #111;
+  border-bottom: 8px solid #111;
   animation: 1s linear 0s infinite rotate;
 }
 @keyframes rotate { 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} }
