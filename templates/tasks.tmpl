@@ -31,7 +31,7 @@
       <div class="margintop"><strong id="userSelectorDisplay" i18n-text="userFilter">Filter by user:</strong><br>
        <select id="userSelector" class="numberbox">
           <option value="" i18n-text="selectUser">Select user</option>
-          {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
+          {{range .UserList}}<option value="{{.ID}}">{{.Value}}</option>
           {{end}}
         </select><span class="dropdown"></span>
         <div class="somemargins">

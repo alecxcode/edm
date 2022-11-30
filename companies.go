@@ -46,7 +46,7 @@ func (bs *BaseStruct) companiesHandler(w http.ResponseWriter, r *http.Request) {
 		LoggedinID: id,
 	}
 
-	user := bs.team.getByID(Page.LoggedinID)
+	user := unmarshalToProfile(bs.team.GetByID(Page.LoggedinID))
 	Page.UserConfig = user.UserConfig
 	if user.UserRole == 1 {
 		Page.LoggedinAdmin = true
@@ -68,8 +68,8 @@ func (bs *BaseStruct) companiesHandler(w http.ResponseWriter, r *http.Request) {
 			if allowedToRemove {
 				removed := sqla.DeleteObjects(bs.db, bs.dbt, "companies", "ID", ids)
 				if removed > 0 {
-					bs.team.constructCorpList(bs.db, bs.dbt)
-					bs.team.constructUnitList(bs.db, bs.dbt)
+					constructCorpList(bs.db, bs.dbt, bs.team)
+					constructUnitList(bs.db, bs.dbt, bs.team)
 					Page.Message = "removedElems"
 					Page.RemovedNum = removed
 				} else {

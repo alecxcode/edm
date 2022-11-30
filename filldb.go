@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"edm/pkg/datetime"
 	"math/rand"
 	"strconv"
 	"time"
@@ -57,7 +58,7 @@ func fillDBwithTestData(db *sql.DB, DBType byte) {
 			TelMobile: "",
 			Email:     "",
 		},
-		BirthDate:  Date{1990, 10, 22},
+		BirthDate:  datetime.Date{Year: 1990, Month: 10, Day: 22},
 		JobTitle:   "Software developer",
 		JobUnit:    &Unit{ID: softunit},
 		UserConfig: defaultUserConfig,
@@ -72,7 +73,7 @@ func fillDBwithTestData(db *sql.DB, DBType byte) {
 			TelMobile: "",
 			Email:     "",
 		},
-		BirthDate:  Date{1900, 12, 25},
+		BirthDate:  datetime.Date{Year: 1900, Month: 12, Day: 25},
 		JobTitle:   "Document archivist",
 		JobUnit:    &Unit{ID: archunit},
 		UserConfig: defaultUserConfig,
@@ -90,9 +91,9 @@ func fillDBwithTestData(db *sql.DB, DBType byte) {
 			}
 			d := Document{
 				RegNo:     "rno-" + strconv.Itoa(i+1),
-				RegDate:   Date{1990 + i, byte(month), byte(i + 1)},
+				RegDate:   datetime.Date{Year: 1990 + i, Month: byte(month), Day: byte(i + 1)},
 				IncNo:     "ino-" + strconv.Itoa(i+10),
-				IncDate:   Date{1990 + i, byte(month), byte(i + 2)},
+				IncDate:   datetime.Date{Year: 1990 + i, Month: byte(month), Day: byte(i + 2)},
 				Category:  cat,
 				DocType:   doctype,
 				About:     "Test content about. Some test text. Document description or topic.",
@@ -100,7 +101,7 @@ func fillDBwithTestData(db *sql.DB, DBType byte) {
 				Addressee: "Some text to whom it is addressed.",
 				DocSum:    100 * i,
 				Currency:  840,
-				EndDate:   Date{2000 + i, byte(month), byte(i)},
+				EndDate:   datetime.Date{Year: 2000 + i, Month: byte(month), Day: byte(i)},
 				Creator:   &Profile{ID: 2},
 				Note:      "",
 			}
@@ -161,10 +162,10 @@ func fillDBwithTestData(db *sql.DB, DBType byte) {
 			var tid int
 			if creator == 1 {
 				t := Task{
-					Created:    DateTime{2022, 1, byte(day), byte(hour), byte(i + 3)},
-					PlanStart:  DateTime{2022, byte(month + 1), byte(day), byte(hour), byte(minute)},
-					PlanDue:    DateTime{2022, byte(month + 2), byte(day), byte(hour), byte(minute)},
-					StatusSet:  DateTime{2022, 1, byte(day), byte(hour), byte(minutex)},
+					Created:    datetime.DateTime{Year: 2022, Month: 1, Day: byte(day), Hour: byte(hour), Minute: byte(i + 3)},
+					PlanStart:  datetime.DateTime{Year: 2022, Month: byte(month + 1), Day: byte(day), Hour: byte(hour), Minute: byte(minute)},
+					PlanDue:    datetime.DateTime{Year: 2022, Month: byte(month + 2), Day: byte(day), Hour: byte(hour), Minute: byte(minute)},
+					StatusSet:  datetime.DateTime{Year: 2022, Month: 1, Day: byte(day), Hour: byte(hour), Minute: byte(minutex)},
 					Creator:    &Profile{ID: creator},
 					Assignee:   nil,
 					Topic:      tasktopics[v],
@@ -174,10 +175,10 @@ func fillDBwithTestData(db *sql.DB, DBType byte) {
 				tid, _ = t.create(db, DBType)
 			} else {
 				t := Task{
-					Created:    DateTime{2022, 1, byte(day), byte(hour), byte(i + 3)},
-					PlanStart:  DateTime{2022, byte(month + 1), byte(day), byte(hour), byte(minute)},
-					PlanDue:    DateTime{2022, byte(month + 2), byte(day), byte(hour), byte(minute)},
-					StatusSet:  DateTime{2022, 1, byte(day), byte(hour), byte(minutex)},
+					Created:    datetime.DateTime{Year: 2022, Month: 1, Day: byte(day), Hour: byte(hour), Minute: byte(i + 3)},
+					PlanStart:  datetime.DateTime{Year: 2022, Month: byte(month + 1), Day: byte(day), Hour: byte(hour), Minute: byte(minute)},
+					PlanDue:    datetime.DateTime{Year: 2022, Month: byte(month + 2), Day: byte(day), Hour: byte(hour), Minute: byte(minute)},
+					StatusSet:  datetime.DateTime{Year: 2022, Month: 1, Day: byte(day), Hour: byte(hour), Minute: byte(minutex)},
 					Creator:    &Profile{ID: creator},
 					Assignee:   &Profile{ID: assignee},
 					Topic:      tasktopics[v],
@@ -194,7 +195,7 @@ func fillDBwithTestData(db *sql.DB, DBType byte) {
 				comment := Comment{
 					Task:    &Task{ID: tid},
 					Creator: &Profile{ID: creator},
-					Created: DateTime{2022, byte(m), byte(x + 1), byte(x + 2), byte(i + 5)},
+					Created: datetime.DateTime{Year: 2022, Month: byte(m), Day: byte(x + 1), Hour: byte(x + 2), Minute: byte(i + 5)},
 					Content: "Test comment iteration: 000" + strconv.Itoa(i) + strconv.Itoa(x),
 				}
 				comment.create(db, DBType)

@@ -35,7 +35,7 @@ func getSQLinitScript(DBType byte, scriptsPath string) string {
 }
 
 func postgresqlMakeDatabase(DSN string, DBName string, sqlStmt string) {
-	db, err := sql.Open("postgres", DSN)
+	db, err := sql.Open("pgx", DSN)
 	if err != nil {
 		log.Fatal(accs.CurrentFunction()+":", err)
 	}
@@ -43,9 +43,9 @@ func postgresqlMakeDatabase(DSN string, DBName string, sqlStmt string) {
 	if err = db.Ping(); err != nil {
 		log.Fatal(accs.CurrentFunction()+":", err)
 	}
-	checkStmt := "SELECT EXISTS(SELECT datname FROM pg_catalog.pg_database WHERE datname = '" + DBName + "');"
+	checkStmt := "SELECT EXISTS(SELECT datname FROM pg_catalog.pg_database WHERE datname = '?');"
 	var res sql.NullBool
-	row := db.QueryRow(checkStmt)
+	row := db.QueryRow(checkStmt, DBName)
 	err = row.Scan(&res)
 	if err != nil {
 		log.Printf("%q: %s\n", err, checkStmt)
@@ -53,13 +53,13 @@ func postgresqlMakeDatabase(DSN string, DBName string, sqlStmt string) {
 	}
 
 	if res.Bool == false && res.Valid == true {
-		sqlStmt := "CREATE DATABASE edm;"
-		_, err = db.Exec(sqlStmt)
+		sqlStmt := "CREATE DATABASE ?;"
+		_, err = db.Exec(sqlStmt, DBName)
 		if err != nil {
 			log.Printf("%q: %s\n", err, sqlStmt)
 			return
 		}
-		db, err = sql.Open("postgres", DSN)
+		db, err = sql.Open("pgx", DSN)
 		if err != nil {
 			log.Fatal(accs.CurrentFunction()+":", err)
 		}
@@ -68,6 +68,5 @@ func postgresqlMakeDatabase(DSN string, DBName string, sqlStmt string) {
 			log.Printf("%q: %s\n", err, "while creating tables")
 			return
 		}
-
 	}
 }

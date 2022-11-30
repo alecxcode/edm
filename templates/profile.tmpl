@@ -98,12 +98,12 @@
       <p><span class="ofname" i18n-text="jobTitle">Job title:</span> <input type="text" class="field ofval" name="jobTitle" size="30" maxlength="255" value="{{.Profile.JobTitle}}"></p>
       <p><span class="ofname" i18n-text="unit">Unit:</span> <select name="jobUnit" id="jobUnit" class="numberbox">
         <option value="0" i18n-text="no">no</option>
-        {{range .UnitList}}<option value="{{.ID}}">{{.UnitNameComp}}</option>
+        {{range .UnitList}}<option value="{{.ID}}">{{.Value}}</option>
         {{end}}
       </select><span class="dropdown"></span></p>
       <p><span class="ofname" i18n-text="peportingTo">Reporting to:</span> <select name="boss" id="boss" class="numberbox">
         <option value="0" i18n-text="no">no</option>
-        {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
+        {{range .UserList}}<option value="{{.ID}}">{{.Value}}</option>
         {{end}}
       </select><span class="dropdown"></span></p>
       {{if .New}}<h2 i18n-text="loginAndPasswd">Login and password:</h2>

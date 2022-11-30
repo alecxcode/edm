@@ -24,6 +24,9 @@ func makeStringToWriteToINI(cfg *Config) string {
 	s += "DBPort = " + cfg.DBPort + "\n"
 	s += "DBUser = " + cfg.DBUser + "\n"
 	s += "DBPassword = " + cfg.DBPassword + "\n"
+	s += "REDISConnect = " + cfg.REDISConnect + "\n"
+	s += "REDISPassword = " + cfg.REDISPassword + "\n"
+	s += "REDISFlush = " + cfg.REDISFlush + "\n"
 	s += "SMTPEmail = " + cfg.SMTPEmail + "\n"
 	s += "SMTPHost = " + cfg.SMTPHost + "\n"
 	s += "SMTPPort = " + cfg.SMTPPort + "\n"
@@ -90,6 +93,15 @@ func readMapToCfgStruct(m map[string]string, cfg *Config) {
 	}
 	if _, ok := m["DBPassword"]; ok {
 		cfg.DBPassword = m["DBPassword"]
+	}
+	if _, ok := m["REDISConnect"]; ok {
+		cfg.REDISConnect = m["REDISConnect"]
+	}
+	if _, ok := m["REDISPassword"]; ok {
+		cfg.REDISPassword = m["REDISPassword"]
+	}
+	if _, ok := m["REDISFlush"]; ok {
+		cfg.REDISFlush = m["REDISFlush"]
 	}
 	if _, ok := m["SMTPEmail"]; ok {
 		cfg.SMTPEmail = m["SMTPEmail"]

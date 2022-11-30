@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"edm/pkg/accs"
+	"edm/pkg/memdb"
 	"edm/pkg/passwd"
 	"fmt"
 	"html/template"
@@ -10,150 +11,23 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gofrs/uuid"
 )
 
-// ALLOWED_LOGIN_ATTEMPTS is a bruteforce shield related constant
-const ALLOWED_LOGIN_ATTEMPTS = 100
-
-// MINUTES_TO_WAIT_BRUTEFORCE_UNLOCK is a bruteforce shield related constant
-const MINUTES_TO_WAIT_BRUTEFORCE_UNLOCK = 60
-
-// ProfilesInMemory holds all users in a single memory map with mutex to prevent data race
-type ProfilesInMemory struct {
-	sync.RWMutex
-	Aarr              map[int]Profile
-	Cjar              map[string]int
-	UserList          []UserListElem
-	UnitList          []UnitListElem
-	CorpList          []CorpListElem
-	BruteForceCounter int
+// ObjectArrElem is an element for buildibg lists
+type ObjectArrElem struct {
+	ID    int
+	Value string
 }
 
-// UserListElem is an element for buildibg user lists
-type UserListElem struct {
-	ID          int
-	FullNameJob string
+// GetID is to satisfy ObjHasID interface
+func (e ObjectArrElem) GetID() int {
+	return e.ID
 }
 
-// UnitListElem is an element for buildibg unit lists
-type UnitListElem struct {
-	ID           int
-	UnitNameComp string
-}
-
-// CorpListElem is an element for buildibg company lists
-type CorpListElem struct {
-	ID          int
-	CompanyName string
-}
-
-func (m *ProfilesInMemory) isProfileInMemory(id int) (res bool) {
-	res = false
-	m.RLock()
-	if _, ok := m.Aarr[id]; ok {
-		res = true
-	}
-	m.RUnlock()
-	return res
-}
-
-func (m *ProfilesInMemory) delCookie(cookval string) {
-	var idForClearCheck int
-	m.Lock()
-	idForClearCheck = m.Cjar[cookval]
-	delete(m.Cjar, cookval)
-	m.Unlock()
-	// Below code removes completely-logout user
-	var remove = true
-	m.RLock()
-	for _, fid := range m.Cjar {
-		if fid == idForClearCheck {
-			remove = false
-			break
-		}
-	}
-	m.RUnlock()
-	if remove {
-		m.Lock()
-		delete(m.Aarr, idForClearCheck)
-		m.Unlock()
-	}
-}
-
-func (m *ProfilesInMemory) getByID(id int) Profile {
-	m.RLock()
-	elem := m.Aarr[id]
-	m.RUnlock()
-	return elem
-}
-
-func (m *ProfilesInMemory) set(cookval string, user Profile) {
-	m.Lock()
-	m.Cjar[cookval] = user.ID
-	m.Aarr[user.ID] = user
-	m.Unlock()
-}
-
-func (m *ProfilesInMemory) update(user Profile) {
-	if user.UserLock == 1 || user.Login == "" {
-		m.delProfile(user.ID)
-	} else {
-		m.Lock()
-		m.Aarr[user.ID] = user
-		m.Unlock()
-	}
-}
-
-func (m *ProfilesInMemory) updateConfig(user Profile) {
-	m.Lock()
-	userToChange := m.Aarr[user.ID]
-	userToChange.UserConfig = user.UserConfig
-	m.Aarr[user.ID] = userToChange
-	m.Unlock()
-}
-
-func (m *ProfilesInMemory) updatePasswd(user Profile) {
-	m.Lock()
-	userToChange := m.Aarr[user.ID]
-	userToChange.Login = user.Login
-	userToChange.Passwd = user.Passwd
-	m.Aarr[user.ID] = userToChange
-	m.Unlock()
-}
-
-func (m *ProfilesInMemory) delProfile(id int) {
-	var keysForRemoval []string
-	m.RLock()
-	for k, cid := range m.Cjar {
-		if cid == id {
-			keysForRemoval = append(keysForRemoval, k)
-		}
-	}
-	m.RUnlock()
-	m.Lock()
-	delete(m.Aarr, id)
-	for _, k := range keysForRemoval {
-		delete(m.Cjar, k)
-	}
-	m.Unlock()
-}
-
-func (m *ProfilesInMemory) clearAll() {
-	m.Lock()
-	for k := range m.Aarr {
-		delete(m.Aarr, k)
-	}
-	for k := range m.Cjar {
-		delete(m.Cjar, k)
-	}
-	m.Unlock()
-}
-
-func (m *ProfilesInMemory) constructUserList(db *sql.DB, DBType byte) error {
+func constructUserList(db *sql.DB, DBType byte, m memdb.ObjectsInMemory) error {
 	rows, err := db.Query(`SELECT ID, FirstName, OtherName, Surname, JobTitle, UserLock FROM profiles
 ORDER BY Surname ASC, FirstName ASC, OtherName ASC`)
 	if err != nil {
@@ -166,7 +40,7 @@ ORDER BY Surname ASC, FirstName ASC, OtherName ASC`)
 	var Surname sql.NullString
 	var JobTitle sql.NullString
 	var UserLock sql.NullInt64
-	UserList := []UserListElem{}
+	UserList := []memdb.ObjHasID{}
 	for rows.Next() {
 		err = rows.Scan(&ID, &FirstName, &OtherName, &Surname, &JobTitle, &UserLock)
 		if err != nil {
@@ -190,24 +64,14 @@ ORDER BY Surname ASC, FirstName ASC, OtherName ASC`)
 			if JobTitle.String != "" {
 				fullNameJob += ", " + JobTitle.String
 			}
-			UserList = append(UserList, UserListElem{ID, fullNameJob})
+			UserList = append(UserList, ObjectArrElem{ID, fullNameJob})
 		}
 	}
-	m.Lock()
-	m.UserList = UserList
-	m.Unlock()
+	m.SetObjectArr("UserList", UserList)
 	return nil
 }
 
-func (m *ProfilesInMemory) returnUserList() []UserListElem {
-	m.RLock()
-	list := make([]UserListElem, len(m.UserList), cap(m.UserList))
-	copy(list, m.UserList)
-	m.RUnlock()
-	return list
-}
-
-func (m *ProfilesInMemory) constructUnitList(db *sql.DB, DBType byte) error {
+func constructUnitList(db *sql.DB, DBType byte, m memdb.ObjectsInMemory) error {
 	rows, err := db.Query(`SELECT units.ID, units.UnitName,
 companies.ShortName
 FROM units
@@ -220,7 +84,7 @@ ORDER BY units.UnitName ASC`)
 	var ID int
 	var UnitName sql.NullString
 	var CompanyShortName sql.NullString
-	UnitList := []UnitListElem{}
+	UnitList := []memdb.ObjHasID{}
 	for rows.Next() {
 		err = rows.Scan(&ID, &UnitName, &CompanyShortName)
 		if err != nil {
@@ -234,32 +98,21 @@ ORDER BY units.UnitName ASC`)
 		if CompanyShortName.String != "" {
 			unitNameComp += ", " + CompanyShortName.String
 		}
-		UnitList = append(UnitList, UnitListElem{ID, unitNameComp})
+		UnitList = append(UnitList, ObjectArrElem{ID, unitNameComp})
 	}
-	m.Lock()
-	m.UnitList = UnitList
-	m.Unlock()
+	m.SetObjectArr("UnitList", UnitList)
 	return nil
 }
 
-func (m *ProfilesInMemory) returnUnitList() []UnitListElem {
-	m.RLock()
-	list := make([]UnitListElem, len(m.UnitList), cap(m.UnitList))
-	copy(list, m.UnitList)
-	m.RUnlock()
-	return list
-}
-
-func (m *ProfilesInMemory) constructCorpList(db *sql.DB, DBType byte) error {
-	rows, err := db.Query(`SELECT ID, ShortName FROM companies
-ORDER BY ShortName ASC`)
+func constructCorpList(db *sql.DB, DBType byte, m memdb.ObjectsInMemory) error {
+	rows, err := db.Query(`SELECT ID, ShortName FROM companies ORDER BY ShortName ASC`)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 	var ID int
 	var ShortName sql.NullString
-	CorpList := []CorpListElem{}
+	CorpList := []memdb.ObjHasID{}
 	for rows.Next() {
 		err = rows.Scan(&ID, &ShortName)
 		if err != nil {
@@ -270,32 +123,10 @@ ORDER BY ShortName ASC`)
 		if companyName == "" {
 			companyName = "ID: " + strconv.Itoa(ID)
 		}
-		CorpList = append(CorpList, CorpListElem{ID, companyName})
+		CorpList = append(CorpList, ObjectArrElem{ID, companyName})
 	}
-	m.Lock()
-	m.CorpList = CorpList
-	m.Unlock()
+	m.SetObjectArr("CorpList", CorpList)
 	return nil
-}
-
-func (m *ProfilesInMemory) returnCorpList() []CorpListElem {
-	m.RLock()
-	list := make([]CorpListElem, len(m.CorpList), cap(m.CorpList))
-	copy(list, m.CorpList)
-	m.RUnlock()
-	return list
-}
-
-func (m *ProfilesInMemory) checkLoggedin(sessionCookie *http.Cookie) (result bool, id int) {
-	m.RLock()
-	id, ok := m.Cjar[sessionCookie.Value]
-	m.RUnlock()
-	if ok {
-		result = true
-	} else {
-		result = false
-	}
-	return result, id
 }
 
 func getLoginTemplate() *template.Template {
@@ -356,16 +187,16 @@ func (bs *BaseStruct) getLoginLang() LoginLang {
 func (bs *BaseStruct) authVerify(w http.ResponseWriter, r *http.Request) (res bool, id int) {
 	thecookie, err := r.Cookie("sessionid")
 	if err == http.ErrNoCookie {
-		if !bs.team.verifyBruteForceCounter() {
+		if !bs.team.VerifyBruteForceCounter() {
 			writeBruteForceStub(w)
 			return false, 0
 		}
 		writeLoginPage(w, bs.getLoginLang(), bs.logintmpl, false)
 		return false, 0
 	}
-	allow, id := bs.team.checkLoggedin(thecookie)
+	allow, id := bs.team.CheckSession(thecookie.Value)
 	if !allow {
-		if !bs.team.verifyBruteForceCounter() {
+		if !bs.team.VerifyBruteForceCounter() {
 			writeBruteForceStub(w)
 			return false, 0
 		}
@@ -376,7 +207,7 @@ func (bs *BaseStruct) authVerify(w http.ResponseWriter, r *http.Request) (res bo
 }
 
 func (bs *BaseStruct) loginHandler(w http.ResponseWriter, r *http.Request) {
-	if !bs.team.verifyBruteForceCounter() {
+	if !bs.team.VerifyBruteForceCounter() {
 		writeBruteForceStub(w)
 		return
 	}
@@ -397,12 +228,12 @@ func (bs *BaseStruct) loginHandler(w http.ResponseWriter, r *http.Request) {
 				HttpOnly: true,
 				Expires:  time.Now().AddDate(0, 0, 38000),
 			}
-			bs.team.set(cookie.Value, user)
+			bs.team.Set(cookie.Value, user)
 			http.SetCookie(w, &cookie)
 			http.Redirect(w, r, "/", http.StatusFound)
-			bs.team.resetBruteForceCounterImmediately()
+			bs.team.ResetBruteForceCounterImmediately()
 		} else {
-			bs.team.increaseBruteForceCounter(accs.GetIPAddr(r), r.FormValue("loginName"))
+			bs.team.IncreaseBruteForceCounter(accs.GetIPAddr(r), r.FormValue("loginName"))
 			writeLoginPage(w, bs.getLoginLang(), bs.logintmpl, true)
 			return
 		}
@@ -421,48 +252,12 @@ func (bs *BaseStruct) logoutHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
-	bs.team.delCookie(thecookie.Value)
+	bs.team.DelCookie(thecookie.Value)
 	thecookie.Expires = time.Now().AddDate(-1, -1, -1)
 	http.SetCookie(w, thecookie)
 	http.Redirect(w, r, "/", http.StatusFound)
 	writeLoginPage(w, bs.getLoginLang(), bs.logintmpl, false)
 	return
-}
-
-func (m *ProfilesInMemory) resetBruteForceCounterAfterMinutes(numberOfMinutes int) {
-	time.Sleep(time.Duration(numberOfMinutes) * time.Minute)
-	m.Lock()
-	m.BruteForceCounter = 0
-	m.Unlock()
-}
-
-func (m *ProfilesInMemory) resetBruteForceCounterImmediately() {
-	m.Lock()
-	m.BruteForceCounter = 0
-	m.Unlock()
-}
-
-func (m *ProfilesInMemory) increaseBruteForceCounter(ipaddr string, login string) {
-	m.Lock()
-	m.BruteForceCounter++
-	BruteForceCounter := m.BruteForceCounter
-	m.Unlock()
-	if BruteForceCounter >= ALLOWED_LOGIN_ATTEMPTS {
-		log.Printf("System bruteforce shield activated, last attempt from IP addr: %s, login used: %s", ipaddr, login)
-		go m.resetBruteForceCounterAfterMinutes(MINUTES_TO_WAIT_BRUTEFORCE_UNLOCK)
-	}
-}
-
-func (m *ProfilesInMemory) verifyBruteForceCounter() (res bool) {
-	m.RLock()
-	BruteForceCounter := m.BruteForceCounter
-	m.RUnlock()
-	if BruteForceCounter >= ALLOWED_LOGIN_ATTEMPTS {
-		res = false
-	} else {
-		res = true
-	}
-	return res
 }
 
 func writeBruteForceStub(w http.ResponseWriter) {

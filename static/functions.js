@@ -315,8 +315,13 @@ function processTableSelection(removeAllowed) {
 
   document.getElementById("mainTable").addEventListener("click", function (event) {
     if (event.target.classList.contains('grideven') || event.target.classList.contains('gridodd')) {
-      let id = (+event.target.classList[0].split('-')[1]);
-      let cb = document.getElementById(id);
+      let cb = document.getElementById(+event.target.classList[0].split('-')[1]);
+      cb.checked = !cb.checked;
+      checkOne(cb.checked, '.' + cb.parentNode.classList[0]);
+    }
+    if (event.target.classList.contains('taskcontent') && 
+    (event.target.parentElement.classList.contains('grideven') || (event.target.parentElement.classList.contains('gridodd')))) {
+      let cb = document.getElementById(+event.target.parentElement.classList[0].split('-')[1]);
       cb.checked = !cb.checked;
       checkOne(cb.checked, '.' + cb.parentNode.classList[0]);
     }

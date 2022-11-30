@@ -7,7 +7,7 @@
 BIG = 1
 SMALL = 2
 OTHER = 3
-useprefixes = ["DB", "SMTP"]
+useprefixes = ["DB", "REDIS", "SMTP"]
 
 
 def getCase(letter):

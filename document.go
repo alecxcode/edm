@@ -3,6 +3,9 @@ package main
 import (
 	"database/sql"
 	"edm/pkg/accs"
+	"edm/pkg/currencies"
+	"edm/pkg/datetime"
+	"edm/pkg/memdb"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -18,21 +21,21 @@ import (
 type Document struct {
 	//sql generate
 	ID        int
-	RegNo     string `sql-gen:"varchar(255)"`
-	RegDate   Date   `sql-gen:"bigint,IDX"`
-	IncNo     string `sql-gen:"varchar(255)"`
-	IncDate   Date   `sql-gen:"bigint,IDX"`
-	Category  int    // See lang.go
-	DocType   int    // See lang.go
-	About     string `sql-gen:"varchar(4000)"`
-	Authors   string `sql-gen:"varchar(2000)"`
-	Addressee string `sql-gen:"varchar(2000)"`
-	DocSum    int    `sql-gen:"bigint"`
+	RegNo     string        `sql-gen:"varchar(255)"`
+	RegDate   datetime.Date `sql-gen:"bigint,IDX"`
+	IncNo     string        `sql-gen:"varchar(255)"`
+	IncDate   datetime.Date `sql-gen:"bigint,IDX"`
+	Category  int           // See lang.go
+	DocType   int           // See lang.go
+	About     string        `sql-gen:"varchar(4000)"`
+	Authors   string        `sql-gen:"varchar(2000)"`
+	Addressee string        `sql-gen:"varchar(2000)"`
+	DocSum    int           `sql-gen:"bigint"`
 	Currency  int
-	EndDate   Date     `sql-gen:"bigint"`
-	Creator   *Profile `sql-gen:"FK_NULL"`
-	Note      string   `sql-gen:"varchar(4000)"`
-	FileList  []string `sql-gen:"varchar(max)"`
+	EndDate   datetime.Date `sql-gen:"bigint"`
+	Creator   *Profile      `sql-gen:"FK_NULL"`
+	Note      string        `sql-gen:"varchar(4000)"`
+	FileList  []string      `sql-gen:"varchar(max)"`
 }
 
 func (d Document) print() {
@@ -68,7 +71,7 @@ func (d Document) GiveCreatorID() int {
 
 // GiveDate executes in a template to deliver the queried date of a document
 func (d Document) GiveDate(dateWhat string, dateFmt string) string {
-	var datetoconv Date
+	var datetoconv datetime.Date
 	switch dateWhat {
 	case "Reg":
 		datetoconv = d.RegDate
@@ -79,7 +82,7 @@ func (d Document) GiveDate(dateWhat string, dateFmt string) string {
 	default:
 		return "wrong arg"
 	}
-	return dateToString(datetoconv, dateFmt)
+	return datetime.DateToString(datetoconv, dateFmt)
 }
 
 // GiveShortFileName executes in a template to deliver the shortened filelist
@@ -96,7 +99,7 @@ func (d Document) GiveSum() string {
 	if d.DocSum == 0 && d.Currency == Undefined {
 		return ""
 	} else {
-		return toDecimalStr(strconv.Itoa(d.DocSum))
+		return currencies.ToDecimalStr(strconv.Itoa(d.DocSum))
 	}
 }
 
@@ -118,11 +121,11 @@ func (d *Document) create(db *sql.DB, DBType byte) (lastid int, rowsaff int) {
 	var args sqla.AnyTslice
 	args = args.AppendNonEmptyString("RegNo", d.RegNo)
 	if d.RegDate.Day != 0 {
-		args = args.AppendInt64("RegDate", dateToInt64(d.RegDate))
+		args = args.AppendInt64("RegDate", datetime.DateToInt64(d.RegDate))
 	}
 	args = args.AppendNonEmptyString("IncNo", d.IncNo)
 	if d.IncDate.Day != 0 {
-		args = args.AppendInt64("IncDate", dateToInt64(d.IncDate))
+		args = args.AppendInt64("IncDate", datetime.DateToInt64(d.IncDate))
 	}
 	args = args.AppendInt("Category", d.Category) // Mandatory
 	args = args.AppendInt("DocType", d.DocType)   // Mandatory
@@ -134,7 +137,7 @@ func (d *Document) create(db *sql.DB, DBType byte) (lastid int, rowsaff int) {
 	}
 	args = args.AppendInt("Currency", d.Currency)
 	if d.EndDate.Day != 0 {
-		args = args.AppendInt64("EndDate", dateToInt64(d.EndDate))
+		args = args.AppendInt64("EndDate", datetime.DateToInt64(d.EndDate))
 	}
 	if d.Creator != nil {
 		args = args.AppendInt("Creator", d.Creator.ID)
@@ -149,13 +152,13 @@ func (d *Document) update(db *sql.DB, DBType byte) (rowsaff int) {
 	var args sqla.AnyTslice
 	args = args.AppendStringOrNil("RegNo", d.RegNo)
 	if d.RegDate.Day != 0 {
-		args = args.AppendInt64("RegDate", dateToInt64(d.RegDate))
+		args = args.AppendInt64("RegDate", datetime.DateToInt64(d.RegDate))
 	} else {
 		args = args.AppendNil("RegDate")
 	}
 	args = args.AppendStringOrNil("IncNo", d.IncNo)
 	if d.IncDate.Day != 0 {
-		args = args.AppendInt64("IncDate", dateToInt64(d.IncDate))
+		args = args.AppendInt64("IncDate", datetime.DateToInt64(d.IncDate))
 	} else {
 		args = args.AppendNil("IncDate")
 	}
@@ -171,7 +174,7 @@ func (d *Document) update(db *sql.DB, DBType byte) (rowsaff int) {
 	}
 	args = args.AppendInt("Currency", d.Currency)
 	if d.EndDate.Day != 0 {
-		args = args.AppendInt64("EndDate", dateToInt64(d.EndDate))
+		args = args.AppendInt64("EndDate", datetime.DateToInt64(d.EndDate))
 	} else {
 		args = args.AppendNil("EndDate")
 	}
@@ -217,9 +220,9 @@ WHERE documents.ID = `+sqla.MakeParam(DBType, 1), d.ID)
 		return err
 	}
 	d.RegNo = RegNo.String
-	d.RegDate = getValidDateFromSQL(RegDate)
+	d.RegDate = datetime.GetValidDateFromSQL(RegDate)
 	d.IncNo = IncNo.String
-	d.IncDate = getValidDateFromSQL(IncDate)
+	d.IncDate = datetime.GetValidDateFromSQL(IncDate)
 	d.Category = int(Category.Int64)
 	d.DocType = int(DocType.Int64)
 	d.About = About.String
@@ -227,7 +230,7 @@ WHERE documents.ID = `+sqla.MakeParam(DBType, 1), d.ID)
 	d.Addressee = Addressee.String
 	d.DocSum = int(DocSum.Int64)
 	d.Currency = int(Currency.Int64)
-	d.EndDate = getValidDateFromSQL(EndDate)
+	d.EndDate = datetime.GetValidDateFromSQL(EndDate)
 	if CreatorID.Valid == true {
 		d.Creator = &Profile{
 			ID:        int(CreatorID.Int64),
@@ -246,8 +249,8 @@ WHERE documents.ID = `+sqla.MakeParam(DBType, 1), d.ID)
 type Approval struct {
 	//sql generate
 	ID           int
-	Written      DateTime `sql-gen:"bigint"`
-	Approver     *Profile `sql-gen:"FK_NULL"`
+	Written      datetime.DateTime `sql-gen:"bigint"`
+	Approver     *Profile          `sql-gen:"FK_NULL"`
 	ApproverSign string
 	DocID        int `sql-gen:"IDX,FK_CASCADE,fktable(documents)"`
 	Approved     int
@@ -269,7 +272,7 @@ func (a *Approval) create(db *sql.DB, DBType byte) (lastid int, rowsaff int) {
 func (a *Approval) sign(db *sql.DB, DBType byte) (rowsaff int) {
 	var args sqla.AnyTslice
 	if a.Written.Day != 0 {
-		args = args.AppendInt64("Written", dateTimeToInt64(a.Written))
+		args = args.AppendInt64("Written", datetime.DateTimeToInt64(a.Written))
 	}
 	args = args.AppendStringOrNil("ApproverSign", a.ApproverSign)
 	args = args.AppendInt("DocID", a.DocID)
@@ -320,7 +323,7 @@ WHERE DocID = `+sqla.MakeParam(DBType, 1)+` ORDER BY a.Written ASC, a.ID ASC`, d
 		}
 		a := Approval{
 			ID:           int(ID.Int64),
-			Written:      int64ToDateTime(Written.Int64),
+			Written:      datetime.Int64ToDateTime(Written.Int64),
 			ApproverSign: ApproverSign.String,
 			DocID:        d.ID,
 			Approved:     int(Approved.Int64),
@@ -345,16 +348,16 @@ func (a Approval) GiveDateTime(dateFmt string, timeFmt string, sep string) strin
 	var dt = a.Written
 	var rt string
 	if timeFmt == "12h am/pm" {
-		rt = timeToString12(dt.Hour, dt.Minute)
+		rt = datetime.TimeToString12(dt.Hour, dt.Minute)
 	} else if timeFmt == "24h" {
-		rt = timeToString24(dt.Hour, dt.Minute)
+		rt = datetime.TimeToString24(dt.Hour, dt.Minute)
 	} else {
-		rt = timeToString24(dt.Hour, dt.Minute)
+		rt = datetime.TimeToString24(dt.Hour, dt.Minute)
 	}
 	if dt.Day == 0 {
 		return ""
 	}
-	return dateToString(Date{dt.Year, dt.Month, dt.Day}, dateFmt) + sep + rt
+	return datetime.DateToString(datetime.Date{Year: dt.Year, Month: dt.Month, Day: dt.Day}, dateFmt) + sep + rt
 }
 
 type approvals []Approval
@@ -442,7 +445,7 @@ type DocumentPage struct {
 	DocTypes      []string
 	Currencies    map[int]string
 	ApprovalSign  []string
-	UserList      []UserListElem
+	UserList      []memdb.ObjHasID
 }
 
 func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
@@ -500,7 +503,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 		Page.YouApproved = Page.Approvals.approved(IntID, Page.LoggedinID)
 	}
 
-	user := bs.team.getByID(Page.LoggedinID)
+	user := unmarshalToProfile(bs.team.GetByID(Page.LoggedinID))
 	Page.UserConfig = user.UserConfig
 	if user.UserRole == ADMIN || Page.New || Page.Document.GiveCreatorID() == Page.LoggedinID {
 		Page.Editable = true
@@ -528,17 +531,17 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 		d := Document{
 			ID:        IntID,
 			RegNo:     r.FormValue("regNo"),
-			RegDate:   stringToDate(r.FormValue("regDate")),
+			RegDate:   datetime.StringToDate(r.FormValue("regDate")),
 			IncNo:     r.FormValue("incNo"),
-			IncDate:   stringToDate(r.FormValue("incDate")),
+			IncDate:   datetime.StringToDate(r.FormValue("incDate")),
 			Category:  accs.StrToInt(r.FormValue("category")),
 			DocType:   accs.StrToInt(r.FormValue("docType")),
 			About:     r.FormValue("about"),
 			Authors:   r.FormValue("authors"),
 			Addressee: r.FormValue("addressee"),
-			DocSum:    processFormSumInt(r.FormValue("docSum")),
+			DocSum:    currencies.ProcessFormSumInt(r.FormValue("docSum")),
 			Currency:  accs.StrToInt(r.FormValue("currencyCode")),
-			EndDate:   stringToDate(r.FormValue("endDate")),
+			EndDate:   datetime.StringToDate(r.FormValue("endDate")),
 			Creator:   &Profile{ID: Page.LoggedinID},
 			Note:      r.FormValue("note"),
 		}
@@ -645,7 +648,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 		if Page.Editable || Page.IamApprover {
 			a := Approval{
 				ID:       Page.Approvals.getApprovalIDbyDocIDandApproverID(IntID, Page.LoggedinID),
-				Written:  getCurrentDateTime(),
+				Written:  datetime.GetCurrentDateTime(),
 				Approver: &Profile{ID: Page.LoggedinID},
 				DocID:    IntID,
 				Approved: accs.StrToInt(r.FormValue("approvalSign")),
@@ -705,7 +708,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Reset approvals ===========================================
 	if shallBreakApproval {
-		sqla.UpdateMultipleWithOneInt(bs.db, bs.dbt, "approvals", "Approved", BROKEN, "Written", dateTimeToInt64(getCurrentDateTime()), Page.Approvals.getApprovalsIDsSliceApproved())
+		sqla.UpdateMultipleWithOneInt(bs.db, bs.dbt, "approvals", "Approved", BROKEN, "Written", datetime.DateTimeToInt64(datetime.GetCurrentDateTime()), Page.Approvals.getApprovalsIDsSliceApproved())
 	}
 
 	// Other fields code ============================================
@@ -723,7 +726,7 @@ func (bs *BaseStruct) documentHandler(w http.ResponseWriter, r *http.Request) {
 		Page.IamApprover = accs.IntToBool(Page.Approvals.getApprovalIDbyDocIDandApproverID(IntID, Page.LoggedinID))
 		Page.YouApproved = Page.Approvals.approved(IntID, Page.LoggedinID)
 	}
-	Page.UserList = bs.team.returnUserList()
+	Page.UserList = bs.team.GetObjectArr("UserList")
 
 	template := "document.tmpl"
 	if strings.HasSuffix(r.URL.Path, "approval") || strings.HasSuffix(r.URL.Path, "approval/") {

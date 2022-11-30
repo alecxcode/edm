@@ -32,6 +32,9 @@ type Config struct {
 	DBPort        string
 	DBUser        string
 	DBPassword    string
+	REDISConnect  string
+	REDISPassword string
+	REDISFlush    string
 	SMTPEmail     string
 	SMTPHost      string
 	SMTPPort      string

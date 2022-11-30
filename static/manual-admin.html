@@ -2,7 +2,7 @@
 <head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
-<title>EDM: User documentation</title>
+<title>EDM: Administrator documentation</title>
 <link rel="shortcut icon" href="favicon.png">
 <link rel="icon" href="favicon.png">
 <link rel="stylesheet" href="fonts.css">
@@ -36,7 +36,10 @@
         <p>On the client-side it is necessary to use modern web browsers like Chrome, Firefox, Safari with enabled JavaScript. Internet Exprorer is not supported.</p>
         <h3 class="margintop">Basic bruteforce protection</h3>
         <p>This bruteforce protection by default blocks login capability for any users from any IP addresses for 60 minutes after 100 attempts to enter with wrong login or password.</p>
-        
+        <h3 class="margintop">Redis in-memory data store</h3>
+        <p>By default the server process keeps in its memory user sessions, user lists, and some other data, which are shared among all HTTP requests.</p>
+        <p>If Redis options are configured in the config file or environment variables, the server will use the Redis database to keep user sessions, user lists and some other shared data. This should make it possible to use multiple instances of the server process.</p>
+
         <h2 class="margintop">Installation of a release package</h2>
         <p>Installing in Windows is easy: run the downloaded distribution file, select a folder to install, and then it runs automatically. This way of installation is more for presentation purposes.</p>
         <p>On Linux/Mac/BSD: unpack the app somewhere and run <code>./edm</code> executable. If there is no build for your system or it does not work, you need to build it yourself. It is recommended to create a separate user for the server (e.g. with the name <code>edm</code>), like for other servers and configure the software as a service on your system. You should refer to your system administration guides or manuals about how to do that.</p>
@@ -84,6 +87,9 @@
         <p><code>DBPort</code> - port of the database server.</p>
         <p><code>DBUser</code> - database user to connect.</p>
         <p><code>DBPassword</code> - password of the database user.</p>
+        <p><code>REDISConnect</code> - Redis host and port (e.g. 127.0.0.1:6379). If specified, the app will use Redis.</p>
+        <p><code>REDISPassword</code> - Redis password.</p>
+        <p><code>REDISFlush</code> - clear Redis database on launch: <code>true</code> or <code>false</code>.</p>
         <p><code>SMTPEmail</code> - email address to use in notification emails.</p>
         <p><code>SMTPHost</code> - SMTP server host address. Should be specified in order to make notifications work properly.</p>
         <p><code>SMTPPort</code> - SMTP server port. Should be specified in order to make notifications work properly.</p>
@@ -94,17 +100,24 @@
         <p>After reading configuration file the server tries to read environment variables, which, if present, override corresponding configuration file values.</p>
         <p>This might be useful when deploying on a system where you should not store your sensitive data in a configuration file.</p>
         <p>The following variables are available (values are the same as for configuration file):</p>
+        
         <p><code>EDM_DB_TYPE</code> - RDBMS type.</p>
         <p><code>EDM_DB_NAME</code> - database name to connect. For Oracle it is a service name.</p>
         <p><code>EDM_DB_HOST</code> - host address of the database server.</p>
         <p><code>EDM_DB_PORT</code> - port of the database server.</p>
         <p><code>EDM_DB_USER</code> - database user to connect.</p>
         <p><code>EDM_DB_PASSWORD</code> - password of the database user.</p>
+
+        <p><code>EDM_REDIS_CONNECT</code> - Redis host and port (e.g. 127.0.0.1:6379).</p>
+        <p><code>EDM_REDIS_PASSWORD</code> - Redis password.</p>
+        <p><code>EDM_REDIS_FLUSH</code> - clear Redis database on launch: <code>true</code> or <code>false</code>.</p>
+
         <p><code>EDM_SMTP_EMAIL</code> - email address to use in notification emails.</p>
         <p><code>EDM_SMTP_HOST</code> - SMTP server host address.</p>
         <p><code>EDM_SMTP_PORT</code> - SMTP server port.</p>
         <p><code>EDM_SMTP_USER</code> - SMTP server user.</p>
         <p><code>EDM_SMTP_PASSWORD</code> - SMTP server password.</p>
+       
         <p>If you require to use other configuration options as environment variables you can edit <b>config-env.py</b> from <b>internal/config</b> directory. The file has predefined list of prefixes for environment variables. For instance, you can set it to <code>[""]</code> in order to make all config options available as environment variables.</p>
 
         <h2 class="margintop">Command line arguments</h2>

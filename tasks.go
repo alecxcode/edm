@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"edm/internal/mail"
 	"edm/pkg/accs"
+	"edm/pkg/datetime"
+	"edm/pkg/memdb"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -33,7 +35,7 @@ type TasksPage struct {
 	RemovedNum    int
 	UpdatedNum    int
 	TaskStatuses  []string
-	UserList      []UserListElem
+	UserList      []memdb.ObjHasID
 }
 
 func (bs *BaseStruct) tasksHandler(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +96,7 @@ func (bs *BaseStruct) tasksHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Page.RemoveAllowed, _ = strconv.ParseBool(bs.cfg.RemoveAllowed)
-	user := bs.team.getByID(Page.LoggedinID)
+	user := unmarshalToProfile(bs.team.GetByID(Page.LoggedinID))
 	Page.UserConfig = user.UserConfig
 	if user.UserRole == 1 {
 		Page.LoggedinAdmin = true
@@ -102,7 +104,7 @@ func (bs *BaseStruct) tasksHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Page.Filters.GetFilterFromForm(r,
-		convDateStrToInt64, convDateTimeStrToInt64,
+		datetime.ConvDateStrToInt64, datetime.ConvDateTimeStrToInt64,
 		map[string]int{"my": Page.LoggedinID})
 
 	// Parsing other fields
@@ -136,7 +138,7 @@ func (bs *BaseStruct) tasksHandler(w http.ResponseWriter, r *http.Request) {
 			p := Profile{ID: Page.LoggedinID, UserConfig: Page.UserConfig}
 			updated := p.updateConfig(bs.db, bs.dbt)
 			if updated > 0 {
-				bs.team.updateConfig(p)
+				memoryUpdateProfile(bs.db, bs.dbt, bs.team, p.ID)
 			}
 		}
 	}
@@ -191,7 +193,7 @@ WHERE tasks.TaskStatus <> ` + sqla.MakeParam(bs.dbt, 1) + " "
 						for i := 0; i < len(tasks); i++ {
 							idstoupd[i] = tasks[i].ID
 						}
-						updated := sqla.UpdateMultipleWithOneInt(bs.db, bs.dbt, "tasks", "TaskStatus", statusCode, "StatusSet", dateTimeToInt64(getCurrentDateTime()), idstoupd)
+						updated := sqla.UpdateMultipleWithOneInt(bs.db, bs.dbt, "tasks", "TaskStatus", statusCode, "StatusSet", datetime.DateTimeToInt64(datetime.GetCurrentDateTime()), idstoupd)
 						if updated > 0 {
 							Page.Message = "statusUpdated"
 							Page.UpdatedNum = updated
@@ -395,10 +397,10 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 				return err
 			}
 
-			t.Created = int64ToDateTime(Created.Int64)
-			t.PlanStart = int64ToDateTime(PlanStart.Int64)
-			t.PlanDue = int64ToDateTime(PlanDue.Int64)
-			t.StatusSet = int64ToDateTime(StatusSet.Int64)
+			t.Created = datetime.Int64ToDateTime(Created.Int64)
+			t.PlanStart = datetime.Int64ToDateTime(PlanStart.Int64)
+			t.PlanDue = datetime.Int64ToDateTime(PlanDue.Int64)
+			t.StatusSet = datetime.Int64ToDateTime(StatusSet.Int64)
 			if CreatorID.Valid == true {
 				t.Creator = &Profile{
 					ID:        int(CreatorID.Int64),
@@ -463,7 +465,7 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 	// 	log.Printf("SQL execution time in milliseconds: %d\n", diff.Milliseconds())
 	// }
 
-	Page.UserList = bs.team.returnUserList()
+	Page.UserList = bs.team.GetObjectArr("UserList")
 
 	// Attention! This removes db column lists in outputs like JSON.
 	// Usually columns should not be available to a client.
@@ -578,10 +580,10 @@ func loadTasks(db *sql.DB, sq string, sqcount string, args []interface{}) (Tasks
 			return Tasks, FilteredNumRes, err
 		}
 
-		t.Created = int64ToDateTime(Created.Int64)
-		t.PlanStart = int64ToDateTime(PlanStart.Int64)
-		t.PlanDue = int64ToDateTime(PlanDue.Int64)
-		t.StatusSet = int64ToDateTime(StatusSet.Int64)
+		t.Created = datetime.Int64ToDateTime(Created.Int64)
+		t.PlanStart = datetime.Int64ToDateTime(PlanStart.Int64)
+		t.PlanDue = datetime.Int64ToDateTime(PlanDue.Int64)
+		t.StatusSet = datetime.Int64ToDateTime(StatusSet.Int64)
 		if CreatorID.Valid == true {
 			t.Creator = &Profile{
 				ID:        int(CreatorID.Int64),

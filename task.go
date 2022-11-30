@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"edm/internal/mail"
 	"edm/pkg/accs"
+	"edm/pkg/datetime"
+	"edm/pkg/memdb"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -19,15 +21,15 @@ import (
 type Task struct {
 	//sql generate
 	ID           int
-	Created      DateTime `sql-gen:"bigint,IDX"`
-	PlanStart    DateTime `sql-gen:"bigint,IDX"`
-	PlanDue      DateTime `sql-gen:"bigint,IDX"`
-	StatusSet    DateTime `sql-gen:"bigint,IDX"`
-	Creator      *Profile `sql-gen:"FK_NULL,FK_NOACTION"`
-	Assignee     *Profile `sql-gen:"FK_NULL,FK_NOACTION"`
-	Participants []int    `sql-gen:"varchar(4000)"`
-	Topic        string   `sql-gen:"varchar(255)"`
-	Content      string   `sql-gen:"varchar(max)"`
+	Created      datetime.DateTime `sql-gen:"bigint,IDX"`
+	PlanStart    datetime.DateTime `sql-gen:"bigint,IDX"`
+	PlanDue      datetime.DateTime `sql-gen:"bigint,IDX"`
+	StatusSet    datetime.DateTime `sql-gen:"bigint,IDX"`
+	Creator      *Profile          `sql-gen:"FK_NULL,FK_NOACTION"`
+	Assignee     *Profile          `sql-gen:"FK_NULL,FK_NOACTION"`
+	Participants []int             `sql-gen:"varchar(4000)"`
+	Topic        string            `sql-gen:"varchar(255)"`
+	Content      string            `sql-gen:"varchar(max)"`
 	TaskStatus   int
 	Project      int      //this is for future use
 	FileList     []string `sql-gen:"varchar(max)"`
@@ -67,7 +69,7 @@ func (t Task) GiveAssigneeID() int {
 // GiveDateTime executes in a template to deliver the queried date and time of a task
 func (t Task) GiveDateTime(dateWhat string, dateFmt string, timeFmt string, sep string) string {
 
-	var dt DateTime
+	var dt datetime.DateTime
 	var rt string
 
 	switch dateWhat {
@@ -88,14 +90,14 @@ func (t Task) GiveDateTime(dateWhat string, dateFmt string, timeFmt string, sep 
 	}
 
 	if timeFmt == "12h am/pm" {
-		rt = timeToString12(dt.Hour, dt.Minute)
+		rt = datetime.TimeToString12(dt.Hour, dt.Minute)
 	} else if timeFmt == "24h" {
-		rt = timeToString24(dt.Hour, dt.Minute)
+		rt = datetime.TimeToString24(dt.Hour, dt.Minute)
 	} else {
-		rt = timeToString24(dt.Hour, dt.Minute)
+		rt = datetime.TimeToString24(dt.Hour, dt.Minute)
 	}
 
-	return dateToString(Date{dt.Year, dt.Month, dt.Day}, dateFmt) + sep + rt
+	return datetime.DateToString(datetime.Date{Year: dt.Year, Month: dt.Month, Day: dt.Day}, dateFmt) + sep + rt
 }
 
 // GiveShortFileName executes in a template to deliver the shortened file name
@@ -110,16 +112,16 @@ func (t Task) GiveShortFileName(index int) string {
 func (t *Task) create(db *sql.DB, DBType byte) (lastid int, rowsaff int) {
 	var args sqla.AnyTslice
 	if t.Created.Day != 0 {
-		args = args.AppendInt64("Created", dateTimeToInt64(t.Created))
+		args = args.AppendInt64("Created", datetime.DateTimeToInt64(t.Created))
 	}
 	if t.PlanStart.Day != 0 {
-		args = args.AppendInt64("PlanStart", dateTimeToInt64(t.PlanStart))
+		args = args.AppendInt64("PlanStart", datetime.DateTimeToInt64(t.PlanStart))
 	}
 	if t.PlanDue.Day != 0 {
-		args = args.AppendInt64("PlanDue", dateTimeToInt64(t.PlanDue))
+		args = args.AppendInt64("PlanDue", datetime.DateTimeToInt64(t.PlanDue))
 	}
 	if t.StatusSet.Day != 0 {
-		args = args.AppendInt64("StatusSet", dateTimeToInt64(t.StatusSet))
+		args = args.AppendInt64("StatusSet", datetime.DateTimeToInt64(t.StatusSet))
 	}
 	if t.Creator != nil {
 		args = args.AppendInt("Creator", t.Creator.ID)
@@ -138,17 +140,17 @@ func (t *Task) create(db *sql.DB, DBType byte) (lastid int, rowsaff int) {
 func (t *Task) update(db *sql.DB, DBType byte) (rowsaff int) {
 	var args sqla.AnyTslice
 	if t.PlanStart.Day != 0 {
-		args = args.AppendInt64("PlanStart", dateTimeToInt64(t.PlanStart))
+		args = args.AppendInt64("PlanStart", datetime.DateTimeToInt64(t.PlanStart))
 	} else {
 		args = args.AppendNil("PlanStart")
 	}
 	if t.PlanDue.Day != 0 {
-		args = args.AppendInt64("PlanDue", dateTimeToInt64(t.PlanDue))
+		args = args.AppendInt64("PlanDue", datetime.DateTimeToInt64(t.PlanDue))
 	} else {
 		args = args.AppendNil("PlanDue")
 	}
 	if t.StatusSet.Day != 0 {
-		args = args.AppendInt64("StatusSet", dateTimeToInt64(t.StatusSet))
+		args = args.AppendInt64("StatusSet", datetime.DateTimeToInt64(t.StatusSet))
 	}
 	if t.Assignee != nil {
 		args = args.AppendInt("Assignee", t.Assignee.ID)
@@ -165,7 +167,7 @@ func (t *Task) update(db *sql.DB, DBType byte) (rowsaff int) {
 
 func (t *Task) updateStatus(db *sql.DB, DBType byte) (rowsaff int) {
 	var args sqla.AnyTslice
-	args = args.AppendInt64("StatusSet", dateTimeToInt64(t.StatusSet))
+	args = args.AppendInt64("StatusSet", datetime.DateTimeToInt64(t.StatusSet))
 	args = args.AppendInt("TaskStatus", t.TaskStatus)
 	rowsaff = sqla.UpdateObject(db, DBType, "tasks", args, t.ID)
 	return rowsaff
@@ -215,10 +217,10 @@ WHERE tasks.ID = `+sqla.MakeParam(DBType, 1), t.ID)
 		return err
 	}
 
-	t.Created = int64ToDateTime(Created.Int64)
-	t.PlanStart = int64ToDateTime(PlanStart.Int64)
-	t.PlanDue = int64ToDateTime(PlanDue.Int64)
-	t.StatusSet = int64ToDateTime(StatusSet.Int64)
+	t.Created = datetime.Int64ToDateTime(Created.Int64)
+	t.PlanStart = datetime.Int64ToDateTime(PlanStart.Int64)
+	t.PlanDue = datetime.Int64ToDateTime(PlanDue.Int64)
+	t.StatusSet = datetime.Int64ToDateTime(StatusSet.Int64)
 	if CreatorID.Valid == true {
 		t.Creator = &Profile{
 			ID:        int(CreatorID.Int64),
@@ -299,17 +301,17 @@ func (t *Task) loadParticipants(db *sql.DB, DBType byte) (ProfList []Profile, er
 type Comment struct {
 	//sql generate
 	ID       int
-	Created  DateTime `sql-gen:"bigint"`
-	Creator  *Profile `sql-gen:"FK_NULL"`
-	Task     *Task    `sql-gen:"IDX,FK_CASCADE"`
-	Content  string   `sql-gen:"varchar(max)"`
-	FileList []string `sql-gen:"varchar(max)"`
+	Created  datetime.DateTime `sql-gen:"bigint"`
+	Creator  *Profile          `sql-gen:"FK_NULL"`
+	Task     *Task             `sql-gen:"IDX,FK_CASCADE"`
+	Content  string            `sql-gen:"varchar(max)"`
+	FileList []string          `sql-gen:"varchar(max)"`
 }
 
 func (c *Comment) create(db *sql.DB, DBType byte) (lastid int, rowsaff int) {
 	var args sqla.AnyTslice
 	if c.Created.Day != 0 {
-		args = args.AppendInt64("Created", dateTimeToInt64(c.Created))
+		args = args.AppendInt64("Created", datetime.DateTimeToInt64(c.Created))
 	}
 	args = args.AppendInt("Creator", c.Creator.ID)
 	args = args.AppendInt("Task", c.Task.ID)
@@ -338,16 +340,16 @@ func (c Comment) GiveDateTime(dateFmt string, timeFmt string, sep string) string
 	var dt = c.Created
 	var rt string
 	if timeFmt == "12h am/pm" {
-		rt = timeToString12(dt.Hour, dt.Minute)
+		rt = datetime.TimeToString12(dt.Hour, dt.Minute)
 	} else if timeFmt == "24h" {
-		rt = timeToString24(dt.Hour, dt.Minute)
+		rt = datetime.TimeToString24(dt.Hour, dt.Minute)
 	} else {
-		rt = timeToString24(dt.Hour, dt.Minute)
+		rt = datetime.TimeToString24(dt.Hour, dt.Minute)
 	}
 	if dt.Day == 0 {
 		return ""
 	}
-	return dateToString(Date{dt.Year, dt.Month, dt.Day}, dateFmt) + sep + rt
+	return datetime.DateToString(datetime.Date{Year: dt.Year, Month: dt.Month, Day: dt.Day}, dateFmt) + sep + rt
 }
 
 func (t *Task) loadComments(db *sql.DB, DBType byte) (CommList []Comment, err error) {
@@ -379,7 +381,7 @@ WHERE Task = `+sqla.MakeParam(DBType, 1)+` ORDER BY c.Created ASC, c.ID ASC`, t.
 		if err != nil {
 			return CommList, err
 		}
-		c.Created = int64ToDateTime(Created.Int64)
+		c.Created = datetime.Int64ToDateTime(Created.Int64)
 		if Creator.Valid {
 			c.Creator = &Profile{
 				ID:        int(CreatorID.Int64),
@@ -413,7 +415,7 @@ type TaskPage struct {
 	IamParticipant bool
 	New            bool
 	TaskStatuses   []string
-	UserList       []UserListElem
+	UserList       []memdb.ObjHasID
 }
 
 func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
@@ -465,7 +467,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	user := bs.team.getByID(Page.LoggedinID)
+	user := unmarshalToProfile(bs.team.GetByID(Page.LoggedinID))
 	Page.UserConfig = user.UserConfig
 	if user.UserRole == ADMIN || Page.New || Page.Task.GiveCreatorID() == Page.LoggedinID {
 		Page.Editable = true
@@ -504,9 +506,9 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		t := Task{
 			ID:         IntID,
-			Created:    getCurrentDateTime(),
-			PlanStart:  stringToDateTime(r.FormValue("planStart")),
-			PlanDue:    stringToDateTime(r.FormValue("planDue")),
+			Created:    datetime.GetCurrentDateTime(),
+			PlanStart:  datetime.StringToDateTime(r.FormValue("planStart")),
+			PlanDue:    datetime.StringToDateTime(r.FormValue("planDue")),
 			Creator:    &Profile{ID: Page.LoggedinID},
 			Topic:      r.FormValue("topic"),
 			Content:    r.FormValue("content"),
@@ -516,14 +518,14 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 			t.Assignee = &Profile{ID: accs.StrToInt(r.FormValue("assignee"))}
 			if t.Assignee.ID != Page.Task.GiveAssigneeID() && Page.Task.TaskStatus < DONE {
 				t.TaskStatus = ASSIGNED
-				t.StatusSet = getCurrentDateTime()
+				t.StatusSet = datetime.GetCurrentDateTime()
 				eventAssigneeSet = true
 			}
 		} else {
 			t.Assignee = nil
 			if Page.Task.TaskStatus < DONE && Page.Task.TaskStatus != CREATED {
 				t.TaskStatus = CREATED
-				t.StatusSet = getCurrentDateTime()
+				t.StatusSet = datetime.GetCurrentDateTime()
 				eventTaskStatusChanged = true
 			}
 		}
@@ -535,7 +537,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if r.FormValue("createButton") != "" && !strings.Contains(Page.Message, "Error") {
-			t.StatusSet = getCurrentDateTime()
+			t.StatusSet = datetime.GetCurrentDateTime()
 			t.ID, created = t.create(bs.db, bs.dbt)
 			if created > 0 {
 				if eventAssigneeSet {
@@ -621,7 +623,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 					eventAssigneeSet = true
 					if aID != oID && Page.Task.TaskStatus < DONE {
 						t := Task{ID: IntID,
-							StatusSet:  getCurrentDateTime(),
+							StatusSet:  datetime.GetCurrentDateTime(),
 							TaskStatus: ASSIGNED}
 						ress := t.updateStatus(bs.db, bs.dbt)
 						if ress > 0 {
@@ -643,7 +645,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" && r.FormValue("createComment") != "" {
 		if Page.Editable || Page.IamAssignee || Page.IamParticipant {
 			c := Comment{
-				Created: getCurrentDateTime(),
+				Created: datetime.GetCurrentDateTime(),
 				Creator: &Profile{ID: Page.LoggedinID},
 				Task:    &Task{ID: IntID},
 				Content: r.FormValue("content"),
@@ -714,7 +716,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Other fields code ============================================
-	Page.UserList = bs.team.returnUserList()
+	Page.UserList = bs.team.GetObjectArr("UserList")
 	Page.IamAssignee = Page.Task.GiveAssigneeID() == Page.LoggedinID
 	Page.IamParticipant = accs.SliceContainsInt(Page.Task.Participants, Page.LoggedinID)
 	if TextID == "new" {
@@ -728,7 +730,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 		//Status INPROGRESS on open
 		if Page.IamAssignee && Page.Task.TaskStatus == ASSIGNED {
 			t := Task{ID: IntID,
-				StatusSet:  getCurrentDateTime(),
+				StatusSet:  datetime.GetCurrentDateTime(),
 				TaskStatus: INPROGRESS}
 			res := t.updateStatus(bs.db, bs.dbt)
 			if res > 0 {
@@ -764,7 +766,7 @@ func (bs *BaseStruct) taskHandler(w http.ResponseWriter, r *http.Request) {
 				}
 				if statusCode > 0 && statusCode < 6 {
 					t := Task{ID: IntID,
-						StatusSet:  getCurrentDateTime(),
+						StatusSet:  datetime.GetCurrentDateTime(),
 						TaskStatus: statusCode}
 					res := t.updateStatus(bs.db, bs.dbt)
 					if res > 0 {

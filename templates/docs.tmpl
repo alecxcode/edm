@@ -117,11 +117,11 @@
     <div id="mainTable" style="grid-template-columns: repeat(3, min-content) 15% 20% min-content repeat(3, auto) min-content;">
         <div class="gridheader center" id="Chooser"><input type="checkbox" class="chead" id="chead"></div>
         {{if $.ShowIncNo}}
-        <div class="gridheader" id="IncNo"><span i18n-text="incNo">Inc.No.</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
-        <div class="gridheader" id="IncDate"><span i18n-text="incDate">Inc.Date</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
+        <div class="gridheader" id="IncNo"><span i18n-text="incNo" class="nowrap">Inc.No.</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
+        <div class="gridheader" id="IncDate"><span i18n-text="incDate" class="nowrap">Inc.Date</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
         {{else}}
-        <div class="gridheader" id="RegNo"><span i18n-text="regNo">Reg.No.</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
-        <div class="gridheader" id="RegDate"><span i18n-text="regDate">Reg.Date</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
+        <div class="gridheader" id="RegNo"><span i18n-text="regNo" class="nowrap">Reg.No.</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
+        <div class="gridheader" id="RegDate"><span i18n-text="regDate" class="nowrap">Reg.Date</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>
         {{end}}
         <div class="gridheader" id="docType"><span i18n-text="docType">Type</span></div>
         <div class="gridheader" id="About"><span i18n-text="docAbout">About</span><span class="sort" title="Ascending" onclick='sortBy(this.parentNode.id, 1)'>▲</span><span class="sort" title="Descending" onclick='sortBy(this.parentNode.id, 0)'>▼</span></div>

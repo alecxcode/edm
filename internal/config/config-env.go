@@ -24,6 +24,15 @@ func (cfg *Config) readOSEnv() {
 	if v, ok := os.LookupEnv("EDM_DB_PASSWORD"); ok {
 		cfg.DBPassword = v
 	}
+	if v, ok := os.LookupEnv("EDM_REDIS_CONNECT"); ok {
+		cfg.REDISConnect = v
+	}
+	if v, ok := os.LookupEnv("EDM_REDIS_PASSWORD"); ok {
+		cfg.REDISPassword = v
+	}
+	if v, ok := os.LookupEnv("EDM_REDIS_FLUSH"); ok {
+		cfg.REDISFlush = v
+	}
 	if v, ok := os.LookupEnv("EDM_SMTP_EMAIL"); ok {
 		cfg.SMTPEmail = v
 	}

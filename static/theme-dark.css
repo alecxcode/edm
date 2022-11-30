@@ -258,7 +258,7 @@ h2 {
   border-radius: calc(1px + var(--elements-radius));
   overflow: hidden;
 }
-#mainTable div {background-color: #323232; padding: 0px 1px;}
+.grideven, .gridodd {background-color: #323232; padding: 0px 1px;}
 .gridheader {background-color: #10100c !important; color: #bba; font-weight: bold;}
 .grideven {background-color: var(--defaultBackgroundColor);}
 .gridodd {background-color: var(--tableOddRowBkgColor);}

@@ -101,7 +101,7 @@
       <h2 i18n-text="other">Other:</h2>
       <p><span class="ofname" i18n-text="companyHead">CEO or head:</span> <select name="companyHead" id="companyHead" class="numberbox">
         <option value="0" i18n-text="no">no</option>
-        {{range .UserList}}<option value="{{.ID}}">{{.FullNameJob}}</option>
+        {{range .UserList}}<option value="{{.ID}}">{{.Value}}</option>
         {{end}}
       </select><span class="dropdown"></span></p>
       <p><span class="ofname" i18n-text="companyRegNo">Reg. No.:</span> <input type="text" class="field ofval" name="regNo" size="30" maxlength="127" value="{{.Company.RegNo}}"></p>
@@ -204,7 +204,7 @@ function showUnitEditForm(elemID, unitName, companyID, unitHeadID) {
   <div><span class="ofname" i18n-text="nameEntity">Name*:</span> <input type="text" class="field ofval" name="unitName" size="30" maxlength="512" value="${unitName}" required></div>
   <div><span class="ofname" i18n-text="unitHead">Head:</span> <select name="unitHead" id="unitHead" class="numberbox">
     <option value='0' i18n-text="no">no</option>
-    {{range .UserList}}<option value='{{.ID}}'>{{.FullNameJob}}</option>
+    {{range .UserList}}<option value='{{.ID}}'>{{.Value}}</option>
     {{end}}
   </select><span class="dropdown"></span></div>
   <div class="margintop"><input type="submit" class ="sbut" name="updateUnit" i18n-value="save" value="Save">
@@ -223,7 +223,7 @@ function showUnitCreateForm(elemID, companyID) {
   <div><span class="ofname" i18n-text="nameEntity">Name*:</span> <input type="text" class="field ofval" name="unitName" size="30" maxlength="512" required></div>
   <div><span class="ofname" i18n-text="unitHead">Head:</span> <select name="unitHead" id="unitHead" class="numberbox">
     <option value='0' i18n-text="no">no</option>
-    {{range .UserList}}<option value='{{.ID}}'>{{.FullNameJob}}</option>
+    {{range .UserList}}<option value='{{.ID}}'>{{.Value}}</option>
     {{end}}
   </select><span class="dropdown"></span></div>
   <div class="margintop"><input type="submit" class ="sbut" name="createUnit" i18n-value="create" value="Create">

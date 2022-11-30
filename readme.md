@@ -13,6 +13,7 @@ The application has the following functions:
 * Themes and localization support
 * UX/UI features: bb-code, search results highlighting, etc.
 * Some basic bruteforce protection
+* Redis support to store sessions and other shared data
 * Other functions, not mentioned in this list
 
 Supported themes: dark, light, monochrome-dark, monochrome-light.  

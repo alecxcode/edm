@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"edm/pkg/accs"
+	"edm/pkg/datetime"
+	"edm/pkg/memdb"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -27,9 +29,9 @@ type TeamPage struct {
 	PageNumber    int
 	FilteredNum   int
 	RemovedNum    int
-	UserList      []UserListElem
-	UnitList      []UnitListElem
-	CorpList      []CorpListElem
+	UserList      []memdb.ObjHasID
+	UnitList      []memdb.ObjHasID
+	CorpList      []memdb.ObjHasID
 }
 
 func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +71,7 @@ func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
 		LoggedinID: id,
 	}
 
-	user := bs.team.getByID(Page.LoggedinID)
+	user := unmarshalToProfile(bs.team.GetByID(Page.LoggedinID))
 	Page.UserConfig = user.UserConfig
 	if user.UserRole == 1 {
 		Page.LoggedinAdmin = true
@@ -77,7 +79,7 @@ func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parsing Filters
 	Page.Filters.GetFilterFromForm(r,
-		convDateStrToInt64, convDateTimeStrToInt64,
+		datetime.ConvDateStrToInt64, datetime.ConvDateTimeStrToInt64,
 		map[string]int{"my": Page.LoggedinID})
 
 	// Parsing other fields
@@ -103,7 +105,7 @@ func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
 			p := Profile{ID: Page.LoggedinID, UserConfig: Page.UserConfig}
 			updated := p.updateConfig(bs.db, bs.dbt)
 			if updated > 0 {
-				bs.team.updateConfig(p)
+				memoryUpdateProfile(bs.db, bs.dbt, bs.team, p.ID)
 			}
 		}
 	}
@@ -141,9 +143,9 @@ func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
 					Page.Message = "removedElems"
 					Page.RemovedNum = removed
 					for _, eachID := range ids {
-						bs.team.delProfile(eachID)
+						bs.team.DelObject(eachID)
 					}
-					bs.team.constructUserList(bs.db, bs.dbt)
+					constructUserList(bs.db, bs.dbt, bs.team)
 					if removed >= elemsOnCurrentPage && Page.PageNumber > 1 {
 						Page.PageNumber--
 					}
@@ -251,9 +253,9 @@ LEFT JOIN companies ON companies.ID = units.Company`,
 		return
 	}
 
-	Page.UserList = bs.team.returnUserList()
-	Page.UnitList = bs.team.returnUnitList()
-	Page.CorpList = bs.team.returnCorpList()
+	Page.UserList = bs.team.GetObjectArr("UserList")
+	Page.UnitList = bs.team.GetObjectArr("UnitList")
+	Page.CorpList = bs.team.GetObjectArr("CorpList")
 
 	// Attention! This removes db column lists in outputs like JSON.
 	// Usually columns should not be available to a client.

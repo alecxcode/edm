@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"edm/pkg/accs"
+	"edm/pkg/memdb"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -265,7 +266,7 @@ type CompanyPage struct {
 	Message    string
 	Editable   bool
 	New        bool
-	UserList   []UserListElem
+	UserList   []memdb.ObjHasID
 }
 
 func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
@@ -290,7 +291,7 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 		New:        false,
 	}
 
-	user := bs.team.getByID(Page.LoggedinID)
+	user := unmarshalToProfile(bs.team.GetByID(Page.LoggedinID))
 	Page.UserConfig = user.UserConfig
 	if user.UserRole == 1 {
 		Page.Editable = true
@@ -333,7 +334,7 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 		if r.FormValue("createButton") != "" {
 			c.ID, created = c.create(bs.db, bs.dbt)
 			if created > 0 {
-				bs.team.constructCorpList(bs.db, bs.dbt)
+				constructCorpList(bs.db, bs.dbt, bs.team)
 				if Page.UserConfig.ReturnAfterCreation {
 					http.Redirect(w, r, "/companies/", http.StatusSeeOther)
 				} else {
@@ -348,8 +349,8 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 		if r.FormValue("updateButton") != "" {
 			updated = c.update(bs.db, bs.dbt)
 			if updated > 0 {
-				bs.team.constructCorpList(bs.db, bs.dbt)
-				bs.team.constructUnitList(bs.db, bs.dbt)
+				constructCorpList(bs.db, bs.dbt, bs.team)
+				constructUnitList(bs.db, bs.dbt, bs.team)
 				Page.Message = "dataWritten"
 			} else {
 				Page.Message = "dataNotWritten"
@@ -382,7 +383,7 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 			unitaff = u.update(bs.db, bs.dbt)
 		}
 		if unitaff > 0 {
-			bs.team.constructUnitList(bs.db, bs.dbt)
+			constructUnitList(bs.db, bs.dbt, bs.team)
 			Page.Message = "dataWritten"
 		} else {
 			Page.Message = "dataNotWritten"
@@ -398,7 +399,7 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 		UnitIntID, _ := strconv.Atoi(r.FormValue("unitID"))
 		unitaff := sqla.DeleteObjects(bs.db, bs.dbt, "units", "ID", []int{UnitIntID})
 		if unitaff > 0 {
-			bs.team.constructUnitList(bs.db, bs.dbt)
+			constructUnitList(bs.db, bs.dbt, bs.team)
 			Page.Message = "dataWritten"
 		} else {
 			Page.Message = "dataNotWritten"
@@ -406,7 +407,7 @@ func (bs *BaseStruct) companyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Loading code ============================================
-	Page.UserList = bs.team.returnUserList()
+	Page.UserList = bs.team.GetObjectArr("UserList")
 	if TextID == "new" {
 		Page.New = true
 		Page.PageTitle = bs.text.NewCompany

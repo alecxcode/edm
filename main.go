@@ -5,6 +5,11 @@ import (
 	"edm/internal/config"
 	"edm/internal/mail"
 	"edm/pkg/accs"
+	"edm/pkg/currencies"
+	"edm/pkg/datetime"
+	"edm/pkg/memdb"
+	"edm/pkg/ramdb"
+	"edm/pkg/redisdb"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -21,7 +26,7 @@ import (
 // const AppTitle = "EDM"
 
 // AppVersion is this application version
-const AppVersion = "1.3.0"
+const AppVersion = "1.4.0"
 
 // Undefined is for any unknown category, type, etc.
 const Undefined = 0
@@ -53,7 +58,7 @@ type BaseStruct struct {
 	uploads      http.Handler
 	db           *sql.DB
 	dbt          byte // DB type as defined by constants in sqla package
-	team         ProfilesInMemory
+	team         memdb.ObjectsInMemory
 	templates    *template.Template
 	logintmpl    *template.Template
 	anymailtmpl  *template.Template
@@ -95,6 +100,7 @@ func main() {
 		DBType:        "sqlite",
 		DBName:        "edm.db",
 		DBHost:        "127.0.0.1",
+		REDISFlush:    "false",
 		UseTLS:        "false",
 	}
 
@@ -148,7 +154,7 @@ func main() {
 	if accs.FileExists(logPath) != true {
 		os.Mkdir(logPath, 0700)
 	}
-	logFile = filepath.Join(logPath, "edm-"+getCurrentYearMStr()+".log")
+	logFile = filepath.Join(logPath, "edm-"+datetime.GetCurrentYearMStr()+".log")
 	applog, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Println(accs.CurrentFunction()+":", err)
@@ -172,7 +178,7 @@ func main() {
 		return
 	}
 
-	if cfg.CreateDB == "true" {
+	if accs.StrToBool(cfg.CreateDB) {
 		log.Println("Creating Schema...")
 		sqla.CreateDB(DBT, DSN, getSQLinitScript(DBT, sqlscriptsPath))
 		db = sqla.OpenSQLConnection(DBT, DSN)
@@ -208,12 +214,8 @@ func main() {
 		cfg:        &cfg,
 		db:         db,
 		dbt:        DBT,
-		currencies: getCurrencies(),
+		currencies: currencies.GetCurrencies(),
 		//utcdiff:    getUTCDiff(), // difference between local time and UTC in minutes, reserved for future use
-		team: ProfilesInMemory{
-			Aarr: make(map[int]Profile),
-			Cjar: make(map[string]int),
-		},
 		options: struct {
 			Themes      []string
 			DateFormats []string
@@ -226,9 +228,14 @@ func main() {
 			LangCodes:   []string{"en", "es", "fr", "ru"},
 		},
 	}
+	if cfg.REDISConnect != "" {
+		bs.team = redisdb.NewReidsConnection([]string{"UserList", "UnitList", "CorpList"}, cfg.REDISConnect, cfg.REDISPassword, accs.StrToBool(cfg.REDISFlush))
+	} else {
+		bs.team = ramdb.NewObjectsInMemory([]string{"UserList", "UnitList", "CorpList"})
+	}
 
 	protocol := "http"
-	if cfg.UseTLS == "true" {
+	if accs.StrToBool(cfg.UseTLS) {
 		protocol = "https"
 	}
 	if (protocol == "http" && cfg.ServerPort == "80") || (protocol == "https" && cfg.ServerPort == "443") {
@@ -275,15 +282,15 @@ func main() {
 	bs.text = newTextStruct()
 	bs.i18n = newi18nStruct(filepath.Join(i18nPath, cfg.DefaultLang+".json"))
 
-	err = bs.team.constructUserList(db, DBT)
+	err = constructUserList(db, DBT, bs.team)
 	if err != nil {
 		log.Println(accs.CurrentFunction()+": constructUserList:", err)
 	}
-	err = bs.team.constructUnitList(db, DBT)
+	err = constructUnitList(db, DBT, bs.team)
 	if err != nil {
 		log.Println(accs.CurrentFunction()+": constructUnitList:", err)
 	}
-	err = bs.team.constructCorpList(db, DBT)
+	err = constructCorpList(db, DBT, bs.team)
 	if err != nil {
 		log.Println(accs.CurrentFunction()+": constructCorpList", err)
 	}
@@ -298,7 +305,7 @@ func main() {
 	// Server code:
 	if accs.IsPrevInstanceRunning(cfg.ServerHost + ":" + cfg.ServerPort) {
 		log.Println("server is already running, quiting")
-		if cfg.RunBrowser == "true" {
+		if accs.StrToBool(cfg.RunBrowser) {
 			accs.RunClient(cfg.UseTLS, "127.0.0.1:"+cfg.ServerPort, 1, 2)
 		}
 		return
@@ -314,7 +321,7 @@ func main() {
 	}
 
 	// Launching browser:
-	if cfg.RunBrowser == "true" {
+	if accs.StrToBool(cfg.RunBrowser) {
 		go accs.RunClient(cfg.UseTLS, "127.0.0.1:"+cfg.ServerPort, 100, 2)
 	}
 
@@ -342,7 +349,7 @@ func main() {
 	http.HandleFunc("/login", bs.loginHandler)
 	http.HandleFunc("/logout", bs.logoutHandler)
 	http.HandleFunc("/files/", bs.serveUploads)
-	if cfg.UseTLS == "true" {
+	if accs.StrToBool(cfg.UseTLS) {
 		log.Fatal(http.ListenAndServeTLS(cfg.ServerHost+":"+cfg.ServerPort,
 			filepath.Join(cfg.ServerRoot, cfg.SSLCertFile),
 			filepath.Join(cfg.ServerRoot, cfg.SSLKeyFile),

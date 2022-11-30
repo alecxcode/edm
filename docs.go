@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"edm/pkg/accs"
+	"edm/pkg/datetime"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -84,7 +85,7 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Page.RemoveAllowed, _ = strconv.ParseBool(bs.cfg.RemoveAllowed)
-	user := bs.team.getByID(Page.LoggedinID)
+	user := unmarshalToProfile(bs.team.GetByID(Page.LoggedinID))
 	Page.UserConfig = user.UserConfig
 	if user.UserRole == 1 {
 		Page.LoggedinAdmin = true
@@ -92,7 +93,7 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Page.Filters.GetFilterFromForm(r,
-		convDateStrToInt64, convDateTimeStrToInt64,
+		datetime.ConvDateStrToInt64, datetime.ConvDateTimeStrToInt64,
 		map[string]int{"my": Page.LoggedinID})
 
 	// Parsing other fields
@@ -132,7 +133,7 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 			p := Profile{ID: Page.LoggedinID, UserConfig: Page.UserConfig}
 			updated := p.updateConfig(bs.db, bs.dbt)
 			if updated > 0 {
-				bs.team.updateConfig(p)
+				memoryUpdateProfile(bs.db, bs.dbt, bs.team, p.ID)
 			}
 		}
 	}
@@ -236,9 +237,9 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			d.RegNo = RegNo.String
-			d.RegDate = getValidDateFromSQL(RegDate)
+			d.RegDate = datetime.GetValidDateFromSQL(RegDate)
 			d.IncNo = IncNo.String
-			d.IncDate = getValidDateFromSQL(IncDate)
+			d.IncDate = datetime.GetValidDateFromSQL(IncDate)
 			d.Category = int(Category.Int64)
 			d.DocType = int(DocType.Int64)
 			d.About = About.String
@@ -246,7 +247,7 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 			d.Addressee = Addressee.String
 			d.DocSum = int(DocSum.Int64)
 			d.Currency = int(Currency.Int64)
-			d.EndDate = getValidDateFromSQL(EndDate)
+			d.EndDate = datetime.GetValidDateFromSQL(EndDate)
 			if Creator.Valid == true {
 				d.Creator = &Profile{ID: int(Creator.Int64)}
 			}

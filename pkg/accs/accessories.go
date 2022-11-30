@@ -318,3 +318,9 @@ func IntToBool(v int) bool {
 	}
 	return false
 }
+
+// StrToBool silently converts int to bool
+func StrToBool(v string) bool {
+	res, _ := strconv.ParseBool(v)
+	return res
+}

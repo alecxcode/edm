@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"edm/pkg/accs"
+	"edm/pkg/datetime"
+	"edm/pkg/memdb"
 	"edm/pkg/passwd"
 	"encoding/json"
 	"fmt"
@@ -18,19 +20,19 @@ import (
 type Profile struct {
 	//sql generate
 	ID         int
-	FirstName  string       `sql-gen:"varchar(255)"`
-	OtherName  string       `sql-gen:"varchar(255)"`
-	Surname    string       `sql-gen:"varchar(255)"`
-	BirthDate  Date         `sql-gen:"bigint"`
-	JobTitle   string       `sql-gen:"varchar(255)"`
-	JobUnit    *Unit        `sql-gen:"FK_NULL"`
-	Boss       *Profile     `sql-gen:"FK_NULL,FK_NOACTION"`
-	Contacts   UserContacts `sql-gen:"varchar(4000)"`
-	UserRole   int          // admin = 1, others = 0
-	UserLock   int          // locked = 1, unlocked = 0
-	UserConfig UserConfig   `sql-gen:"varchar(4000)"`
-	Login      string       `sql-gen:"varchar(255)"`
-	Passwd     string       `sql-gen:"varchar(255)"`
+	FirstName  string        `sql-gen:"varchar(255)"`
+	OtherName  string        `sql-gen:"varchar(255)"`
+	Surname    string        `sql-gen:"varchar(255)"`
+	BirthDate  datetime.Date `sql-gen:"bigint"`
+	JobTitle   string        `sql-gen:"varchar(255)"`
+	JobUnit    *Unit         `sql-gen:"FK_NULL"`
+	Boss       *Profile      `sql-gen:"FK_NULL,FK_NOACTION"`
+	Contacts   UserContacts  `sql-gen:"varchar(4000)"`
+	UserRole   int           // admin = 1, others = 0
+	UserLock   int           // locked = 1, unlocked = 0
+	UserConfig UserConfig    `sql-gen:"varchar(4000)"`
+	Login      string        `sql-gen:"varchar(255)"`
+	Passwd     string        `sql-gen:"varchar(255)"`
 }
 
 // UserConfig stores person-related settings; it should not include data for query filters
@@ -55,6 +57,17 @@ type UserContacts struct {
 	Other     string
 }
 
+// GetID returns Profile ID to satisfy some interfaces
+func (p Profile) GetID() int {
+	return p.ID
+}
+
+func unmarshalToProfile(obj string) Profile {
+	user := Profile{}
+	json.Unmarshal([]byte(obj), &user)
+	return user
+}
+
 func unmarshalNonEmptyProfileContacts(c string) (res UserContacts) {
 	if c != "" {
 		err := json.Unmarshal([]byte(c), &res)
@@ -63,6 +76,17 @@ func unmarshalNonEmptyProfileContacts(c string) (res UserContacts) {
 		}
 	}
 	return res
+}
+
+func memoryUpdateProfile(db *sql.DB, dbType byte, m memdb.ObjectsInMemory, id int) {
+	if m.IsObjectInMemory(id) {
+		u := Profile{ID: id}
+		err := u.loadByIDorLogin(db, dbType, "ID")
+		if err != nil {
+			log.Println("Critical memory update error:", err)
+		}
+		m.Update(u, (u.UserLock == 1 || u.Login == ""))
+	}
 }
 
 func createFirstAdmin(db *sql.DB, DBType byte, langCode string) {
@@ -97,7 +121,7 @@ func (p *Profile) create(db *sql.DB, DBType byte) (lastid int, rowsaff int) {
 	args = args.AppendNonEmptyString("Surname", p.Surname)
 	args = args.AppendJSONStruct("Contacts", p.Contacts)
 	if p.BirthDate.Day != 0 {
-		args = args.AppendInt64("BirthDate", dateToInt64(p.BirthDate))
+		args = args.AppendInt64("BirthDate", datetime.DateToInt64(p.BirthDate))
 	}
 	args = args.AppendNonEmptyString("JobTitle", p.JobTitle)
 	if p.JobUnit != nil {
@@ -122,7 +146,7 @@ func (p *Profile) update(db *sql.DB, DBType byte) (rowsaff int) {
 	args = args.AppendStringOrNil("Surname", p.Surname)
 	args = args.AppendJSONStruct("Contacts", p.Contacts)
 	if p.BirthDate.Day != 0 {
-		args = args.AppendInt64("BirthDate", dateToInt64(p.BirthDate))
+		args = args.AppendInt64("BirthDate", datetime.DateToInt64(p.BirthDate))
 	} else {
 		args = args.AppendNil("BirthDate")
 	}
@@ -206,7 +230,7 @@ WHERE p.ID = `+sqla.MakeParam(DBType, 1), p.ID)
 	p.OtherName = OtherName.String
 	p.Surname = Surname.String
 	p.Contacts = unmarshalNonEmptyProfileContacts(Contacts.String)
-	p.BirthDate = getValidDateFromSQL(BirthDate)
+	p.BirthDate = datetime.GetValidDateFromSQL(BirthDate)
 	p.JobTitle = JobTitle.String
 	if UnitID.Valid {
 		p.JobUnit = &Unit{
@@ -427,25 +451,25 @@ func (p Profile) GiveSelfNameJob() (n string) {
 func (p Profile) GiveBirthDay(dateFmt string) string {
 	switch dateFmt {
 	case "yyyy-mm-dd":
-		return dateToStringWOY(p.BirthDate, true)
+		return datetime.DateToStringWOY(p.BirthDate, true)
 	case "yyyy.mm.dd":
-		return dateToStringWOY(p.BirthDate, true)
+		return datetime.DateToStringWOY(p.BirthDate, true)
 	case "dd.mm.yyyy":
-		return dateToStringWOY(p.BirthDate, false)
+		return datetime.DateToStringWOY(p.BirthDate, false)
 	case "dd/mm/yyyy":
-		return dateToStringWOY(p.BirthDate, false)
+		return datetime.DateToStringWOY(p.BirthDate, false)
 	case "Mon dd, yyyy":
-		return dateToStringWOY(p.BirthDate, true)
+		return datetime.DateToStringWOY(p.BirthDate, true)
 	case "mm/dd/yyyy":
-		return dateToStringWOY(p.BirthDate, true)
+		return datetime.DateToStringWOY(p.BirthDate, true)
 	default:
-		return dateToStringWOY(p.BirthDate, false)
+		return datetime.DateToStringWOY(p.BirthDate, false)
 	}
 }
 
 // GiveBirthDate executes in a template to deliver the queried date
 func (p Profile) GiveBirthDate() string {
-	return dateToString(p.BirthDate, "yyyy-mm-dd")
+	return datetime.DateToString(p.BirthDate, "yyyy-mm-dd")
 }
 
 // ProfilePage is passed into template
@@ -460,8 +484,8 @@ type ProfilePage struct {
 	LoggedinAdmin bool
 	Editable      bool
 	New           bool
-	UserList      []UserListElem
-	UnitList      []UnitListElem
+	UserList      []memdb.ObjHasID
+	UnitList      []memdb.ObjHasID
 }
 
 func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
@@ -487,7 +511,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 		New:           false,
 	}
 
-	user := bs.team.getByID(Page.LoggedinID)
+	user := unmarshalToProfile(bs.team.GetByID(Page.LoggedinID))
 	Page.UserConfig = user.UserConfig
 	if user.UserRole == 1 {
 		Page.LoggedinAdmin = true
@@ -521,7 +545,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 				Email:     r.FormValue("email"),
 				Other:     r.FormValue("otherContacts"),
 			},
-			BirthDate: stringToDate(r.FormValue("birthDate")),
+			BirthDate: datetime.StringToDate(r.FormValue("birthDate")),
 			JobTitle:  r.FormValue("jobTitle"),
 		}
 		if r.FormValue("jobUnit") != "" && r.FormValue("jobUnit") != "0" {
@@ -565,7 +589,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 						bs.systemURL, bs.i18n.Messages.DoNotReply, bs.systemURL, bs.i18n.Messages.MailerName}
 					mail.constructToChannel(bs.db, bs.dbt, bs.anymailtmpl, bs.mailchan, p)
 				}
-				bs.team.constructUserList(bs.db, bs.dbt)
+				constructUserList(bs.db, bs.dbt, bs.team)
 				if Page.UserConfig.ReturnAfterCreation {
 					http.Redirect(w, r, "/team/", http.StatusSeeOther)
 				} else {
@@ -594,7 +618,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 				Email:     r.FormValue("email"),
 				Other:     r.FormValue("otherContacts"),
 			},
-			BirthDate: stringToDate(r.FormValue("birthDate")),
+			BirthDate: datetime.StringToDate(r.FormValue("birthDate")),
 			JobTitle:  r.FormValue("jobTitle"),
 		}
 		if r.FormValue("jobUnit") != "" && r.FormValue("jobUnit") != "0" {
@@ -656,15 +680,8 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 	// Common memory refresh code after updating user profile ==
 	if doupdate && updated > 0 {
 		Page.Message = "dataWritten"
-		bs.team.constructUserList(bs.db, bs.dbt)
-		if bs.team.isProfileInMemory(IntID) {
-			u := Profile{ID: IntID}
-			err = u.loadByIDorLogin(bs.db, bs.dbt, "ID")
-			if err != nil {
-				log.Println("Critical memory update error:", err)
-			}
-			bs.team.update(u)
-		}
+		constructUserList(bs.db, bs.dbt, bs.team)
+		memoryUpdateProfile(bs.db, bs.dbt, bs.team, IntID)
 	} else if doupdate {
 		Page.Message = "dataNotWritten"
 	}
@@ -708,9 +725,7 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 					bs.i18n.Messages.DoNotReply, bs.systemURL, bs.i18n.Messages.MailerName}
 				mail.constructToChannel(bs.db, bs.dbt, bs.anymailtmpl, bs.mailchan, p)
 				Page.Message = "dataWritten"
-				if bs.team.isProfileInMemory(p.ID) {
-					bs.team.updatePasswd(p)
-				}
+				memoryUpdateProfile(bs.db, bs.dbt, bs.team, p.ID)
 			} else {
 				Page.Message = "dataNotWritten"
 			}
@@ -718,8 +733,8 @@ func (bs *BaseStruct) profileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Loading code ============================================
-	Page.UserList = bs.team.returnUserList()
-	Page.UnitList = bs.team.returnUnitList()
+	Page.UserList = bs.team.GetObjectArr("UserList")
+	Page.UnitList = bs.team.GetObjectArr("UnitList")
 	if TextID == "new" {
 		Page.New = true
 		Page.PageTitle = bs.text.NewProfile
@@ -817,7 +832,7 @@ func (bs *BaseStruct) userConfigHandler(w http.ResponseWriter, r *http.Request) 
 		p.UserConfig.ReturnAfterCreation, _ = strconv.ParseBool(r.FormValue("returnAfterCreation"))
 		updated = p.updateConfig(bs.db, bs.dbt)
 		if updated > 0 {
-			bs.team.updateConfig(p)
+			memoryUpdateProfile(bs.db, bs.dbt, bs.team, p.ID)
 			Page.Message = "dataWritten"
 		}
 	}
@@ -829,7 +844,7 @@ func (bs *BaseStruct) userConfigHandler(w http.ResponseWriter, r *http.Request) 
 	Page.TimeFormats = bs.options.TimeFormats
 	Page.LangCodes = bs.options.LangCodes
 
-	user := bs.team.getByID(Page.LoggedinID)
+	user := unmarshalToProfile(bs.team.GetByID(Page.LoggedinID))
 	Page.UserConfig = user.UserConfig
 
 	// JSON output

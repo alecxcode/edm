@@ -21,7 +21,7 @@
         <div class="scroller">
         {{range .UnitList}}
         <input type="checkbox" id="ju{{.ID}}" name="jobunits" value="{{.ID}}">
-        <label for="ju{{.ID}}">{{.UnitNameComp}}</label><br>{{end}}
+        <label for="ju{{.ID}}">{{.Value}}</label><br>{{end}}
         </div>
       </div>
     
@@ -29,7 +29,7 @@
         <div class="scroller">
         {{range .CorpList}}
         <input type="checkbox" id="com{{.ID}}" name="companies" value="{{.ID}}">
-        <label for="com{{.ID}}">{{.CompanyName}}</label><br>{{end}}
+        <label for="com{{.ID}}">{{.Value}}</label><br>{{end}}
         </div>
       </div>
 
