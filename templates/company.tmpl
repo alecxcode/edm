@@ -11,14 +11,15 @@
   <div id="control">
     <h1{{if .New}} i18n-text="newCompany"{{end}}>{{.PageTitle}}</h1>
     <p class="breadcrumbs"><a href="/companies/" i18n-text="allCompanies">all companies</a> / <span i18n-text="companyPage">company page</span></p>
+    {{if not .New}}{{template "formatOutput"}}{{end}}
     {{if and .Editable (not .New)}}
-      <input type="button" class ="sbut" name="showButton" i18n-value="edit" value="Edit" onclick="showEditForm('edit');">
-      <input type="button" class ="sbut reddish" name="showDelete" i18n-value="delete" value="Delete" onclick="showEditForm('removal');">
+      <input type="button" class="sbut" name="showButton" i18n-value="edit" value="Edit" onclick="showEditForm('edit');">
+      <input type="button" class="sbut reddish" name="showDelete" i18n-value="delete" value="Delete" onclick="showEditForm('removal');">
       <form id="removal" action="/companies/" method="post" style="display: none;">
       <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
       <input type="hidden" name="ids" value="{{.Company.ID}}">
       <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="showEditForm('view');">
-      <input type="submit" class ="sbut reddish" name="deleteButton" i18n-value="yesDelete" value="Yes, delete">
+      <input type="submit" class="sbut reddish" name="deleteButton" i18n-value="yesDelete" value="Yes, delete">
       </form>
     {{end}}
     {{if and .New (not .Editable)}}<div class="msgred" i18n-text="noPermsAdd">You do not have permission to add an object of this type.</div>{{end}}
@@ -59,16 +60,16 @@
         <div class="subelem"><a href="/team/?jobunits={{.ID}}" i18n-text="unitEmployeeList">Unit employee list</a></div>
         {{if $.Editable}}
         <span class="subelem">
-          <input type="button" class ="sbut" name="editUnit" i18n-value="edit" value="Edit" onclick="restoreUnitHTMLs();
+          <input type="button" class="sbut" name="editUnit" i18n-value="edit" value="Edit" onclick="restoreUnitHTMLs();
           showUnitEditForm('{{.ID}}', '{{.UnitName}}', '{{$.Company.ID}}', '{{.GiveHeadID}}');">
-          <input type="button" class ="sbut reddish" name="deleteUnit" i18n-value="delete" value="Delete" onclick="
+          <input type="button" class="sbut reddish" name="deleteUnit" i18n-value="delete" value="Delete" onclick="
           this.parentNode.parentNode.lastElementChild.style.display = 'block';">
         </span>
-        <form class="subelem" action="/companies/company/{{$.Company.ID}}" method="POST" style="display: none;">
+        <form class="subelem removalform" action="/companies/company/{{$.Company.ID}}" method="POST" style="display: none;">
           <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
           <input type="hidden" name="unitID" value="{{.ID}}">
-          <input type="button" class ="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); this.parentNode.style.display = 'none';">
-          <input type="submit" class ="sbut reddish" name="deleteUnit" i18n-value="yesDelete" value="Yes, delete">
+          <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); this.parentNode.style.display = 'none';">
+          <input type="submit" class="sbut reddish" name="deleteUnit" i18n-value="yesDelete" value="Yes, delete">
         </form>
         {{end}}
         </div>
@@ -76,7 +77,7 @@
 
       {{if .Editable}}
       <div class="elem unit" id="newUnit"><div class="subelem">
-      <input type="button" class ="sbut greenish" name="createUnit" i18n-value="unitCreate" value="Create unit"
+      <input type="button" class="sbut greenish" name="createUnit" i18n-value="unitCreate" value="Create unit"
       onclick="restoreUnitHTMLs(); showUnitCreateForm('newUnit', '{{$.Company.ID}}');">
       </div></div>
       {{end}}
@@ -107,12 +108,12 @@
       <p><span class="ofname" i18n-text="companyRegNo">Reg. No.:</span> <input type="text" class="field ofval" name="regNo" size="30" maxlength="127" value="{{.Company.RegNo}}"></p>
       <p><span class="ofname" i18n-text="companyTaxNo">Tax (VAT) No.:</span> <input type="text" class="field ofval" name="taxNo" size="30" maxlength="127" value="{{.Company.TaxNo}}"></p>
       <p><span class="ofname" i18n-text="companyBankDetails" style="vertical-align: top;">Bank details:</span> <textarea class="multiline ofval" name="bankDetails" maxlength="2000" rows="4" cols="30">{{.Company.BankDetails}}</textarea></p>
-    {{if .New}}<input type="submit" class ="sbut" name="createButton" i18n-value="create" value="Create">
-               <input type="button" class ="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" 
+    {{if .New}}<input type="submit" class="sbut" name="createButton" i18n-value="create" value="Create">
+               <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" 
                onclick="if (history.length > 1) {history.back()} else {window.location.href = '/companies/'}">
     </form>{{else}}
-      <input type="submit" class ="sbut" name="updateButton" i18n-value="save" value="Save">
-      <input type="button" class ="sbut" name="hideButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); showEditForm('view');">
+      <input type="submit" class="sbut" name="updateButton" i18n-value="save" value="Save">
+      <input type="button" class="sbut" name="hideButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); showEditForm('view');">
     </form>{{end}}
     </div>
   {{end}}
@@ -191,45 +192,122 @@ function restoreUnitHTMLs() {
   if (unit) {
     let obj = JSON.parse(unit);
     sessionStorage.removeItem('unit');
-    document.getElementById(obj.id).innerHTML = obj.text;
+    const unitDiv = document.getElementById(obj.id);
+    let forRemoval = unitDiv.querySelectorAll('.tempConstructedElem');
+    if (forRemoval) {
+      forRemoval.forEach(elem => unitDiv.removeChild(elem));
+    }
+    if (unitDiv.children) {
+      for (elem of unitDiv.children) {
+        elem.style.display = (elem.classList.contains('removalform'))? 'none' : 'block';
+      }
+    }
   }
 }
 
 function showUnitEditForm(elemID, unitName, companyID, unitHeadID) {
   const unitDiv = document.getElementById('unit'+elemID);
-  sessionStorage.setItem("unit", JSON.stringify({id: 'unit'+elemID, text: unitDiv.innerHTML}));
-  let newHTML = `<h3 i18n-text="unitEdit">Edit unit</h3>
-  <form class="subelem" id="unitEditForm" action="/companies/company/${companyID}" method="POST">
-  <input type="hidden" name="unitID" value="${elemID}">
-  <div><span class="ofname" i18n-text="nameEntity">Name*:</span> <input type="text" class="field ofval" name="unitName" size="30" maxlength="512" value="${unitName}" required></div>
-  <div><span class="ofname" i18n-text="unitHead">Head:</span> <select name="unitHead" id="unitHead" class="numberbox">
-    <option value='0' i18n-text="no">no</option>
-    {{range .UserList}}<option value='{{.ID}}'>{{.Value}}</option>
-    {{end}}
-  </select><span class="dropdown"></span></div>
-  <div class="margintop"><input type="submit" class ="sbut" name="updateUnit" i18n-value="save" value="Save">
-  <input type="button" class ="sbut" name="hideUnitEdit" i18n-value="cancel" value="Cancel" onclick="restoreUnitHTMLs();"></div>
-  </form>`;
-  unitDiv.innerHTML = newHTML;
+  if (unitDiv.children) {
+    for (elem of unitDiv.children) {
+      elem.style.display = 'none';
+    }
+  }
+  sessionStorage.setItem("unit", JSON.stringify({id: 'unit'+elemID, text: ''}));
+
+  const h3Elem = makeElem('h3', unitDiv, 'Edit unit', 'tempConstructedElem', false);
+  h3Elem.setAttribute('i18n-text', 'unitEdit');
+
+  const frm = makeElem('form', unitDiv, '', 'tempConstructedElem', false);
+  frm.id = 'unitEditForm';
+  frm.classList.add('subelem');
+  frm.method = 'post';
+  frm.action = `/companies/company/${companyID}`;
+  makeInputElem('hidden', frm, 'unitID', `${elemID}`, '', false);
+
+  const div1 = makeElem('div', frm, '', '', false);
+  const valN = makeElem('span', div1, 'Name*:', 'ofname', true);
+  valN.setAttribute('i18n-text', 'nameEntity');
+  const inpN = makeInputElem('text', div1, 'unitName', `${unitName}`, 'ofval', true);
+  inpN.classList.add('field');
+  inpN.required = true;
+  inpN.size = 30;
+  inpN.maxlength = 512;
+
+  const div2 = makeElem('div', frm, '', '', false);
+  const valH = makeElem('span', div2, 'Head:', 'ofname', true);
+  valH.setAttribute('i18n-text', 'unitHead');
+  const inpH = makeElem('select', div2, '', 'numberbox', false);
+  inpH.id = 'unitHead';
+  inpH.name = 'unitHead';
+  const option0 = makeElem('option', inpH, 'no', '', false);
+  option0.value = 0;
+  option0.setAttribute('i18n-text', 'no');
+  let optionN;
+  {{range .UserList}}optionN = makeElem('option', inpH, '{{.Value}}', '', true); optionN.value = {{.ID}};
+  {{end}}
+  makeElem('span', div2, '', 'dropdown', false);
+
+  const div3 = makeElem('div', frm, '', '', false);
+  div3.classList.add('margintop');
+  const inpS = makeInputElem('submit', div3, 'updateUnit', 'Save', 'sbut', true);
+  inpS.setAttribute('i18n-value', 'save');
+  const inpC = makeInputElem('button', div3, 'hideUnitEdit', 'Cancel', 'sbut', true);
+  inpC.addEventListener('click', restoreUnitHTMLs);
+  inpC.setAttribute('i18n-value', 'cancel');
+
   translateElem(unitDiv);
   document.getElementById('unitHead').value = unitHeadID;
 }
 
 function showUnitCreateForm(elemID, companyID) {
   const unitDiv = document.getElementById(elemID);
-  sessionStorage.setItem("unit", JSON.stringify({id: elemID, text: unitDiv.innerHTML}));
-  let newHTML = `<h3 i18n-text="unitNew">New unit</h3>
-  <form class="subelem" id="unitCreateForm" action="/companies/company/${companyID}" method="POST">
-  <div><span class="ofname" i18n-text="nameEntity">Name*:</span> <input type="text" class="field ofval" name="unitName" size="30" maxlength="512" required></div>
-  <div><span class="ofname" i18n-text="unitHead">Head:</span> <select name="unitHead" id="unitHead" class="numberbox">
-    <option value='0' i18n-text="no">no</option>
-    {{range .UserList}}<option value='{{.ID}}'>{{.Value}}</option>
-    {{end}}
-  </select><span class="dropdown"></span></div>
-  <div class="margintop"><input type="submit" class ="sbut" name="createUnit" i18n-value="create" value="Create">
-  <input type="button" class ="sbut" name="hideUnitEdit" i18n-value="cancel" value="Cancel" onclick="restoreUnitHTMLs();"></div>
-  </form>`;
-  unitDiv.innerHTML = newHTML;
+  if (unitDiv.children) {
+    for (elem of unitDiv.children) {
+      elem.style.display = 'none';
+    }
+  }
+  sessionStorage.setItem("unit", JSON.stringify({id: elemID, text: ''}));
+  
+  const h3Elem = makeElem('h3', unitDiv, 'New unit', 'tempConstructedElem', false);
+  h3Elem.setAttribute('i18n-text', 'unitNew');
+
+  const frm = makeElem('form', unitDiv, '', 'tempConstructedElem', false);
+  frm.id = 'unitCreateForm';
+  frm.classList.add('subelem');
+  frm.method = 'post';
+  frm.action = `/companies/company/${companyID}`;
+
+  const div1 = makeElem('div', frm, '', '', false);
+  const valN = makeElem('span', div1, 'Name*:', 'ofname', true);
+  valN.setAttribute('i18n-text', 'nameEntity');
+  const inpN = makeInputElem('text', div1, 'unitName', '', 'ofval', true);
+  inpN.classList.add('field');
+  inpN.required = true;
+  inpN.size = 30;
+  inpN.maxlength = 512;
+
+  const div2 = makeElem('div', frm, '', '', false);
+  const valH = makeElem('span', div2, 'Head:', 'ofname', true);
+  valH.setAttribute('i18n-text', 'unitHead');
+  const inpH = makeElem('select', div2, '', 'numberbox', false);
+  inpH.id = 'unitHead';
+  inpH.name = 'unitHead';
+  const option0 = makeElem('option', inpH, 'no', '', false);
+  option0.value = 0;
+  option0.setAttribute('i18n-text', 'no');
+  let optionN;
+  {{range .UserList}}optionN = makeElem('option', inpH, '{{.Value}}', '', true); optionN.value = {{.ID}};
+  {{end}}
+  makeElem('span', div2, '', 'dropdown', false);
+
+  const div3 = makeElem('div', frm, '', '', false);
+  div3.classList.add('margintop');
+  const inpS = makeInputElem('submit', div3, 'createUnit', 'Create', 'sbut', true);
+  inpS.setAttribute('i18n-value', 'create');
+  const inpC = makeInputElem('button', div3, 'hideUnitEdit', 'Cancel', 'sbut', true);
+  inpC.addEventListener('click', restoreUnitHTMLs);
+  inpC.setAttribute('i18n-value', 'cancel');
+
   translateElem(unitDiv);
 }
 

@@ -11,16 +11,17 @@
   <div id="control">
   <h1{{if .New}} i18n-text="newUser"{{end}}>{{.PageTitle}}</h1>
   <p class="breadcrumbs"><a href="/team/" i18n-text="allUsers">all users</a> / <span i18n-text="userPage">user page</span></p>
+  {{if not .New}}{{template "formatOutput"}}{{end}}
   {{if and .Editable (not .New)}}
-    <input type="button" class ="sbut" name="showButton" i18n-value="edit" value="Edit" onclick="showEditForm('edit');">
-    <input type="button" class ="sbut" name="showButton" i18n-value="changeLoginPasswd" value="Change login, password" onclick="showEditForm('passwd');">
+    <input type="button" class="sbut" name="showButton" i18n-value="edit" value="Edit" onclick="showEditForm('edit');">
+    <input type="button" class="sbut" name="showButton" i18n-value="changeLoginPasswd" value="Change login, password" onclick="showEditForm('passwd');">
 
     {{if .LoggedinAdmin}}
-      {{if .Profile.UserLock}}<input type="button" class ="sbut" name="unlockUser" i18n-value="unlock" value="Unlock" onclick="processLock('0', this.value);">
-      {{else}}<input type="button" class ="sbut" name="lockUser" i18n-value="lock" value="Lock" onclick="processLock('1', this.value);">{{end}}
-      {{if eq .Profile.UserRole 1}}<input type="button" class ="sbut" name="roleNone" i18n-value="revokeAdmin" value="Revoke administrator role" onclick="processRole('0', this.value);">
-      {{else}}<input type="button" class ="sbut" name="roleAdmin" i18n-value="makeAdmin" value="Make administrator" onclick="processRole('1', this.value);">{{end}}
-      <input type="button" class ="sbut reddish" name="showDelete" i18n-value="delete" value="Delete" onclick="showEditForm('removal');">
+      {{if .Profile.UserLock}}<input type="button" class="sbut" name="unlockUser" i18n-value="unlock" value="Unlock" onclick="processLock('0', this.value);">
+      {{else}}<input type="button" class="sbut" name="lockUser" i18n-value="lock" value="Lock" onclick="processLock('1', this.value);">{{end}}
+      {{if eq .Profile.UserRole 1}}<input type="button" class="sbut" name="roleNone" i18n-value="revokeAdmin" value="Revoke administrator role" onclick="processRole('0', this.value);">
+      {{else}}<input type="button" class="sbut" name="roleAdmin" i18n-value="makeAdmin" value="Make administrator" onclick="processRole('1', this.value);">{{end}}
+      <input type="button" class="sbut reddish" name="showDelete" i18n-value="delete" value="Delete" onclick="showEditForm('removal');">
 
       <form id="userStatuses" action="/team/profile/{{.Profile.ID}}" method="post" style="display: none;">
         <div class="msgredfx" i18n-text="beCarefulWithOptions">Be careful while applying these options!</div>
@@ -28,14 +29,14 @@
         <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="
         document.getElementById('userStatuses').reset();
         this.parentNode.style.display = 'none';">
-        <input type="submit" id="userStatusSubmit" class ="sbut reddish" name="" value="">
+        <input type="submit" id="userStatusSubmit" class="sbut reddish" name="" value="">
       </form>
 
       <form id="removal" action="/team/" method="post" style="display: none;">
         <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
         <input type="hidden" name="ids" value="{{.Profile.ID}}">
         <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="showEditForm('view');">
-        <input type="submit" class ="sbut reddish" name="deleteButton" i18n-value="yesDelete" value="Yes, delete">
+        <input type="submit" class="sbut reddish" name="deleteButton" i18n-value="yesDelete" value="Yes, delete">
       </form>
     {{end}}
 
@@ -125,12 +126,12 @@
             });
           })();
         </script>
-        <input type="submit" class ="sbut" name="createButton" i18n-value="create" value="Create">
-        <input type="button" class ="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" 
+        <input type="submit" class="sbut" name="createButton" i18n-value="create" value="Create">
+        <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" 
         onclick="if (history.length > 1) {history.back()} else {window.location.href = '/team/'}">
       </form>{{else}}
-        <input type="submit" class ="sbut" name="updateButton" i18n-value="save" value="Save">
-        <input type="button" class ="sbut" name="hideButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); showEditForm('view');">
+        <input type="submit" class="sbut" name="updateButton" i18n-value="save" value="Save">
+        <input type="button" class="sbut" name="hideButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); showEditForm('view');">
       </form>{{end}}
 
     </div>
@@ -142,8 +143,8 @@
     <form id="passwdForm" action="/team/profile/{{.Profile.ID}}" method="post">
       <p><span class="ofname" i18n-text="login">Login:</span> <input type="text" class="field ofval" name="login" size="30" maxlength="127" value="{{.Profile.Login}}"></p>
       <p><span class="ofname" i18n-text="passwd">Password*:</span> <input type="password" class="field ofval" name="passwd" size="30" minlength="6" maxlength="72" value="" required> <span i18n-text="passwdRequirement">6 characters minimum</span></p>
-      <input type="submit" class ="sbut" name="updatePasswd" i18n-value="save" value="Save">
-      <input type="button" class ="sbut" name="hideButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); showEditForm('view');
+      <input type="submit" class="sbut" name="updatePasswd" i18n-value="save" value="Save">
+      <input type="button" class="sbut" name="hideButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); showEditForm('view');
       let msgp = document.getElementById('msgemptypass');
       if (msgp) {msgp.parentNode.removeChild(msgp);}">
     </form>

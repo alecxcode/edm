@@ -14,37 +14,30 @@
   <div id="control">
     <h1>{{.PageTitle}}</h1>
     <p class="breadcrumbs"><a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-text="allTasks">all tasks</a> / <span i18n-text="taskPage">task page</span></p>
+    {{if not .New}}{{template "formatOutput"}}{{end}}
 
     {{if and (not .New) (or .Editable .IamAssignee)}}
     <form id="statuses" action="/tasks/task/{{.Task.ID}}" method="POST">
       <input type="hidden" name="taskStatus" value="" id="taskStatus">
-      <input type="submit" class ="sbut" id="inprogress" name="statusButton" i18n-many="inProgressOne" value="In progress" title="Set task status - in progress" onclick="document.getElementById('taskStatus').value = 'inprogress';">
-      <input type="submit" class ="sbut" id="stuck" name="statusButton" i18n-many="stuckOne" value="Stuck" title="Suspend due to some problem" onclick="document.getElementById('taskStatus').value = 'stuck';">
-      <input type="submit" class ="sbut" id="done" name="statusButton" i18n-many="doneOne" value="Done" title="Complete the task" onclick="document.getElementById('taskStatus').value = 'done';">
-      <input type="submit" class ="sbut" id="cancelled" name="statusButton" i18n-many="cancelOne" value="Cancel" title="Cancel the task" onclick="document.getElementById('taskStatus').value = 'cancelled';">
+      <input type="submit" class="sbut" id="inprogress" name="statusButton" i18n-many="inProgressOne" value="In progress" title="Set task status - in progress" onclick="document.getElementById('taskStatus').value = 'inprogress';">
+      <input type="submit" class="sbut" id="stuck" name="statusButton" i18n-many="stuckOne" value="Stuck" title="Suspend due to some problem" onclick="document.getElementById('taskStatus').value = 'stuck';">
+      <input type="submit" class="sbut" id="inreview" name="statusButton" i18n-many="inReviewOne" value="In review" title="Set task status - in review" onclick="document.getElementById('taskStatus').value = 'inreview';">
+      <input type="submit" class="sbut" id="done" name="statusButton" i18n-many="doneOne" value="Done" title="Complete the task" onclick="document.getElementById('taskStatus').value = 'done';">
+      <input type="submit" class="sbut" id="canceled" name="statusButton" i18n-many="cancelOne" value="Cancel" title="Cancel the task" onclick="document.getElementById('taskStatus').value = 'canceled';">
     </form>
-    <script>
-      (function() {
-        const CREATED = 0, ASSIGNED = 1, INPROGRESS = 2, STUCK = 3, DONE = 4, CANCELLED = 5;
-        let textStatus = '';
-        let taskStatus = {{.Task.TaskStatus}};
-        if (taskStatus == INPROGRESS) textStatus = 'inprogress';
-        if (taskStatus == STUCK) textStatus = 'stuck';
-        if (taskStatus == DONE) textStatus = 'done';
-        if (taskStatus == CANCELLED) textStatus = 'cancelled';
-        if (textStatus) document.getElementById(textStatus).disabled = true;
-      })();
-    </script>
     {{end}}
 
+    {{if and (eq .Task.TaskStatus 0) (not .New)}}
+      <input type="button" class="sbut greenish" name="takeButton" i18n-many="take" title="Take the task to do" value="Take" onclick="makeFormAndSubmit({{.LoggedinID}}, 'assigneeForward', '/tasks/task/{{.Task.ID}}');">
+    {{end}}
     {{if and .Editable (not .New)}}
-      <input type="button" class ="sbut" name="showButton" i18n-value="edit" value="Edit" onclick="showEditForm('edit');">
+      <input type="button" class="sbut" name="showButton" i18n-value="edit" value="Edit" onclick="showEditForm('edit');">
       <input type="button"{{if not .RemoveAllowed}}style="display: none;"{{end}} class="sbut reddish" name="showDelete" i18n-value="delete" value="Delete" onclick="showEditForm('removal');">
       <form id="removal" action="/tasks/" method="POST" style="display: none;">
       <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
       <input type="hidden" name="ids" value="{{.Task.ID}}">
       <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="showEditForm('view');">
-      <input type="submit" class ="sbut reddish" name="deleteButton" i18n-value="yesDelete" value="Yes, delete">
+      <input type="submit" class="sbut reddish" name="deleteButton" i18n-value="yesDelete" value="Yes, delete">
       </form>
     {{end}}
 
@@ -62,20 +55,8 @@
   {{if not .New}}
     <div id="view">
       <h2 i18n-text="parameters">Parameters:</h2>
-      <p><span class="ofname" i18n-text="status">Status:</span><span class="ofval" id="about"><span id="statusIndicator" class="txtbw" i18n-index="taskStatuses-{{.Task.TaskStatus}}">{{.Task.GiveStatus .TaskStatuses "Unknown"}}</span>;
-        <span i18n-text="statusSet">Status set</span>: {{.Task.GiveDateTime "StatusSet" .UserConfig.DateFormat .UserConfig.TimeFormat $vtsep}}</span></p>
-        <script>
-          (function() {
-            const CREATED = 0, ASSIGNED = 1, INPROGRESS = 2, STUCK = 3, DONE = 4, CANCELLED = 5;
-            let className = '';
-            let taskStatus = {{.Task.TaskStatus}};
-            if (taskStatus == CREATED || taskStatus == ASSIGNED || taskStatus == INPROGRESS) className = 'txtblue';
-            if (taskStatus == STUCK) className = 'txtred';
-            if (taskStatus == DONE) className = 'txtgreen';
-            if (taskStatus == CANCELLED) className = 'txtbw';
-            if (className) document.getElementById('statusIndicator').className = className;
-          })();
-        </script>
+      <p><span class="ofname" i18n-text="status">Status:</span><span class="ofval" id="about"><span id="statusIndicator" i18n-index="taskStatuses-{{.Task.TaskStatus}}">{{.Task.GiveStatus .TaskStatuses "Unknown"}}</span>;
+        <span i18n-text="set">Set</span>: {{.Task.GiveDateTime "StatusSet" .UserConfig.DateFormat .UserConfig.TimeFormat $vtsep}}</span></p>
       <p><span class="ofname" i18n-text="plannedStartDue">Planned start and due:</span><span class="ofval">{{if .Task.PlanStart.Day}}<span class="nowrap"><span i18n-text="start">Start:</span> {{.Task.GiveDateTime "PlanStart" .UserConfig.DateFormat .UserConfig.TimeFormat $vtsep}}</span>{{end}}
         {{if and .Task.PlanStart.Day .Task.PlanDue.Day}}-{{end}}
         {{if .Task.PlanDue.Day}}<span class="nowrap"><span i18n-text="due">Due:</span> {{.Task.GiveDateTime "PlanDue" .UserConfig.DateFormat .UserConfig.TimeFormat $vtsep}}</span>{{end}}</span></p>
@@ -89,9 +70,11 @@
         </select><span class="dropdown"></span></span> <span class="nowrap">
         <input type="button" class="sbut greenish smaller" i18n-value="forward" value="Forward"
         onclick="makeFormAndSubmit(document.getElementById('selectedAssignee').value, 'assigneeForward', '/tasks/task/{{.Task.ID}}');">
-        <input type="button" class ="sbut smaller" i18n-value="cancel" value="Cancel" onclick="document.getElementById('forwardControls').style.display = 'none';">
+        <input type="button" class="sbut smaller" i18n-value="cancel" value="Cancel" onclick="document.getElementById('forwardControls').style.display = 'none';">
         </span>
       </div>{{end}}
+      {{if .Task.Project}}<p><span class="ofname" i18n-text="project">Project:</span><span class="ofval"><a href="/projs/project/{{.Task.Project}}"></a></span></p>{{end}}
+
       <h2 i18n-text="content">Content:</h2>
       <div class="elem"><div class="subelem multilineContent">{{.Task.Content}}</div></div>
 
@@ -101,7 +84,7 @@
           {{range .UserList}}<option value="{{.ID}}">{{.Value}}</option>
           {{end}}
         </select><span class="dropdown"></span></span>
-        <input type="button" class ="sbut greenish smaller" i18n-value="addParticipant" value="Add participant"
+        <input type="button" class="sbut greenish smaller" i18n-value="addParticipant" value="Add participant"
         onclick="makeFormAndSubmit(document.getElementById('selectedParticipant').value, 'participantAdd', '/tasks/task/{{.Task.ID}}');">
       </div>{{end}}
       <div id="appliedElems"><span i18n-text="participants">Participants:</span>{{if .Participants}}
@@ -117,11 +100,11 @@
         <br>{{end}}
       {{end}}
       {{if and .Editable .Task.FileList (not .New)}}
-        <span i18n-text="selectedFiles">Selected files:</span> <input type="button" class ="sbut reddish" name="showDeleteFiles" i18n-value="delete" value="Delete" onclick="showEditForm('removalFiles');">
+        <span i18n-text="selectedFiles">Selected files:</span> <input type="button" class="sbut reddish" name="showDeleteFiles" i18n-value="delete" value="Delete" onclick="showEditForm('removalFiles');">
         <form id="removalFiles" action="/tasks/task/{{.Task.ID}}" method="POST" onsubmit="addFileElems(this);" style="display: none;">
         <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
         <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="showEditForm('view');">
-        <input type="submit" class ="sbut reddish" name="deleteFiles" i18n-value="yesDelete" value="Yes, delete">
+        <input type="submit" class="sbut reddish" name="deleteFiles" i18n-value="yesDelete" value="Yes, delete">
         </form>
       {{end}}
       <br>
@@ -153,7 +136,7 @@
           <textarea class="multiline" id="textAreaComm" name="content" maxlength="8000" style="width: 100%; height: 8em; margin-bottom: 0.4em;"></textarea>
           {{$sfx := "Comm"}}{{template "filedrop" $sfx}}
           </div>
-          <div class="subelem"><input type="submit" class ="sbut greenish" name="createComment" i18n-value="addComment" value="Add comment"></div>
+          <div class="subelem"><input type="submit" class="sbut greenish" name="createComment" i18n-value="addComment" value="Add comment"></div>
         </form>
       </div>
       {{end}}
@@ -182,6 +165,7 @@
         {{range .UserList}}<option value="{{.ID}}">{{.Value}}</option>
         {{end}}
       </select><span class="dropdown"></span></span></p>
+      <p id="projectBlock" style="display: none;"></p>
       <h2 i18n-text="content">Content:</h2>
       <p><span class="ofname" i18n-text="topic">Topic*:</span> <input type="text" class="field ofval" name="topic" size="30" maxlength="127" value="{{.Task.Topic}}" required></p>
       <div class="wideelem"><span class="ofname" i18n-text="content">Content:</span> <span class="ofval nowrap">
@@ -194,12 +178,12 @@
       <br>
       <br>
 
-    {{if .New}}<input type="submit" class ="sbut" name="createButton" i18n-value="create" value="Create">
-               <input type="button" class ="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" 
+    {{if .New}}<input type="submit" class="sbut" name="createButton" i18n-value="create" value="Create">
+               <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" 
                onclick="if (history.length > 1) {history.back()} else {window.location.href = '/tasks/'}">
     </form>{{else}}
-      <input type="submit" class ="sbut" name="updateButton" i18n-value="save" value="Save">
-      <input type="button" class ="sbut" name="hideButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); showEditForm('view');">
+      <input type="submit" class="sbut" name="updateButton" i18n-value="save" value="Save">
+      <input type="button" class="sbut" name="hideButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); showEditForm('view');">
     </form>{{end}}
     </div>
   {{end}}
@@ -212,8 +196,7 @@
 </div>
 
 <script src="/static/functions.js"></script>
-
-
+<script src="/static/functionspm.js"></script>
 
 <script>
 /* Some variables for messages */
@@ -246,6 +229,13 @@ if (document.documentElement.lang != 'en') {
 /* Page loading function for read */
 (function() {
   updateMultilines('multilineContent');
+  if (!window.location.pathname.endsWith('/new')) {
+    let status = {{.Task.TaskStatus}};
+    updateTaskStatusButtons(status);
+    updateTaskStatusIndicatorClass(status);
+  }
+  let pid = {{.Task.Project}};
+  if (pid) makeRequest({proj: pid}, '/projs/getproj', showProjectOnTaskPage);
 })();
 </script>
 
@@ -255,6 +245,19 @@ if (document.documentElement.lang != 'en') {
 (function() {
   document.getElementById('assignee').value = "{{$ai}}";
   checkForNewCreated();
+
+  let frm = document.getElementById('createForm');
+  if (!frm) frm = document.getElementById('editForm');
+  let args = new URLSearchParams(document.location.search);
+  let projectReturn = Boolean(args.get("projectReturn"));
+  let project = Number(args.get("project"));
+  if (project) makeRequest({proj: project}, '/projs/getproj', showProjectOnTaskPage);
+  if (project && frm) {
+    addHiddenElem(frm, "projectFrom", project);
+  }
+  if (projectReturn && frm) {
+    addHiddenElem(frm, "projectReturn", projectReturn);
+  }
 })();
 </script>
 {{end}}

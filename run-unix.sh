@@ -1,8 +1,11 @@
-#!/bin/zsh
+#!/bin/sh
 cd internal/config
 go generate
-cd ../..
+cd ../../internal/core
 go generate
+cd ../../cmd/edm
 go build
+cd ../..
+mv cmd/edm/edm ./edm
 #chmod +x ./edm
 ./edm --consolelog

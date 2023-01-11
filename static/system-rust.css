@@ -1,6 +1,7 @@
 :root {
   font-size: 14px;
-  --elements-radius: 2px;
+  --elements-radius: 3px;
+  --smaller-radius: 2px;
   --standard-font: Roboto, "Segoe UI", Ubuntu, "-apple-system", BlinkMacSystemFont, Arial, sans-serif;
   --defaultBackgroundColor: #ddc;
   --darkerBackgroundColor: #a98;
@@ -22,7 +23,7 @@ pre, code {
   overflow-x: auto;
   background-color: #f0f0e0;
   padding: 1px 3px;
-  border-radius: calc(var(--elements-radius) * 2);
+  border-radius: var(--elements-radius);
 }
 q {quotes: '"' '"' "'" "'";}
   
@@ -64,8 +65,10 @@ a:hover, a:focus {
 }
 .txtred {color: #f00;}
 .txtgreen {color: #0a0;}
+.txtora {color: #c60;}
 .txtblue {color: #55a;}
 .txtbw {color: #000;}
+
 .msgredfx {color: #f00;}
 .msgred {color: #f00; opacity: 0; animation: 8s linear fadeout;}
 .msgok {color: #0a0; opacity: 0; animation: 8s linear fadeout;}
@@ -110,7 +113,7 @@ h2 {
   background-color: #ca0;
   display: block; 
   margin: 1px; 
-  border-radius: 2px; 
+  border-radius: var(--smaller-radius); 
   border: 1px solid #b90;
 }
 .fit-content{max-width: fit-content;}
@@ -224,8 +227,9 @@ a.sbut, a.sbut:active, a.sbut:visited {
 .inline-block {
   display: inline-block;
 }
-.smaller, .smaller:hover, .smaller:focus {
+input.smaller, .smaller, .smaller:hover, .smaller:focus {
   padding: 2px 4px;
+  border-radius: var(--smaller-radius);
 }
 
 /* other things */

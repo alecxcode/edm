@@ -15,7 +15,7 @@ type DateTime struct {
 	Minute byte
 }
 
-// Int64 timestamps conversion functions
+// DateTimeToInt64 converts DateTime to int64
 func DateTimeToInt64(dt DateTime) int64 {
 	var AD int64 = 1
 	if dt.Year < 0 {
@@ -24,6 +24,8 @@ func DateTimeToInt64(dt DateTime) int64 {
 	}
 	return (int64(dt.Minute) + int64(dt.Hour)*60 + int64(dt.Day-1)*60*24 + int64(dt.Month-1)*60*24*31 + int64(dt.Year)*60*24*31*12) * AD
 }
+
+// Int64ToDateTime converts int64 to DateTime
 func Int64ToDateTime(timestamp int64) DateTime {
 	if timestamp == 0 {
 		return DateTime{0, 0, 0, 0, 0}
@@ -42,10 +44,12 @@ func Int64ToDateTime(timestamp int64) DateTime {
 	}
 }
 
+// ConvDateTimeStrToInt64 converts datetime string to int64
 func ConvDateTimeStrToInt64(dt string) int64 {
 	return DateTimeToInt64(StringToDateTime(dt))
 }
 
+// StringToDateTime converts datetime string to DateTime
 func StringToDateTime(dtstring string) DateTime {
 	BC := false
 	if dtstring == "" {
@@ -79,6 +83,7 @@ func StringToDateTime(dtstring string) DateTime {
 	return DateTime{y, byte(m), byte(d), byte(hour), byte(minute)}
 }
 
+// TimeToString12 converts time to string in 12h format
 func TimeToString12(hour byte, minute byte) string {
 
 	if hour == 0 && minute == 0 {
@@ -109,6 +114,7 @@ func TimeToString12(hour byte, minute byte) string {
 	return h + ":" + m + ampm
 }
 
+// TimeToString24 converts time to string in 24h format
 func TimeToString24(hour byte, minute byte) string {
 	h := strconv.Itoa(int(hour))
 	m := strconv.Itoa(int(minute))
@@ -121,6 +127,7 @@ func TimeToString24(hour byte, minute byte) string {
 	return h + ":" + m
 }
 
+// DateTimeToStringSTD converts DateTime to standard format string
 func DateTimeToStringSTD(dt DateTime) string {
 	if dt.Day == 0 {
 		return ""
@@ -128,6 +135,7 @@ func DateTimeToStringSTD(dt DateTime) string {
 	return DateToString(Date{dt.Year, dt.Month, dt.Day}, "") + "yyyy-mm-dd" + TimeToString24(dt.Hour, dt.Minute)
 }
 
+// GetCurrentDateTime gets currents DateTime
 func GetCurrentDateTime() DateTime {
 	t := time.Now()
 	y, m, d := t.Date()
@@ -137,25 +145,27 @@ func GetCurrentDateTime() DateTime {
 }
 
 // UTC functions for possible future use
-// func getCurrentDateTimeUTC() DateTime {
-// 	t := time.Now().UTC()
-// 	y, m, d := t.Date()
-// 	hour := t.Hour()
-// 	minute := t.Minute()
-// 	return DateTime{y, byte(m), byte(d), byte(hour), byte(minute)}
-// }
-// func getUTCDiff() int64 {
-// 	return dateTimeToInt64(getCurrentDateTime()) - dateTimeToInt64(getCurrentDateTimeUTC())
-// }
-// func (dt DateTime) minus(minutesdiff int64) DateTime {
-// 	if dt.Day == 0 {
-// 		return DateTime{0, 0, 0, 0, 0}
-// 	}
-// 	return int64ToDateTime(dateTimeToInt64(dt) - minutesdiff)
-// }
-// func (dt DateTime) plus(minutesdiff int64) DateTime {
-// 	if dt.Day == 0 {
-// 		return DateTime{0, 0, 0, 0, 0}
-// 	}
-// 	return int64ToDateTime(dateTimeToInt64(dt) + minutesdiff)
-// }
+/*
+func getCurrentDateTimeUTC() DateTime {
+	t := time.Now().UTC()
+	y, m, d := t.Date()
+	hour := t.Hour()
+	minute := t.Minute()
+	return DateTime{y, byte(m), byte(d), byte(hour), byte(minute)}
+}
+func getUTCDiff() int64 {
+	return DateTimeToInt64(GetCurrentDateTime()) - DateTimeToInt64(getCurrentDateTimeUTC())
+}
+func (dt DateTime) minus(minutesdiff int64) DateTime {
+	if dt.Day == 0 {
+		return DateTime{0, 0, 0, 0, 0}
+	}
+	return Int64ToDateTime(DateTimeToInt64(dt) - minutesdiff)
+}
+func (dt DateTime) plus(minutesdiff int64) DateTime {
+	if dt.Day == 0 {
+		return DateTime{0, 0, 0, 0, 0}
+	}
+	return Int64ToDateTime(DateTimeToInt64(dt) + minutesdiff)
+}
+*/

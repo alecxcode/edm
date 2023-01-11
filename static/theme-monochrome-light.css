@@ -1,6 +1,7 @@
 :root {
   font-size: 14px;
-  --elements-radius: 2px;
+  --elements-radius: 3px;
+  --smaller-radius: 2px;
   --standard-font: Roboto, "Segoe UI", Ubuntu, "-apple-system", BlinkMacSystemFont, Arial, sans-serif;
   --tableOddRowBkgColor: #fff;
   --tableSelectionColor: #e0e0e0;
@@ -158,6 +159,7 @@ a:focus-visible {text-decoration-thickness: 1.5px;}
 
 .txtred {color: #000;}
 .txtgreen {color: #000;}
+.txtora {color: #000;}
 .txtblue {color: #000;}
 .txtbw {color: #000;}
 
@@ -174,31 +176,32 @@ a:focus-visible {text-decoration-thickness: 1.5px;}
 .af {
   color: #aaa;
   background-color: #000;
-  border-radius: var(--elements-radius);
+  border-radius: var(--smaller-radius);
   padding: 0px 5px 0px 5px;
   white-space: nowrap;
 }
 .chosen-block {
+  margin-top: 1px;
   max-width: fit-content;
   color: #aaa;
   background-color: #000;
-  border-radius: var(--elements-radius);
+  border-radius: var(--smaller-radius);
   padding: 0px 5px 0px 5px;
   white-space: nowrap;
 }
 .chosen, #control .chosen, #main .chosen {
   color: #aaa;
   background-color: #000;
-  border-radius: var(--elements-radius);
+  border-radius: var(--smaller-radius);
   padding: 0px 5px 0px 5px;
   white-space: nowrap;
 }
-.withrm, #control .withrm, #main .withrm {border-radius: var(--elements-radius) 0 0 var(--elements-radius);}
+.withrm, #control .withrm, #main .withrm {border-radius: var(--smaller-radius) 0 0 var(--smaller-radius);}
 .rm{ 
   cursor: pointer;
   color:#aaa; 
   background-color: #000;
-  border-radius: 0 var(--elements-radius) var(--elements-radius) 0;
+  border-radius: 0 var(--smaller-radius) var(--smaller-radius) 0;
   padding-left: 3px;
   padding-right: 3px;
 }
@@ -254,7 +257,7 @@ h2 {
   background-color: #000;
   border: 1px solid #000;
   border-radius: calc(1px + var(--elements-radius));
-  overflow: hidden;
+  overflow: scroll;
 }
 .grideven, .gridodd {background-color: #fff; padding: 0px 1px;}
 .gridheader {background-color: #000 !important; color: #fff; font-weight: bold;}
@@ -277,13 +280,13 @@ h2 {
 .afile {
   display: block; 
   margin: 1px; 
-  border-radius: 2px; 
+  border-radius: var(--smaller-radius); 
   border: 1px dotted #000;
 }
 .afile-inline-block {
   display: inline-block; 
   margin: 1px; 
-  border-radius: 2px; 
+  border-radius: var(--smaller-radius); 
   border: 1px dotted #000;
 }
 .someaction {
@@ -328,13 +331,43 @@ h2 {
   margin-top: 6px;
   margin-bottom: 6px;
 }
-.margintop {
-  margin-top: 6px;
-}
-.marginbottom {
-  margin-bottom: 6px;
-}
+.margintop {margin-top: 6px;}
+.marginbottom {margin-bottom: 6px;}
 
+
+
+/* flexbox columns for PM */
+.container-flexbox {
+  display: flex; 
+  justify-content: space-between; 
+  flex-wrap: wrap;
+  gap: 15px 5px;
+}
+.item-col-4 {
+  width: 24%;
+  min-height: 60px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #000;
+  border-radius: calc(1px + var(--elements-radius));
+}
+.item-col-4 h3 {border-radius: calc(1px + var(--elements-radius)) calc(1px + var(--elements-radius)) 0 0;}
+@media (max-width:960px) {
+  .item-col-4 { width: 49%; }
+}
+@media (max-width:640px) {
+  .item-col-4 { width: 100%; }
+}
+.elem-inside-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 5px;
+  border-radius: var(--elements-radius);
+  border: 1px solid #000;
+  margin: 5px 5px 0px 5px;
+}
+.elem-inside-item:last-child {margin-bottom: 5px;}
+.bigger-font {font-size: 15px;}
 
 
 input[type=text], input[type=button], input[type=submit], button {
@@ -358,6 +391,7 @@ input[type='checkbox'] {
   height: 14px;
   background-color: #fff;
   border: 1px solid #000;
+  border-radius: var(--smaller-radius);
 }
 input[type='checkbox']:checked {
   background-color: #fff;
@@ -562,7 +596,7 @@ a.sbut, a.sbut:active, a.sbut:visited {
   margin: 1px;
   font: inherit;
   border: 1px solid #000;
-  border-radius: var(--elements-radius);
+  border-radius: var(--smaller-radius);
 }
 .numberbox:hover, .numberbox:focus {
   border: 1px solid #000;
@@ -648,8 +682,9 @@ h3 a:focus {
   text-decoration: underline;
   text-decoration-style: dotted;
 }
-.smaller, .smaller:hover, .smaller:focus {
+input.smaller, .smaller, .smaller:hover, .smaller:focus {
   padding: 2px 4px;
+  border-radius: var(--smaller-radius);
 }
 .nowrap {
   white-space: nowrap;

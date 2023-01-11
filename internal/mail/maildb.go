@@ -32,6 +32,7 @@ func (em *EmailMessage) saveToDB(db *sql.DB, DBType byte) (lastid int, rowsaff i
 	return lastid, rowsaff
 }
 
+// SaveToDBandLog saves message to DB. It should only be called if channel is full
 func (em *EmailMessage) SaveToDBandLog(db *sql.DB, DBType byte) {
 	log.Println("Saving mail message to DB.")
 	_, ra := em.saveToDB(db, DBType)
@@ -40,6 +41,7 @@ func (em *EmailMessage) SaveToDBandLog(db *sql.DB, DBType byte) {
 	}
 }
 
+// ReadMailFromDB reads and sends to channel email messages from DB
 func ReadMailFromDB(ch chan EmailMessage, waitTimeSeconds int, db *sql.DB, DBType byte, DEBUG bool) {
 	for {
 		sq := "SELECT ID, SendTo, SendCc, Subj, Cont FROM emailmessages ORDER BY ID ASC LIMIT 100"

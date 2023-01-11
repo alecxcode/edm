@@ -1,16 +1,13 @@
 /* Highlights current website block */
 (function(){
-  let addr = window.location.pathname;
-  let currentItem;
-  if (addr.includes("/docs")) {
-    currentItem = document.querySelector("#textmenu a[href^='/docs']");
-  } else if (addr.includes("/team")) {
-    currentItem = document.querySelector("#textmenu a[href^='/team']");
-  } else if (addr.includes("/task")) {
-    currentItem = document.querySelector("#textmenu a[href^='/task']");
-  }
-  if (currentItem) currentItem.classList.add("chosenmenu");
+  if (document.documentElement.lang == 'en') highlightCurrentBase();
 })();
+function highlightCurrentBase(){
+  let addr = window.location.pathname.slice(0, 5);
+  let currentItem;
+  currentItem = document.querySelector(`#textmenu a[href^='${addr}']`);
+  if (currentItem) currentItem.classList.add("chosenmenu");
+};
 
 /* Remove faded out messages */
 /* (function(){
@@ -27,6 +24,7 @@
       document.title = lang.appTitle + ': ' + document.querySelector('h1').innerText;
       const loadingDiv = document.querySelector('.fullscreen');
       if (loadingDiv) loadingDiv.parentNode.removeChild(loadingDiv);
+      highlightCurrentBase();
     });
   }
 })();
@@ -146,7 +144,7 @@ function translateAll(rootElem, lang) {
 /* Replaces a value of an agrument in an URL get request */
 function replaceGetArg(url, key, val){
   let res = '?';
-  var arr = url.split('?')[1].split('&');
+  let arr = url.split('?')[1].split('&');
   if (arr) {
     for (let i = 0; i < arr.length; i++){
       if (arr[i].split('=')[0] == key){
@@ -157,6 +155,17 @@ function replaceGetArg(url, key, val){
     }
   }
   return res.slice(0, -1);
+}
+/* Adds a value of an agrument to an URL get request */
+function addGetArg(url, key, val){
+  let res = '';
+  let rarr = url.split('?');
+  if (rarr.length > 1) {
+    res = url + '&' + key + '=' + val;
+  } else {
+    res = url + '?' + key + '=' + val;
+  }
+  return res;
 }
 /* Replaces the page number arg in the URL according to last query after POST */
 function replacePageNumberArg(pageNumber){
@@ -174,14 +183,18 @@ function checkForNewCreated() {
   if (result) {
     sessionStorage.removeItem('new');
     if (!window.location.href.endsWith('new')) {
+      const controlDiv = document.getElementById('control');
+      const oldResDisplay = document.getElementById('resDisplay');
+      if (oldResDisplay) controlDiv.removeChild(oldResDisplay);
       let msgnew = document.createElement('div');
       msgnew.className = "msgok";
       msgnew.innerHTML = "Creation completed.";
+      msgnew.id = 'resDisplay';
       const langCode = document.documentElement.lang;
       if (langCode != 'en') {
         getLang(langCode).then(lang => {if (lang.creationCompleted) msgnew.innerHTML = lang.creationCompleted});
       }
-      document.getElementById('control').appendChild(msgnew);
+      controlDiv.appendChild(msgnew);
     }
   }
 }
@@ -195,22 +208,22 @@ function showEditForm(what) {
   if (what == 'edit') {
     view.style.display = 'none';
     edit.style.display = 'block';
-    removal.style.display = 'none';
+    if (removal) removal.style.display = 'none';
     if (removalFiles) removalFiles.style.display = 'none'
   } else if (what == 'removal') {
     view.style.display = 'block';
     edit.style.display = 'none';
-    removal.style.display = 'block';
+    if (removal) removal.style.display = 'block';
     if (removalFiles) removalFiles.style.display = 'none'
   } else if (what == 'removalFiles') {
     view.style.display = 'block';
     edit.style.display = 'none';
-    removal.style.display = 'none';
+    if (removal) removal.style.display = 'none';
     if (removalFiles) removalFiles.style.display = 'block'
   } else {
     view.style.display = 'block';
     edit.style.display = 'none';
-    removal.style.display = 'none';
+    if (removal) removal.style.display = 'none';
     if (removalFiles) removalFiles.style.display = 'none'
   }
 }
@@ -319,7 +332,7 @@ function processTableSelection(removeAllowed) {
       cb.checked = !cb.checked;
       checkOne(cb.checked, '.' + cb.parentNode.classList[0]);
     }
-    if (event.target.classList.contains('taskcontent') && 
+    if ((event.target.classList.contains('content') || event.target.classList.contains('description')) && 
     (event.target.parentElement.classList.contains('grideven') || (event.target.parentElement.classList.contains('gridodd')))) {
       let cb = document.getElementById(+event.target.parentElement.classList[0].split('-')[1]);
       cb.checked = !cb.checked;
@@ -408,6 +421,7 @@ function resetFilter() {
 
 /* Sorting functionality */
 function applySortingSelection() {
+  if (!document.getElementById('sortedBy') || !document.getElementById('sortedHow')) return;
   let valSortedBy = document.getElementById('sortedBy').value;
   let currentSortedBy = document.getElementById(valSortedBy);
   let nodeList = currentSortedBy.children;
@@ -483,8 +497,8 @@ function addUserProfile(profileID, divID, selectorID) {
   if (arrOfProfileNames.includes(profileName)) return;
 
   let visibleElem = document.createElement('p');
-  visibleElem.className = 'chosen-block'
-  visibleElem.innerHTML = profileName;
+  visibleElem.className = 'chosen-block';
+  visibleElem.appendChild(document.createTextNode(profileName));
   divDisp.appendChild(visibleElem);
   addHiddenElem(document.getElementById('controlForm'), inputName, profileID);
 }
@@ -594,7 +608,7 @@ function applyTextFilter(searchPhrase) {
 
 /* Iterate over table data cells to insert a highlight tag */
 function highlightSearchResults(textFilter) {
-  textFilter = textFilter.toLowerCase().replace('<', '&lt;').replace('>', '&gt;');
+  textFilter = textFilter.toLowerCase().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   let elems;
   const content = document.getElementById('mainTable');
   if (content) {
@@ -614,7 +628,7 @@ function recursiveChildrenSearch(elem, textFilter) {
     }
   } else {
     if (elem.classList && elem.classList.contains('mobile')) return;
-    elem.innerHTML = insertCaseInsensitive(elem.innerHTML.replace('&amp;', '&'), textFilter, '<span class="highlight">', '</span>');
+    elem.innerHTML = insertCaseInsensitive(elem.innerHTML, textFilter, '<span class="highlight">', '</span>');
   }
 }
 
@@ -688,8 +702,12 @@ function submitControlButton(inputName, inputValue) {
 }
 function addSortingOnSubmut(formID) {
   const frm = document.getElementById(formID);
-  addHiddenElem(frm, 'sortedBy', document.getElementById('sortedBy').value);
-  addHiddenElem(frm, 'sortedHow', document.getElementById('sortedHow').value);
+  let sortedBy = document.getElementById('sortedBy');
+  let sortedHow = document.getElementById('sortedHow');
+  if (frm && sortedBy && sortedHow) {
+    addHiddenElem(frm, 'sortedBy', sortedBy.value);
+    addHiddenElem(frm, 'sortedHow', sortedHow.value);
+  }
 }
 function addStandardPagination(formID) {
   const frm = document.getElementById(formID);
@@ -836,10 +854,31 @@ function addFileElems(frm) {
   }
 }
 
+/* These functions are for elements creation and removal */
+function makeElem(tag, parentElem, text, className, addSpace) {
+  const elem = document.createElement(tag);
+  if (className) elem.classList.add(className);
+  if (text) elem.appendChild(document.createTextNode(text));
+  parentElem.appendChild(elem);
+  if (addSpace) parentElem.appendChild(document.createTextNode(' '));
+  return elem;
+}
+function makeInputElem(type, parentElem, name, value, className, addSpace) {
+  const elem = makeElem('input', parentElem, '', className, addSpace);
+  if (type) elem.type = type;
+  if (name) elem.name = name;
+  if (value) elem.value = value;
+  return elem;
+}
+function clearChildNodes(parentElem) {
+  while (parentElem.firstChild) {
+    parentElem.removeChild(parentElem.firstChild);
+  }
+}
+
 /* This function prints message about applied filters */
 function printAppliedFilters(classFilterArr, dateFilterArr, sumFilterArr, textFilter) {
 
-  let resString = "";
   let timeout = 0;
   var runAllowed = false;
   var retries = 0;
@@ -865,23 +904,24 @@ function printAppliedFilters(classFilterArr, dateFilterArr, sumFilterArr, textFi
     if (retries > 10000) clearInterval(intervalID);
     if (!document.querySelector('.fullscreen') && runAllowed) {
       clearInterval(intervalID);
+      const fragment = document.createDocumentFragment();
       for (let classFilter of classFilterArr) {
         if (classFilter.Selector) {
           const printedName = document.getElementById(classFilter.Name+'Display').innerText;
-          resString += '<span class="af">' + printedName + "</span> ";
+          makeElem('span', fragment, printedName, 'af', true);
           let namesArr = document.getElementById(classFilter.Name).children;
           for (let i = 1; i < namesArr.length; i++) {
             if (namesArr[i].innerText && namesArr[i].innerText != "\n" && namesArr[i].innerText != " ") {
-              resString += '<span class="af">' + namesArr[i].innerText + "</span> ";
+              makeElem('span', fragment, namesArr[i].innerText, 'af', true);
             }
           }
-          resString += '<br>'
+          makeElem('br', fragment);
         } else {
           const filterboxes = document.getElementsByName(classFilter.Name);
           filterboxes.forEach(function(cb) {
             if (cb.checked) {
               const filterLabel = document.querySelector(`label[for="${cb.id}"]`);
-              resString += '<span class="af">' + filterLabel.innerText + "</span> ";
+              makeElem('span', fragment, filterLabel.innerText , 'af', true);
             }
           });
         }
@@ -891,30 +931,35 @@ function printAppliedFilters(classFilterArr, dateFilterArr, sumFilterArr, textFi
         const printedName = document.getElementById(dateFilter.Name+'Display').innerText;
         let rel = getSelectInputText(document.getElementById(dateFilter.Name+'Relation'));
         if (dateFilter.DatesStr.length == 1) {
-          resString += `<span class="af">${printedName} ${rel}: ${dateFilter.DatesStr[0]}</span> `;
+          makeElem('span', fragment, `${printedName} ${rel}: ${dateFilter.DatesStr[0]}`, 'af', true);
         }
         if (dateFilter.DatesStr.length == 2) {
-          resString += `<span class="af">${printedName} ${diapason}: ${dateFilter.DatesStr[0]} - ${dateFilter.DatesStr[1]}</span> `;
+          makeElem('span', fragment, `${printedName} ${diapason}: ${dateFilter.DatesStr[0]} - ${dateFilter.DatesStr[1]}`, 'af', true);
         }
       }
       for (let sumFilter of sumFilterArr) {
         let currency = document.getElementById(sumFilter.Name+'Currency').value;
-        if (sumFilter.CurrencyCode > 0) resString += `<span class="af">${currency}</span> `;
+        if (sumFilter.CurrencyCode > 0) makeElem('span', fragment, currency, 'af', true);
         const printedName = document.getElementById(sumFilter.Name+'Display').innerText;
         let rel = getSelectInputText(document.getElementById(sumFilter.Name+'Relation'));
         if (sumFilter.Sums.length == 1) {
-          resString += `<span class="af">${printedName} ${rel}: ${sumFilter.SumsStr[0]}</span> `;
+          makeElem('span', fragment, `${printedName} ${rel}: ${sumFilter.SumsStr[0]}`, 'af', true);
         }
         if (sumFilter.Sums.length == 2) {
-          resString += `<span class="af">${printedName} ${diapason}: ${sumFilter.SumsStr[0]} - ${sumFilter.SumsStr[1]}</span> `;
+          makeElem('span', fragment, `${printedName} ${diapason}: ${sumFilter.SumsStr[0]} - ${sumFilter.SumsStr[1]}`, 'af', true);
         }
       }
       if (textFilter) {
-        textFilter = textFilter.replace('<', '&lt;').replace('>', '&gt;');
-        resString += '<span class="af">' + textFilter + "</span> ";
+        makeElem('span', fragment, textFilter, 'af', true);
       }
       const p = document.getElementById('appliedFilters');
-      p.innerHTML = (resString.length > 1) ? appliedFilters + resString : noFiltersApplied;
+      clearChildNodes(p);
+      if (fragment.children.length > 0) {
+        p.appendChild(document.createTextNode(appliedFilters));
+        p.appendChild(fragment);
+      } else {
+        p.appendChild(document.createTextNode(noFiltersApplied));
+      }
     }
   }, timeout);
   
@@ -1083,15 +1128,14 @@ function showMobileMenu() {
     document.getElementById('container').style.display = 'none';
     d.style.display = 'block';
     document.body.style.backgroundColor = styleRoot.getPropertyValue('--menuBackgroundColor');
-    d.innerHTML = document.getElementById('textmenu').innerHTML;
-    /* if (document.getElementById('showhide').style.display != 'none') {
-      showFiltersMobile(document.getElementById('mobileMenuButtonFilters'), 'Close', 'Filters');
-    } */
+    for (eachNode of document.getElementById('textmenu').childNodes) {
+      d.appendChild(eachNode.cloneNode(true));
+    }
   } else {
     document.getElementById('container').style.display = 'block';
     d.style.display = 'none';
     document.body.style.backgroundColor = styleRoot.getPropertyValue('--defaultBackgroundColor');
-    d.innerHTML = '';
+    clearChildNodes(d);
   }
   
 }

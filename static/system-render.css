@@ -1,6 +1,7 @@
 :root {
   font-size: 14px;
   --elements-radius: 2px;
+  --smaller-radius: 2px;
   --standard-font: Roboto, "Segoe UI", Ubuntu, "-apple-system", BlinkMacSystemFont, Arial, sans-serif;
   --defaultBackgroundColor: #fff;
   --darkerBackgroundColor: #fff;
@@ -96,7 +97,7 @@ h2 {
 .afile {
   display: block; 
   margin: 1px; 
-  border-radius: 2px; 
+  border-radius: var(--smaller-radius); 
   border: 1px dotted #000;
 }
 .center {
@@ -210,10 +211,11 @@ input:disabled, .numberbox:disabled, .sbut:disabled, .field:disabled {
   margin-top: 8px;
   margin-bottom: 8px;
   display: grid;
-  grid-gap: 4px;
+  grid-gap: 0px;
   grid-template-columns: auto auto auto;
 }
 .gridheader {
+  border-top: 1px solid #aaa;
   margin-bottom: 8px;
   font-size: 16px;
 }
@@ -225,8 +227,8 @@ input:disabled, .numberbox:disabled, .sbut:disabled, .field:disabled {
   padding: 2px 4px;
   background-color: var(--defaultBackgroundColor);
   color: #000;
-  border: 1px solid #aaa;
-  border-radius: var(--elements-radius);
+  border-bottom: 1px solid #aaa;
+  border-radius: 0px;
 }
 .onlymobile {
   display: none;

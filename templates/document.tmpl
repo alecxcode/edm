@@ -13,8 +13,9 @@
     <p class="breadcrumbs"><a href="/docs/" i18n-text="allDocuments">all documents</a> / <span i18n-text="documentPage">document page</span></p>
     
     {{if not .New}}
+      {{template "formatOutput"}}
       {{if .Editable}}
-      <input type="button" class ="sbut" name="showButton" i18n-value="edit" value="Edit" onclick="showEditForm('edit');">
+      <input type="button" class="sbut" name="showButton" i18n-value="edit" value="Edit" onclick="showEditForm('edit');">
       <input type="button"{{if not .RemoveAllowed}}style="display: none;"{{end}} class="sbut reddish" name="showDelete" i18n-value="delete" value="Delete" onclick="showEditForm('removal');">
       {{end}}
 
@@ -64,7 +65,7 @@
           {{range .UserList}}<option value="{{.ID}}">{{.Value}}</option>
           {{end}}
         </select><span class="dropdown"></span></span>
-        <input type="button" class ="sbut greenish smaller" i18n-value="addApprover" value="Add approver"
+        <input type="button" class="sbut greenish smaller" i18n-value="addApprover" value="Add approver"
         onclick="makeFormAndSubmit(document.getElementById('selectedApprover').value, 'approvalAdd', '/docs/document/{{.Document.ID}}');">
       </div>
       {{end}}
@@ -108,12 +109,12 @@
       <br>{{end}}
       {{end}}
       {{if and .Editable .Document.FileList (not .New)}}
-      <span i18n-text="selectedFiles">Selected files:</span> <input type="button" class ="sbut reddish" name="showDeleteFiles" i18n-value="delete" value="Delete" onclick="showEditForm('removalFiles');">
+      <span i18n-text="selectedFiles">Selected files:</span> <input type="button" class="sbut reddish" name="showDeleteFiles" i18n-value="delete" value="Delete" onclick="showEditForm('removalFiles');">
       <form id="removalFiles" action="/docs/document/{{.Document.ID}}" method="post" onsubmit="addFileElems(this);" style="display: none;">
       <div class="msgredfx" i18n-text="approvalBreak">This will break any approval if present!</div>
       <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
       <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="showEditForm('view');">
-      <input type="submit" class ="sbut reddish" name="deleteFiles" i18n-value="yesDelete" value="Yes, delete">
+      <input type="submit" class="sbut reddish" name="deleteFiles" i18n-value="yesDelete" value="Yes, delete">
       </form>
     {{end}}
       <br>
@@ -173,12 +174,12 @@
       <br>
       <br>
 
-    {{if .New}}<input type="submit" class ="sbut" name="createButton" i18n-value="create" value="Create">
-               <input type="button" class ="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" 
+    {{if .New}}<input type="submit" class="sbut" name="createButton" i18n-value="create" value="Create">
+               <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" 
                onclick="if (history.length > 1) {history.back()} else {window.location.href = '/docs/'}">
     </form>{{else}}
-      <input type="submit" class ="sbut" name="updateButton" i18n-value="save" value="Save">
-      <input type="button" class ="sbut" name="hideButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); showEditForm('view');">
+      <input type="submit" class="sbut" name="updateButton" i18n-value="save" value="Save">
+      <input type="button" class="sbut" name="hideButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); showEditForm('view');">
     </form>{{end}}
     </div>
   {{end}}

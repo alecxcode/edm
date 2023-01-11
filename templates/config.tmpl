@@ -65,20 +65,7 @@
           {{range .LangCodes}}<option value="{{.}}">{{.}}</option>
           {{end}}
         </select><span class="dropdown"></span></p>
-        <script>
-        (function(){
-          const langSelector = document.getElementById('langCode');
-          let selectOptions = langSelector.options;
-          for (let opt of selectOptions) {
-            switch (opt.value) {
-              case 'en': opt.innerHTML = 'English'; continue;
-              case 'es': opt.innerHTML = 'Español'; continue;
-              case 'fr': opt.innerHTML = 'Français'; continue;
-              case 'ru': opt.innerHTML = 'Русский'; continue;
-            }
-          }
-        })();
-        </script>
+        <script src="/static/i18n/codesui.js"></script>
 
         <p><label for="useCalendarInConrols" class="ofname" i18n-title="useCalendarInConrolsHint"
           title="If disabled, these inputs will become text fields." i18n-text="useCalendarInConrols">Use calendar inputs for date and time:</label>
@@ -97,7 +84,7 @@
 
         <h2 i18n-text="functionality">Functionality:</h2>
 
-        <p><label for="showFinishedTasks" class="ofname" i18n-text="showFinishedTasks">Show completed and cancelled tasks with default filter:</label>
+        <p><label for="showFinishedTasks" class="ofname" i18n-text="showFinishedTasks">Show completed and canceled tasks with default filter:</label>
           <label class="switch"><input type="checkbox" class="hidden" 
           id="showFinishedTasks" name="showFinishedTasks" value="true"
           onchange="document.getElementById('configUser').submit();">

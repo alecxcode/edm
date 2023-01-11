@@ -1,14 +1,15 @@
-package main
+package core
 
 import (
 	"edm/pkg/accs"
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"path/filepath"
 )
 
-// text contains only default English strings
-type text struct {
+// Text contains only default English strings
+type Text struct {
 	AppTitle           string
 	ConfigPageTitle    string
 	DocsPageTitle      string
@@ -26,14 +27,18 @@ type text struct {
 	NewTask            string
 	Comment            string
 	NewComment         string
+	ProjsPageTitle     string
+	Project            string
+	NewProject         string
 	Categories         []string
 	DocTypes           []string
 	ApprovalSign       []string
 	TaskStatuses       []string
+	ProjStatuses       []string
 }
 
-// i18n contains laguage-specific strings
-type i18n struct {
+// Si18n contains server laguage-specific strings
+type Si18n struct {
 	LangCode       string
 	LoginLang      LoginLang
 	DocCaption     string
@@ -43,6 +48,17 @@ type i18n struct {
 	DocTypes       []string
 	TaskStatuses   []string
 	Messages       AppMessages
+}
+
+// LoginLang applies to a login template
+type LoginLang struct {
+	AppTitle           string
+	LoginPageTitle     string
+	LoninPrompt        string
+	LoninFieldLabel    string
+	PasswordFieldLabel string
+	LoginButton        string
+	WrongLoginMsg      string
 }
 
 // AppMessages contains language-different strings for email messages
@@ -82,8 +98,9 @@ type AppMessages struct {
 	}
 }
 
-func newTextStruct() text {
-	lng := text{
+// NewTextStruct is a constructor for Text struct
+func NewTextStruct() Text {
+	lng := Text{
 		AppTitle:           "EDM",
 		ConfigPageTitle:    "Settings",
 		DocsPageTitle:      "Documents",
@@ -101,6 +118,9 @@ func newTextStruct() text {
 		NewTask:            "New task",
 		Comment:            "Comment",
 		NewComment:         "New comment",
+		ProjsPageTitle:     "Projects",
+		Project:            "Project",
+		NewProject:         "New Project",
 		Categories: []string{
 			"None",
 			"Incoming",
@@ -135,14 +155,21 @@ func newTextStruct() text {
 			"In progress",
 			"Stuck",
 			"Done",
-			"Cancelled",
+			"Canceled",
+			"In review",
+		},
+		ProjStatuses: []string{
+			"Active",
+			"Done",
+			"Canceled",
 		},
 	}
 	return lng
 }
 
-func newi18nStruct(pathToLngFile string) i18n {
-	lng := i18n{}
+// Newi18nStruct is a constructor for Si18n struct
+func Newi18nStruct(pathToLngFile string) Si18n {
+	lng := Si18n{}
 	content, err := ioutil.ReadFile(pathToLngFile)
 	if err != nil {
 		log.Println(accs.CurrentFunction()+":", err)
@@ -156,10 +183,29 @@ func newi18nStruct(pathToLngFile string) i18n {
 	return lng
 }
 
-func assignNonEmptyString(d string, s string) string {
+// AssignNonEmptyString returns new string if it is now empty, otherwise returns old string
+func AssignNonEmptyString(d string, s string) string {
 	if len(s) == 0 {
 		return d
-	} else {
-		return s
 	}
+	return s
+}
+
+// GetLangList loads a list of available frontend languages
+func GetLangList(serverSystem string) []string {
+	files, err := ioutil.ReadDir(filepath.Join(serverSystem, "static", "i18n"))
+	if err != nil {
+		log.Println(accs.CurrentFunction()+":", err)
+		return []string{}
+	}
+	var res []string
+	var fname string
+	for _, file := range files {
+		fname = file.Name()
+		if ext := filepath.Ext(fname); ext == ".json" {
+			fname = fname[0 : len(fname)-len(ext)]
+			res = append(res, fname)
+		}
+	}
+	return res
 }

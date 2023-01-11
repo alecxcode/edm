@@ -1,8 +1,10 @@
-package main
+package tasks
 
 import (
 	"database/sql"
+	"edm/internal/core"
 	"edm/internal/mail"
+	"edm/internal/team"
 	"edm/pkg/accs"
 	"edm/pkg/datetime"
 	"edm/pkg/memdb"
@@ -25,7 +27,7 @@ type TasksPage struct {
 	LoggedinAdmin bool
 	Message       string
 	RemoveAllowed bool
-	UserConfig    UserConfig
+	UserConfig    team.UserConfig
 	Tasks         []Task //payload
 	SortedBy      string
 	SortedHow     int
@@ -38,23 +40,15 @@ type TasksPage struct {
 	UserList      []memdb.ObjHasID
 }
 
-func (bs *BaseStruct) tasksHandler(w http.ResponseWriter, r *http.Request) {
+// TasksHandler is http handler for docs page
+func (tb *TasksBase) TasksHandler(w http.ResponseWriter, r *http.Request) {
 
-	const (
-		CREATED = iota
-		ASSIGNED
-		INPROGRESS
-		STUCK
-		DONE
-		CANCELLED
-	)
-
-	allow, id := bs.authVerify(w, r)
+	allow, id := core.AuthVerify(w, r, tb.memorydb)
 	if !allow {
 		return
 	}
 
-	if bs.validURLs.Task.FindStringSubmatch(r.URL.Path) == nil {
+	if tb.validURLs.FindStringSubmatch(r.URL.Path) == nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -62,10 +56,10 @@ func (bs *BaseStruct) tasksHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	var Page = TasksPage{
-		AppTitle:     bs.text.AppTitle,
-		AppVersion:   AppVersion,
-		PageTitle:    bs.text.TasksPageTitle,
-		TaskStatuses: bs.text.TaskStatuses,
+		AppTitle:     tb.text.AppTitle,
+		AppVersion:   core.AppVersion,
+		PageTitle:    tb.text.TasksPageTitle,
+		TaskStatuses: tb.text.TaskStatuses,
 		SortedBy:     "ID",
 		SortedHow:    0, // 0 - DESC, 1 - ASC
 		Filters: sqla.Filter{
@@ -95,10 +89,10 @@ func (bs *BaseStruct) tasksHandler(w http.ResponseWriter, r *http.Request) {
 		LoggedinID: id,
 	}
 
-	Page.RemoveAllowed, _ = strconv.ParseBool(bs.cfg.RemoveAllowed)
-	user := unmarshalToProfile(bs.team.GetByID(Page.LoggedinID))
+	Page.RemoveAllowed = tb.cfg.removeAllowed
+	user := team.UnmarshalToProfile(tb.memorydb.GetByID(Page.LoggedinID))
 	Page.UserConfig = user.UserConfig
-	if user.UserRole == 1 {
+	if user.UserRole == team.ADMIN {
 		Page.LoggedinAdmin = true
 		Page.RemoveAllowed = true
 	}
@@ -135,10 +129,10 @@ func (bs *BaseStruct) tasksHandler(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("elemsOnPage") != "" {
 		Page.UserConfig.ElemsOnPage, _ = strconv.Atoi(r.FormValue("elemsOnPage"))
 		if r.FormValue("elemsOnPageChanged") == "true" {
-			p := Profile{ID: Page.LoggedinID, UserConfig: Page.UserConfig}
-			updated := p.updateConfig(bs.db, bs.dbt)
+			p := team.Profile{ID: Page.LoggedinID, UserConfig: Page.UserConfig}
+			updated := p.UpdateConfig(tb.db, tb.dbType)
 			if updated > 0 {
-				memoryUpdateProfile(bs.db, bs.dbt, bs.team, p.ID)
+				team.MemoryUpdateProfile(tb.db, tb.dbType, tb.memorydb, p.ID)
 			}
 		}
 	}
@@ -149,16 +143,8 @@ func (bs *BaseStruct) tasksHandler(w http.ResponseWriter, r *http.Request) {
 	// Processing status change
 	if r.Method == "POST" && r.FormValue("taskStatus") != "" {
 		var statusCode int
-		if r.FormValue("taskStatus") == "inprogress" {
-			statusCode = INPROGRESS
-		} else if r.FormValue("taskStatus") == "stuck" {
-			statusCode = STUCK
-		} else if r.FormValue("taskStatus") == "done" {
-			statusCode = DONE
-		} else if r.FormValue("taskStatus") == "cancelled" {
-			statusCode = CANCELLED
-		}
-		if statusCode > 0 && statusCode < 6 {
+		statusCode = selectTaskStatus(r.FormValue("taskStatus"))
+		if statusCode >= CREATED {
 			r.ParseForm()
 			ids := []int{}
 			for _, v := range r.Form["ids"] {
@@ -166,7 +152,7 @@ func (bs *BaseStruct) tasksHandler(w http.ResponseWriter, r *http.Request) {
 				ids = append(ids, id)
 			}
 			if len(ids) > 0 {
-				allowedToUpdateStatus := checkStatusModifyPermissions(bs.db, bs.dbt, "tasks", Page.LoggedinID, Page.LoggedinAdmin, ids)
+				allowedToUpdateStatus := checkStatusModifyPermissions(tb.db, tb.dbType, "tasks", Page.LoggedinID, Page.LoggedinAdmin, ids)
 				if allowedToUpdateStatus {
 					squpd := `SELECT tasks.ID, tasks.Created, PlanStart, PlanDue, StatusSet, tasks.Creator, Assignee, Participants, Topic, tasks.Content, TaskStatus, tasks.FileList,
 creator.ID, creator.FirstName, creator.Surname, creator.JobTitle, creator.Contacts, creator.Userlock,
@@ -174,17 +160,17 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle, assignee.C
 FROM tasks
 LEFT JOIN profiles creator ON creator.ID = tasks.Creator
 LEFT JOIN profiles assignee ON assignee.ID = Assignee
-WHERE tasks.TaskStatus <> ` + sqla.MakeParam(bs.dbt, 1) + " "
+WHERE tasks.TaskStatus <> ` + sqla.MakeParam(tb.dbType, 1) + " "
 					var argsupd, argsadd []interface{}
-					_, squpd, argsadd = sqla.BuildSQLIN(bs.dbt, squpd, 1, "tasks.ID", ids)
+					_, squpd, argsadd = sqla.BuildSQLIN(tb.dbType, squpd, 1, "tasks.ID", ids)
 					argsupd = append(argsupd, statusCode)
 					argsupd = append(argsupd, argsadd...)
-					sqcountupd := "SELECT COUNT(*) FROM tasks WHERE TaskStatus <> " + sqla.MakeParam(bs.dbt, 1) + " "
-					_, sqcountupd, _ = sqla.BuildSQLIN(bs.dbt, sqcountupd, 1, "tasks.ID", ids)
-					if DEBUG {
+					sqcountupd := "SELECT COUNT(*) FROM tasks WHERE TaskStatus <> " + sqla.MakeParam(tb.dbType, 1) + " "
+					_, sqcountupd, _ = sqla.BuildSQLIN(tb.dbType, sqcountupd, 1, "tasks.ID", ids)
+					if core.DEBUG {
 						log.Println("Selecting tasks to update status:", squpd, argsupd, "\n", sqcountupd)
 					}
-					tasks, numtoupd, err := loadTasks(bs.db, squpd, sqcountupd, argsupd)
+					tasks, numtoupd, err := loadTasks(tb.db, squpd, sqcountupd, argsupd)
 					if err != nil {
 						log.Println(accs.CurrentFunction()+":", err)
 					}
@@ -193,7 +179,7 @@ WHERE tasks.TaskStatus <> ` + sqla.MakeParam(bs.dbt, 1) + " "
 						for i := 0; i < len(tasks); i++ {
 							idstoupd[i] = tasks[i].ID
 						}
-						updated := sqla.UpdateMultipleWithOneInt(bs.db, bs.dbt, "tasks", "TaskStatus", statusCode, "StatusSet", datetime.DateTimeToInt64(datetime.GetCurrentDateTime()), idstoupd)
+						updated := sqla.UpdateMultipleWithOneInt(tb.db, tb.dbType, "tasks", "TaskStatus", statusCode, "StatusSet", datetime.DateTimeToInt64(datetime.GetCurrentDateTime()), idstoupd)
 						if updated > 0 {
 							Page.Message = "statusUpdated"
 							Page.UpdatedNum = updated
@@ -202,8 +188,8 @@ WHERE tasks.TaskStatus <> ` + sqla.MakeParam(bs.dbt, 1) + " "
 							}
 							for i := range idstoupd {
 								t := tasks[i]
-								participants, _ := t.loadParticipants(bs.db, bs.dbt)
-								email := mail.EmailMessage{Subj: bs.i18n.Messages.Subj.TaskStatusChanged + " [" + bs.i18n.TaskCaption + " #" + strconv.Itoa(t.ID) + "]"}
+								participants, _ := t.loadParticipants(tb.db, tb.dbType)
+								email := mail.EmailMessage{Subj: tb.i18n.messages.Subj.TaskStatusChanged + " [" + tb.i18n.taskCaption + " #" + strconv.Itoa(t.ID) + "]"}
 								if t.Creator != nil && t.Creator.Contacts.Email != "" && t.Creator.UserLock == 0 {
 									email.SendTo = append(email.SendTo, mail.UserToSend{Name: t.Creator.FirstName + " " + t.Creator.Surname, Email: t.Creator.Contacts.Email})
 								}
@@ -215,8 +201,8 @@ WHERE tasks.TaskStatus <> ` + sqla.MakeParam(bs.dbt, 1) + " "
 										email.SendCc = append(email.SendCc, mail.UserToSend{Name: participants[i].FirstName + " " + participants[i].Surname, Email: participants[i].Contacts.Email})
 									}
 								}
-								taskMail := TaskMail{email.Subj, t, bs.i18n.Messages, bs.i18n.TaskCaption, bs.i18n.TaskStatuses, bs.systemURL}
-								taskMail.constructToChannel(bs.db, bs.dbt, bs.taskmailtmpl, bs.mailchan, email, bs.regexes.emailCont)
+								taskMail := TaskMail{email.Subj, t, tb.i18n.messages, tb.i18n.taskCaption, tb.i18n.taskStatuses, tb.cfg.systemURL}
+								taskMail.constructToChannel(tb.db, tb.dbType, tb.taskmailtmpl, tb.mailchan, email, tb.emailCont)
 							}
 						} else {
 							Page.Message = "statusUpdateError"
@@ -243,11 +229,11 @@ WHERE tasks.TaskStatus <> ` + sqla.MakeParam(bs.dbt, 1) + " "
 			ids = append(ids, id)
 		}
 		if len(ids) > 0 {
-			allowedToRemove := sqla.VerifyRemovalPermissions(bs.db, bs.dbt, "tasks", Page.LoggedinID, Page.LoggedinAdmin, Page.RemoveAllowed, ids)
+			allowedToRemove := sqla.VerifyRemovalPermissions(tb.db, tb.dbType, "tasks", Page.LoggedinID, Page.LoggedinAdmin, Page.RemoveAllowed, ids)
 			if allowedToRemove {
-				removed := sqla.DeleteObjects(bs.db, bs.dbt, "tasks", "ID", ids)
+				removed := sqla.DeleteObjects(tb.db, tb.dbType, "tasks", "ID", ids)
 				if removed > 0 {
-					removeUploadedDirs(filepath.Join(bs.cfg.ServerRoot, "files", "tasks"), ids)
+					core.RemoveUploadedDirs(filepath.Join(tb.cfg.serverRoot, "files", "tasks"), ids)
 					Page.Message = "removedElems"
 					Page.RemovedNum = removed
 					if removed >= elemsOnCurrentPage && Page.PageNumber > 1 {
@@ -333,14 +319,14 @@ LEFT JOIN profiles assignee ON assignee.ID = Assignee`
 	columns := `tasks.ID, tasks.Created, PlanStart, PlanDue, StatusSet, tasks.Creator, Assignee, Participants, Topic, tasks.Content, TaskStatus, tasks.FileList,
 creator.ID, creator.FirstName, creator.Surname, creator.JobTitle,
 assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
-	if DISTINCT && bs.dbt == sqla.ORACLE {
+	if DISTINCT && tb.dbType == sqla.ORACLE {
 		columns = `tasks.ID, tasks.Created, PlanStart, PlanDue, StatusSet, tasks.Creator, Assignee, Participants, Topic, dbms_lob.substr(tasks.Content, 4000, 1), TaskStatus, dbms_lob.substr(tasks.FileList, 4000, 1),
 creator.ID, creator.FirstName, creator.Surname, creator.JobTitle,
 assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 	}
 
 	sq, sqcount, args, argscount := sqla.ConstructSELECTquery(
-		bs.dbt,
+		tb.dbType,
 		"tasks",
 		columns,
 		columnsToCount,
@@ -360,7 +346,7 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 
 	// Loading objects
 	err = func() error {
-		rows, err := bs.db.Query(sq, args...)
+		rows, err := tb.db.Query(sq, args...)
 		if err != nil {
 			return err
 		}
@@ -402,7 +388,7 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 			t.PlanDue = datetime.Int64ToDateTime(PlanDue.Int64)
 			t.StatusSet = datetime.Int64ToDateTime(StatusSet.Int64)
 			if CreatorID.Valid == true {
-				t.Creator = &Profile{
+				t.Creator = &team.Profile{
 					ID:        int(CreatorID.Int64),
 					FirstName: CreatorFirstName.String,
 					Surname:   CreatorSurname.String,
@@ -412,7 +398,7 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 				t.Creator = nil
 			}
 			if AssigneeID.Valid == true {
-				t.Assignee = &Profile{
+				t.Assignee = &team.Profile{
 					ID:        int(AssigneeID.Int64),
 					FirstName: AssigneeFirstName.String,
 					Surname:   AssigneeSurname.String,
@@ -431,7 +417,7 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 		}
 
 		var FilteredNum sql.NullInt64
-		row := bs.db.QueryRow(sqcount, argscount...)
+		row := tb.db.QueryRow(sqcount, argscount...)
 		err = row.Scan(&FilteredNum)
 		if err != nil {
 			return err
@@ -444,7 +430,6 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 	if err != nil {
 		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to an user
 		return
 	}
 
@@ -465,7 +450,7 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 	// 	log.Printf("SQL execution time in milliseconds: %d\n", diff.Milliseconds())
 	// }
 
-	Page.UserList = bs.team.GetObjectArr("UserList")
+	Page.UserList = tb.memorydb.GetObjectArr("UserList")
 
 	// Attention! This removes db column lists in outputs like JSON.
 	// Usually columns should not be available to a client.
@@ -475,24 +460,13 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 	if r.URL.Query().Get("api") == "json" || r.FormValue("api") == "json" {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(Page)
-		//jsonOut, _ := json.Marshal(Page)
-		//fmt.Fprintln(w, string(jsonOut))
 		return
 	}
 
-	// HTML output
-	// tempTemplates, err := template.ParseFiles(filepath.Join(bs.cfg.ServerSystem, "templates", bs.cfg.DefaultLang, "tasks.tmpl"))
-	// if err != nil {
-	// 	log.Println(accs.CurrentFunction()+":", err)
-	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	// 	return
-	// }
-	// err = tempTemplates.ExecuteTemplate(w, "tasks.tmpl", Page)
-	err = bs.templates.ExecuteTemplate(w, "tasks.tmpl", Page)
+	err = tb.templates.ExecuteTemplate(w, "tasks.tmpl", Page)
 	if err != nil {
 		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
 	}
 }
@@ -513,7 +487,7 @@ func checkStatusModifyPermissions(db *sql.DB, DBType byte, table string, Owner i
 	argsCounter, sq, argstoAppend = sqla.BuildSQLIN(DBType, sq, argsCounter, "ID", ids)
 	args = append(args, argstoAppend...)
 
-	if DEBUG {
+	if core.DEBUG {
 		log.Println(sq, args)
 	}
 	rows, err := db.Query(sq, args...)
@@ -585,24 +559,24 @@ func loadTasks(db *sql.DB, sq string, sqcount string, args []interface{}) (Tasks
 		t.PlanDue = datetime.Int64ToDateTime(PlanDue.Int64)
 		t.StatusSet = datetime.Int64ToDateTime(StatusSet.Int64)
 		if CreatorID.Valid == true {
-			t.Creator = &Profile{
+			t.Creator = &team.Profile{
 				ID:        int(CreatorID.Int64),
 				FirstName: CreatorFirstName.String,
 				Surname:   CreatorSurname.String,
 				JobTitle:  CreatorJobTitle.String,
-				Contacts:  unmarshalNonEmptyProfileContacts(CreatorContacts.String),
+				Contacts:  team.UnmarshalNonEmptyProfileContacts(CreatorContacts.String),
 				UserLock:  int(CreatorUserLock.Int64),
 			}
 		} else {
 			t.Creator = nil
 		}
 		if AssigneeID.Valid == true {
-			t.Assignee = &Profile{
+			t.Assignee = &team.Profile{
 				ID:        int(AssigneeID.Int64),
 				FirstName: AssigneeFirstName.String,
 				Surname:   AssigneeSurname.String,
 				JobTitle:  AssigneeJobTitle.String,
-				Contacts:  unmarshalNonEmptyProfileContacts(AssigneeContacts.String),
+				Contacts:  team.UnmarshalNonEmptyProfileContacts(AssigneeContacts.String),
 				UserLock:  int(AssigneeUserLock.Int64),
 			}
 		} else {

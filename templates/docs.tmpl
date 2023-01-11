@@ -109,6 +109,7 @@
   </div>
 
   <div class="main" id="main">
+    {{template "formatOutput"}}
     {{if not .Docs}}<div class="center somemargins" i18n-text="noElemsFound">Objects matching the specified criteria were not found, or there are no objects.</div>
     {{else}}{{template "pagination" .PageNumber}}
     <form id="datagridForm" name="datagridForm" action="/docs/" method="post" onsubmit="addSortingOnSubmut('datagridForm');

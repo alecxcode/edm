@@ -15,7 +15,7 @@
 
     <div id="controlButtons">
       <span class="panel smaller"><a href="/team/" i18n-text="gotoTeamPage">Go to team page</a></span><br>
-      {{if .LoggedinAdmin}}<a href="/companies/company/new" class ="sbut greenish" i18n-text="newCompany">+ New company</a>{{end}}
+      {{if .LoggedinAdmin}}<a href="/companies/company/new" class="sbut greenish" i18n-text="newCompany">+ New company</a>{{end}}
     </div>
     
     {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred" i18n-text="noPermsOnlyAdmin">Action rejected: no permissions for all or some of objects. Only administrator can delete.</p>{{end}}
@@ -25,6 +25,7 @@
   </div>
 
   <div class="main" id="main">
+    {{template "formatOutput"}}
     {{if not .Companies}}<div class="center somemargins" i18n-text="noElems">There are no objects.</div>{{else}}
       <br>
       {{range .Companies}}

@@ -1,6 +1,6 @@
 # EDM System
 
-EDM System is an electronic document management and task tracking server application.  
+EDM System is an electronic document, task, and project management server application for teams and companies.  
 It is extremely easy to install and configure.  
 See **[EDM Project website](https://edmproject.github.io)** to get the complete documentation, screenshots, downloads, etc.
 
@@ -8,7 +8,8 @@ The application has the following functions:
 * Documents: create, upload files, edit, delete, approve
 * Approval list for documents
 * User profiles, companies, departments: create, edit, delete
-* Tasks: create, edit, upload files, assign, forward, change status (mark as done, cancel, etc.), add comments with files attached
+* Tasks: create, edit, upload files, assign, forward, delete, change status (mark as done, cancel, etc.), add comments with files attached
+* Projects: create, edit, add and detach tasks, view tasks by their progress, take or assign tasks
 * Notifications by e-mail: about user creation to that user, about approvals, about changes and comments in a task to related users
 * Themes and localization support
 * UX/UI features: bb-code, search results highlighting, etc.
@@ -20,7 +21,7 @@ Supported themes: dark, light, monochrome-dark, monochrome-light.
 Supported languages: English, Spanish, French, Russian.
 
 ## How to build and run
-To build use Go (Golang) programming language, run `go build`, and then you can run `./edm` (`edm.exe` for windows) app in the current directory. If you build the application and run locally, by default it immediately opens the browser, so you can start using it.  
+To build use Go (Golang) programming language, run `go build` in the `cmd/edm` directory, then move `cmd/edm/edm` (`cmd\edm\edm.exe` for windows) executable two directories up, and then run it from the root project directory. If you build the application and run locally, by default it immediately opens the browser, so you can start using it.  
 Default login: **admin**, for default password use empty string (no password).  
 To build with docker and run with docker-compose use: `docker build -t edm .` and then `docker-compose up`. If you run it with docker-compose it does not open the browser by itself. You can open the system at: http://127.0.0.1:8090
 

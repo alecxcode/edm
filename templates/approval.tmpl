@@ -46,7 +46,8 @@
     {{end}}
 
     <div class="margintop noprint">
-      <input type="button" class ="sbut pg smaller" name="closeButton" i18n-value="close" value="Close" 
+      <input type="button" class="sbut pg smaller" i18n-value="print" value="Print" onclick="window.print()">
+      <input type="button" class="sbut pg smaller" name="closeButton" i18n-value="close" value="Close" 
       onclick="if (history.length > 1) {history.back();} else {window.location.href = '/docs/document/{{.Document.ID}}';}">
     </div>
 

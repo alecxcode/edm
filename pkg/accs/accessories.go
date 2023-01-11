@@ -1,6 +1,7 @@
 package accs
 
 import (
+	"encoding/json"
 	"log"
 	"net"
 	"net/http"
@@ -164,6 +165,26 @@ func ThrowServerError(w http.ResponseWriter, logmsg string, userID int, resource
 	http.Error(w, "Internal server error", http.StatusInternalServerError)
 }
 
+// ThrowAccessDeniedAPI writes http.StatusForbidden to responce writer and JSON
+func ThrowAccessDeniedAPI(w http.ResponseWriter, logmsg string, userID int) {
+	log.Printf("Wrong credentials error: %s, user ID:%d\n", logmsg, userID)
+	w.WriteHeader(http.StatusForbidden)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(struct {
+		Error int `json:"error"`
+	}{403})
+}
+
+// ThrowServerErrorAPI writes http.StatusInternalServerError to responce writer and JSON
+func ThrowServerErrorAPI(w http.ResponseWriter, logmsg string, userID int, resourceID int) {
+	log.Printf("Internal server error: %s, user ID:%d, resource ID:%d\n", logmsg, userID, resourceID)
+	w.WriteHeader(http.StatusInternalServerError)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(struct {
+		Error int `json:"error"`
+	}{500})
+}
+
 // CurrentFunction returns the name of the current function
 func CurrentFunction() string {
 	counter, _, _, _ := runtime.Caller(1)
@@ -219,7 +240,7 @@ func SliceContainsInt(s []int, e int) bool {
 	return false
 }
 
-// FilterSliceStr removes strings in removalList from srcList
+// FilterSliceStrList removes strings in removalList from srcList
 func FilterSliceStrList(srcList []string, removalList []string) []string {
 	var res []string
 	for _, fname := range srcList {

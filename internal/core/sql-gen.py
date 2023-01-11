@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # This generates SQL script for go structs with
 # the comment 'sql generate' after struct name.
@@ -112,6 +112,8 @@ def analyseLine(x, structName, DBType):
         fk_table = x[1].replace("*", "").lower() + "s"
         if fk_table.endswith("ys"):
             fk_table = fk_table[:-2]+"ies"
+        if "." in fk_table:
+            fk_table = fk_table.split(".")[1]
     if len(x) > 2 and (x[1] == "int" or x[1] == "int64"):
         fkt = re.search("fktable\((.+)\)", x[2], flags=re.IGNORECASE)
         if fkt: fk_table = fkt.group(1)
@@ -177,10 +179,11 @@ def genFile(fname, cont):
     f.write(cont)
     f.close()
 
-genFile(os.path.join("sqlscripts", "sqlite-create.sql"), createFileContent('SQLITE'))
-genFile(os.path.join("sqlscripts", "mssql-create.sql"), createFileContent('MSSQL'))
-genFile(os.path.join("sqlscripts", "mysql-create.sql"), createFileContent('MYSQL'))
-genFile(os.path.join("sqlscripts", "oracle-create.sql"), createFileContent('ORACLE'))
-genFile(os.path.join("sqlscripts", "postgresql-create.sql"), createFileContent('POSTGRESQL'))
-
-print("sqlscripts files generated")
+if __name__ == "__main__":
+    os.chdir(os.path.join('..', '..'))
+    genFile(os.path.join("sqlscripts", "sqlite-create.sql"), createFileContent('SQLITE'))
+    genFile(os.path.join("sqlscripts", "mssql-create.sql"), createFileContent('MSSQL'))
+    genFile(os.path.join("sqlscripts", "mysql-create.sql"), createFileContent('MYSQL'))
+    genFile(os.path.join("sqlscripts", "oracle-create.sql"), createFileContent('ORACLE'))
+    genFile(os.path.join("sqlscripts", "postgresql-create.sql"), createFileContent('POSTGRESQL'))
+    print("sqlscripts files generated")

@@ -6,9 +6,35 @@ import (
 	"encoding/json"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/go-redis/redis"
 )
+
+// SetRaw sets any data in the memory storage
+func (m *ObjectsInMemory) SetRaw(key string, data []byte, durationMSec int) {
+	err := m.rdb.Set(key, data, time.Duration(durationMSec)*time.Millisecond).Err()
+	if err != nil {
+		log.Println(accs.CurrentFunction(), err)
+	}
+}
+
+// GetRaw gets any data in the memory storage
+func (m *ObjectsInMemory) GetRaw(key string) []byte {
+	x, err := m.rdb.Get(key).Result()
+	if err != nil && err != redis.Nil {
+		log.Println(accs.CurrentFunction(), err)
+	}
+	return []byte(x)
+}
+
+// DelRaw sets any data in the memory storage
+func (m *ObjectsInMemory) DelRaw(key string) {
+	err := m.rdb.Del(key).Err()
+	if err != nil {
+		log.Println(accs.CurrentFunction(), err)
+	}
+}
 
 // Set sets session storage with an object and a cookie
 func (m *ObjectsInMemory) Set(cookie string, obj memdb.ObjHasID) {
@@ -149,11 +175,11 @@ func (m *ObjectsInMemory) GetObjectArr(name string) []memdb.ObjHasID {
 	if err != nil {
 		log.Println(accs.CurrentFunction(), err)
 	}
-	var arr []memdb.ObjHasID
 	var arrTmp []ObjectArrElem
 	json.Unmarshal([]byte(elems), &arrTmp)
-	for _, elem := range arrTmp {
-		arr = append(arr, elem)
+	var arr = make([]memdb.ObjHasID, len(arrTmp))
+	for i, elem := range arrTmp {
+		arr[i] = elem
 	}
 	return arr
 }

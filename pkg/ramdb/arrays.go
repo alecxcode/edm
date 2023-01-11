@@ -3,7 +3,38 @@ package ramdb
 import (
 	"edm/pkg/memdb"
 	"encoding/json"
+	"time"
 )
+
+// SetRaw sets any data in the memory storage
+func (m *ObjectsInMemory) SetRaw(key string, data []byte, durationMSec int) {
+	m.Lock()
+	m.Rarr[key] = data
+	m.Unlock()
+	go m.clearOldObject(key, durationMSec)
+}
+
+// GetRaw gets any data in the memory storage
+func (m *ObjectsInMemory) GetRaw(key string) []byte {
+	m.RLock()
+	x := m.Rarr[key]
+	m.RUnlock()
+	return x
+}
+
+// DelRaw deletes any data in the memory storage
+func (m *ObjectsInMemory) DelRaw(key string) {
+	m.Lock()
+	delete(m.Rarr, key)
+	m.Unlock()
+}
+
+func (m *ObjectsInMemory) clearOldObject(key string, durationMSec int) {
+	time.Sleep(time.Duration(durationMSec) * time.Millisecond)
+	m.Lock()
+	delete(m.Rarr, key)
+	m.Unlock()
+}
 
 // Set sets session storage with an object and a cookie
 func (m *ObjectsInMemory) Set(cookie string, obj memdb.ObjHasID) {
@@ -102,6 +133,9 @@ func (m *ObjectsInMemory) DelCookie(cookie string) {
 // ClearAll deletes all objects and cookies from session storage
 func (m *ObjectsInMemory) ClearAll() {
 	m.Lock()
+	for k := range m.Rarr {
+		delete(m.Rarr, k)
+	}
 	for k := range m.Aarr {
 		delete(m.Aarr, k)
 	}

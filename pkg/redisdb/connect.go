@@ -30,3 +30,8 @@ func NewReidsConnection(arrsNames []string, addr string, passwd string, flushdb 
 type ObjectsInMemory struct {
 	rdb *redis.Client
 }
+
+// Close closes Redis connection
+func (m *ObjectsInMemory) Close() {
+	m.rdb.Close()
+}

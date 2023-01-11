@@ -1,5 +1,6 @@
 package currencies
 
+// GetCurrencies returns currencies map
 func GetCurrencies() map[int]string {
 	return map[int]string{
 		-1:  "sum is not null",

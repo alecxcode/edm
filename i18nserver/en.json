@@ -40,7 +40,8 @@
         "In progress",
         "Stuck",
         "Done",
-        "Cancelled"
+        "Canceled",
+        "In review"
     ],
     "Messages": {
         "MailerName": "EDM System",

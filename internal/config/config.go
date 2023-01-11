@@ -75,16 +75,6 @@ func (cfg *Config) ReadConfig(configPath string, serverRoot string) error {
 			}
 			defer f.Close()
 
-			// Replaced by code generation =========================
-			// // Writing config from a struct to file using reflect
-			// v := reflect.ValueOf(cfg).Elem()
-			// t := v.Type()
-			// for i := 0; i < v.NumField(); i++ {
-			// 	cn := fmt.Sprintf("%s", t.Field(i).Name)
-			// 	cv := fmt.Sprintf("%s", v.Field(i).Interface())
-			// 	f.WriteString(cn + " = " + cv + "\n")
-			// }
-
 			// Writing config from a struct to file
 			f.WriteString(makeStringToWriteToINI(cfg))
 			f.Sync()
@@ -101,16 +91,6 @@ func (cfg *Config) ReadConfig(configPath string, serverRoot string) error {
 				return err
 			}
 		}
-
-		// // Replaced by code generation =======================
-		// // Reading Config from a map to a struct using reflect
-		// x := reflect.ValueOf(cfg).Elem()
-		// for k := range mapOfConfig {
-		// 	if _, ok := mapOfConfig[k]; ok {
-		// 		m := x.FieldByName(k)
-		// 		m.SetString(mapOfConfig[k])
-		// 	}
-		// }
 
 		// Reading Config from a map to a struct
 		readMapToCfgStruct(mapOfConfig, cfg)

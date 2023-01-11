@@ -31,6 +31,7 @@
       <div class="textmenu" id="textmenu">
       <a href="/docs/" i18n-text="docs">Documents</a>
       <a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-text="tasks">Tasks</a>
+      <a href="/projs/?projstatuses=0" i18n-text="projects">Projects</a>
       <a href="/team/" i18n-text="team">Team</a>
       </div>
       <div class="graphicmenu">
@@ -46,7 +47,7 @@
 
 {{define "bottom"}}
 <div id="bottom">
-  <span>© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></span>
+  <span>© 2023 <a href="https://edmproject.github.io" target="_blank">EDM Project</a></span>
   <span>v{{.}}.</span>
   <span><a href="/static/manual.html">Manual</a></span>
 </div>
@@ -57,9 +58,9 @@
   <form id="paginationForm" action="?" method="get" onsubmit="addFiltersOnSubmut('paginationForm'); addSortingOnSubmut('paginationForm'); removeEmptyInputs(this);">
     <span class="nowrap">
       <label for="pageNumber"><span i18n-text="page">Page</span> {{.}} <span i18n-text="of">of</span> <span id="totalPagesNumber"></span>.</label>
-      <input class ="sbut pg" type="button" i18n-title="firstP" title="First" value="|&lt;" onclick="paginate('min');"> <input class ="sbut pg" type="button" i18n-title="previousP" title="Previous"value="&lt;-" onclick="paginate(-1);">
+      <input class="sbut pg" type="button" i18n-title="firstP" title="First" value="|&lt;" onclick="paginate('min');"> <input class="sbut pg" type="button" i18n-title="previousP" title="Previous"value="&lt;-" onclick="paginate(-1);">
       <input type="number" class="field" size="8" id="pageNumber" name="pageNumber" value="{{.}}" min="1" max="" onchange="paginate(0);">
-      <input class ="sbut pg" type="button" i18n-title="nextP" title="Next" value="-&gt;" onclick="paginate(1);"> <input class ="sbut pg" type="button" i18n-title="lastP" title="Last" value="&gt;|" onclick="paginate('max');">
+      <input class="sbut pg" type="button" i18n-title="nextP" title="Next" value="-&gt;" onclick="paginate(1);"> <input class="sbut pg" type="button" i18n-title="lastP" title="Last" value="&gt;|" onclick="paginate('max');">
    </span>
   <span class="nowrap">
   <label for="elemsOnPage" i18n-text="elemsOnPage">Elements on page:</label>
@@ -77,16 +78,23 @@
 </div>
 {{end}}
 
+{{define "formatOutput"}}
+<div style="float: right; padding-top: 5px;">
+  <input type="button" class="sbut pg smaller" i18n-value="print" value="Print" onclick="window.print()">
+  <input type="button" class="sbut pg smaller" value="JSON" onclick="window.location.assign(addGetArg(window.location.href, 'api', 'json'))">
+</div>
+{{end}}
+
 {{define "searchPanel"}}
 <div id="search">
-  <input id="showFilters" class ="sbut" type="button" i18n-value="filters" value="Filters..." i18n-title="filtersTitle" title="Show or hide filters" onclick="showFilters();
+  <input id="showFilters" class="sbut" type="button" i18n-value="filters" value="Filters..." i18n-title="filtersTitle" title="Show or hide filters" onclick="showFilters();
   /* This function shows or hides filters controls */
   function showFilters() {
     const d = document.getElementById('showhide');
     d.style.display = (d.style.display == 'none') ? 'block' : 'none';
   };">
   <input id="searchText" type="text" class="field" name="searchText" size="15" i18n-placeholder="searchPhrase" placeholder="Search text">
-  <input id="searchButton" class ="sbut" type="submit" name="searchButton" i18n-value="search" value="Search">
+  <input id="searchButton" class="sbut" type="submit" name="searchButton" i18n-value="search" value="Search">
 </div>
 {{end}}
 
@@ -98,12 +106,12 @@
 {{end}}
 
 {{define "deleteButton"}}
-<input type="button" class ="sbut reddish" id="deleteButton" name="deleteButton" i18n-value="deleteSelected" value="× Delete selected"
+<input type="button" class="sbut reddish" id="deleteButton" name="deleteButton" i18n-value="deleteSelected" value="× Delete selected"
   onclick="this.parentNode.lastElementChild.style.display = 'block'; document.getElementById('yesDeleteButton').disabled = false;" disabled>
 <div style="display: none;">
   <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
   <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.style.display = 'none'; document.getElementById('yesDeleteButton').disabled = true;">
-  <input type="button" class ="sbut reddish" id="yesDeleteButton" name="deleteButton" i18n-value="yesDelete" value="Yes, delete" onclick="
+  <input type="button" class="sbut reddish" id="yesDeleteButton" name="deleteButton" i18n-value="yesDelete" value="Yes, delete" onclick="
   submitControlButton('deleteButton', 'Delete selected');" disabled>
 </div>
 {{end}}
@@ -204,7 +212,7 @@
     exceedQuantityMessage,
     exceedSizeMessage);">
 </div>
-<input type="button" class ="sbut" i18n-value="clearSelectedFiles" value="Clear selected files" onclick="clearInputFiles(
+<input type="button" class="sbut" i18n-value="clearSelectedFiles" value="Clear selected files" onclick="clearInputFiles(
   document.getElementById('fileList{{.}}'),
   document.getElementById('fileDisplay{{.}}'),
   document.getElementById('fileDisplayMsg{{.}}'),

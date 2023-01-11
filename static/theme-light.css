@@ -1,6 +1,7 @@
 :root {
   font-size: 14px;
-  --elements-radius: 2px;
+  --elements-radius: 3px;
+  --smaller-radius: 2px;
   --standard-font: Roboto, "Segoe UI", Ubuntu, "-apple-system", BlinkMacSystemFont, Arial, sans-serif;
   --tableOddRowBkgColor: #f8f7ea;
   --tableSelectionColor: #d0e8f0;
@@ -150,14 +151,15 @@ a, a:visited {
 }
 a:hover, a:focus {
   text-decoration: underline;
-  color: #800;
+  color: #909;
   outline: 0;
 }
 .scroller {height: 11em; overflow-y: scroll; padding: 4px; background-color: #eee;}
 
-.txtred {color: #a00;}
+.txtred {color: #b01;}
 .txtgreen {color: #0a0;}
-.txtblue {color: #03f;}
+.txtora {color: #c60;}
+.txtblue {color: #04e;}
 .txtbw {color: #000;}
 
 .msgredfx {color: #a00;}
@@ -173,31 +175,32 @@ a:hover, a:focus {
 .af {
   color: #333;
   background-color: #bbc;
-  border-radius: var(--elements-radius);
+  border-radius: var(--smaller-radius);
   padding: 0px 5px 0px 5px;
   white-space: nowrap;
 }
 .chosen-block {
+  margin-top: 1px;
   max-width: fit-content;
   color: #000;
   background-color: #aab;
-  border-radius: var(--elements-radius);
+  border-radius: var(--smaller-radius);
   padding: 0px 5px 0px 5px;
   white-space: nowrap;
 }
 .chosen, #control .chosen, #main .chosen {
   color: #000;
   background-color: #aab;
-  border-radius: var(--elements-radius);
+  border-radius: var(--smaller-radius);
   padding: 0px 5px 0px 5px;
   white-space: nowrap;
 }
-.withrm, #control .withrm, #main .withrm {border-radius: var(--elements-radius) 0 0 var(--elements-radius);}
+.withrm, #control .withrm, #main .withrm {border-radius: var(--smaller-radius) 0 0 var(--smaller-radius);}
 .rm {
   cursor: pointer;
   color:#fff; 
   background-color: #d55;
-  border-radius: 0 var(--elements-radius) var(--elements-radius) 0;
+  border-radius: 0 var(--smaller-radius) var(--smaller-radius) 0;
   padding-left: 3px;
   padding-right: 3px;
 }
@@ -253,7 +256,7 @@ h2 {
   background-color: #b7b7b7;
   border: 1px solid #b7b7b7;
   border-radius: calc(1px + var(--elements-radius));
-  overflow: hidden;
+  overflow: scroll;
 }
 .grideven, .gridodd {background-color: #fff; padding: 0px 1px;}
 .gridheader {background-color: #002848 !important; color: #eed; font-weight: bold;}
@@ -276,13 +279,13 @@ h2 {
 .afile {
   display: block; 
   margin: 1px; 
-  border-radius: 2px; 
+  border-radius: var(--smaller-radius); 
   border: 1px solid #bbb;
 }
 .afile-inline-block {
   display: inline-block; 
   margin: 1px; 
-  border-radius: 2px; 
+  border-radius: var(--smaller-radius); 
   border: 1px solid #bbb;
 }
 .someaction {
@@ -326,12 +329,45 @@ h2 {
   margin-top: 6px;
   margin-bottom: 6px;
 }
-.margintop {
-  margin-top: 6px;
+.margintop {margin-top: 6px;}
+.marginbottom {margin-bottom: 6px;}
+
+
+
+/* flexbox columns for PM */
+.container-flexbox {
+  display: flex; 
+  justify-content: space-between; 
+  flex-wrap: wrap;
+  gap: 15px 5px;
 }
-.marginbottom {
-  margin-bottom: 6px;
+.item-col-4 {
+  width: 24%;
+  min-height: 60px;
+  padding: 0;
+  margin: 0;
+  background-color: #f3f4f5;
+  border-radius: calc(1px + var(--elements-radius));
 }
+.item-col-4 h3 {border-radius: calc(1px + var(--elements-radius)) calc(1px + var(--elements-radius)) 0 0;}
+@media (max-width:960px) {
+  .item-col-4 { width: 49%; }
+}
+@media (max-width:640px) {
+  .item-col-4 { width: 100%; }
+}
+.elem-inside-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 5px;
+  border-radius: var(--elements-radius);
+  background-color: #fff;
+  margin: 5px 5px 0px 5px;
+  box-shadow: 0px 0px 2px 1px #ccc;
+}
+.elem-inside-item:last-child {margin-bottom: 5px;}
+.bigger-font {font-size: 15px;}
+.smooth-font {color: #999;}
 
 
 
@@ -483,6 +519,7 @@ a.sbut, a.sbut:active, a.sbut:visited {
   outline: 0;
 }
 .greenish, a.greenish:visited {
+  color: #fff;
   background-color: #0a0;
 }
 .greenish:hover, .greenish:focus, a.greenish:hover, a.greenish:focus {
@@ -515,7 +552,7 @@ a.sbut, a.sbut:active, a.sbut:visited {
   margin: 2px 0;
   display: inline-block;
   background-color: #fff;
-  color: #444;
+  color: #111;
   border: 1px solid #999;
   border-radius: var(--elements-radius);
   padding: 5px 8px;
@@ -532,7 +569,7 @@ a.sbut, a.sbut:active, a.sbut:visited {
   margin: 1px;
   font: inherit;
   border: 1px solid #aaa;
-  border-radius: var(--elements-radius);
+  border-radius: var(--smaller-radius);
   box-shadow: inset 1px 1px 2px 0px #eee, 1px 1px 2px 0px #eee;
 }
 .numberbox:hover, .numberbox:focus {
@@ -609,6 +646,7 @@ h3 {
   padding: 3px 6px;
   background-color: #9393a3;
   color: #fff;
+  border-radius: var(--smaller-radius) var(--smaller-radius) 0 0;
 }
 h3 a, h3 a:hover, h3 a:active, h3 a:visited {
   text-decoration: none;
@@ -619,8 +657,9 @@ h3 a:focus {
   text-decoration: underline;
   text-decoration-style: dotted;
 }
-.smaller, .smaller:hover, .smaller:focus {
+input.smaller, .smaller, .smaller:hover, .smaller:focus {
   padding: 2px 4px;
+  border-radius: var(--smaller-radius);
 }
 .nowrap {
   white-space: nowrap;

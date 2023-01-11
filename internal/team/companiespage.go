@@ -1,7 +1,8 @@
-package main
+package team
 
 import (
 	"database/sql"
+	"edm/internal/core"
 	"edm/pkg/accs"
 	"encoding/json"
 	"log"
@@ -25,14 +26,15 @@ type CompaniesPage struct {
 	RemovedNum    int
 }
 
-func (bs *BaseStruct) companiesHandler(w http.ResponseWriter, r *http.Request) {
+// CompaniesHandler is http handler for companies page
+func (tb *TeamBase) CompaniesHandler(w http.ResponseWriter, r *http.Request) {
 
-	allow, id := bs.authVerify(w, r)
+	allow, id := core.AuthVerify(w, r, tb.memorydb)
 	if !allow {
 		return
 	}
 
-	if bs.validURLs.Comp.FindStringSubmatch(r.URL.Path) == nil {
+	if tb.validURLs.comp.FindStringSubmatch(r.URL.Path) == nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -40,15 +42,15 @@ func (bs *BaseStruct) companiesHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	var Page = CompaniesPage{
-		AppTitle:   bs.text.AppTitle,
-		AppVersion: AppVersion,
-		PageTitle:  bs.text.CompaniesPageTitle,
+		AppTitle:   tb.text.AppTitle,
+		AppVersion: core.AppVersion,
+		PageTitle:  tb.text.CompaniesPageTitle,
 		LoggedinID: id,
 	}
 
-	user := unmarshalToProfile(bs.team.GetByID(Page.LoggedinID))
+	user := UnmarshalToProfile(tb.memorydb.GetByID(Page.LoggedinID))
 	Page.UserConfig = user.UserConfig
-	if user.UserRole == 1 {
+	if user.UserRole == ADMIN {
 		Page.LoggedinAdmin = true
 	}
 
@@ -66,10 +68,10 @@ func (bs *BaseStruct) companiesHandler(w http.ResponseWriter, r *http.Request) {
 				allowedToRemove = true
 			}
 			if allowedToRemove {
-				removed := sqla.DeleteObjects(bs.db, bs.dbt, "companies", "ID", ids)
+				removed := sqla.DeleteObjects(tb.db, tb.dbType, "companies", "ID", ids)
 				if removed > 0 {
-					constructCorpList(bs.db, bs.dbt, bs.team)
-					constructUnitList(bs.db, bs.dbt, bs.team)
+					core.ConstructCorpList(tb.db, tb.dbType, tb.memorydb)
+					core.ConstructUnitList(tb.db, tb.dbType, tb.memorydb)
 					Page.Message = "removedElems"
 					Page.RemovedNum = removed
 				} else {
@@ -85,7 +87,7 @@ func (bs *BaseStruct) companiesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Loading objects
 	err = func() error {
-		rows, err := bs.db.Query(`SELECT 
+		rows, err := tb.db.Query(`SELECT 
 c.ID, c.ShortName, c.FullName, c.ForeignName, 
 c.Contacts, c.CompanyHead, c.RegNo, c.TaxNo, c.BankDetails, 
 p.ID, p.FirstName, p.Surname,  p.JobTitle 
@@ -142,7 +144,6 @@ ORDER BY c.ShortName ASC, c.FullName ASC, c.ForeignName ASC`)
 	if err != nil {
 		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
 	}
 
@@ -150,17 +151,15 @@ ORDER BY c.ShortName ASC, c.FullName ASC, c.ForeignName ASC`)
 	if r.URL.Query().Get("api") == "json" || r.FormValue("api") == "json" {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(Page)
-		//jsonOut, _ := json.Marshal(Page)
-		//fmt.Fprintln(w, string(jsonOut))
+
 		return
 	}
 
 	// HTML output
-	err = bs.templates.ExecuteTemplate(w, "companies.tmpl", Page)
+	err = tb.templates.ExecuteTemplate(w, "companies.tmpl", Page)
 	if err != nil {
 		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
 	}
 }

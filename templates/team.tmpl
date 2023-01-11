@@ -51,7 +51,7 @@
 
   <div class="panel smaller"><a href="/companies/" i18n-text="gotoCompaniesPage">Go to companies list</a></div>
   <div id="controlButtons">
-    <a href="/team/profile/new" class ="sbut greenish" i18n-text="newUser">+ New user profile</a>
+    <a href="/team/profile/new" class="sbut greenish" i18n-text="newUser">+ New user profile</a>
     {{template "deleteButton"}}
   </div>
 
@@ -83,6 +83,7 @@
   </div>
 
   <div class="main" id="main">
+    {{template "formatOutput"}}
     {{if not .Team}}<div class="center somemargins" i18n-text="noElemsFound">Objects matching the specified criteria were not found, or there are no objects.</div>
     {{else}}{{template "pagination" .PageNumber}}
     <form id="datagridForm" name="datagridForm" action="/team/" method="post" onsubmit="addSortingOnSubmut('datagridForm');

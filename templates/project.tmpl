@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="{{.UserConfig.LangCode}}">
+{{template "head" returnHeadRender .AppTitle .PageTitle .UserConfig.LangCode .UserConfig.SystemTheme}}
+<body>
+
+{{template "loading" .UserConfig.LangCode}}
+{{template "menus" .}}
+{{$ci := .Project.GiveCreatorID}}
+
+<div id="container">
+
+  <div id="control">
+    <h1>{{.PageTitle}}</h1>
+    <p class="breadcrumbs"><a href="/projs/?projstatuses=0" i18n-text="allProjects">all projects</a> / <span i18n-text="projectPage">project page</span></p>
+    
+    {{if not .New}}
+      {{template "formatOutput"}}
+      {{if .Editable}}
+      <input type="submit" class="sbut" id="active" name="statusButton" i18n-many="activeProj" value="Active" title="Set project status - active" onclick="wrapperSetProjStatus(0)">
+      <input type="submit" class="sbut" id="done" name="statusButton" i18n-many="doneProj" value="Done" title="Complete the project" onclick="wrapperSetProjStatus(1);">
+      <input type="submit" class="sbut" id="canceled" name="statusButton" i18n-many="cancelProj" value="Cancel" title="Cancel the project" onclick="wrapperSetProjStatus(2);">
+      <input type="button" class="sbut" name="showButton" i18n-value="edit" value="Edit" onclick="showEditForm('edit');">
+      {{if .RemoveAllowed}}<input type="button" class="sbut reddish" name="showDelete" i18n-value="delete" value="Delete" onclick="showEditForm('removal');">{{end}}
+      {{end}}
+
+      {{if .RemoveAllowed}}
+      <form id="removal" action="/projs/" method="post" style="display: none;">
+      <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
+      <input type="hidden" name="ids" value="{{.Project.ID}}">
+      <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="showEditForm('view');">
+      <input type="submit" class="sbut reddish" name="deleteButton" i18n-value="yesDelete" value="Yes, delete">
+      </form>
+      {{end}}
+
+      <div id="appliedElems"><span i18n-text="creatorOwner">Creator (owner):</span>
+        {{if $ci}}<a class="chosen" href="/team/profile/{{$ci}}">{{.Project.Creator.GiveSelfNameJob}}</a>{{end}} 
+        <span i18n-text="participants">Participants:</span> <span id="participantsNum"></span> <span id="participantsList"></span>
+      </div>
+
+      <div id="view">
+        <div><span i18n-text="status">Status:</span> <span id="statusIndicator" i18n-index="projStatuses-{{.Project.ProjStatus}}">{{.Project.GiveStatus .ProjStatuses "Unknown"}}</span>.
+          {{if .Project.Description}}
+          <span i18n-text="description">Description:</span> <input type="button" class="sbut pg smaller" i18n-value="show" value="Show" onclick="showMore(this);
+            function showMore(showButton) {
+              const d = document.getElementById('description');
+              if (d.style.display == 'none') {
+                d.style.display = 'block'
+                showButton.setAttribute('i18n-value', 'hide');
+                if (document.documentElement.lang != 'en') {
+                  getLang(document.documentElement.lang).then(lang => {if (lang[showButton.getAttribute('i18n-value')]) showButton.value = lang[showButton.getAttribute('i18n-value')]});
+                } else {
+                  showButton.value = 'Hide';
+                }
+              } else {
+                d.style.display = 'none'
+                showButton.setAttribute('i18n-value', 'show');
+                if (document.documentElement.lang != 'en') {
+                  getLang(document.documentElement.lang).then(lang => {if (lang[showButton.getAttribute('i18n-value')]) showButton.value = lang[showButton.getAttribute('i18n-value')]});
+                } else {
+                  showButton.value = 'Show';
+                }
+              }
+            };">{{end}}
+        </div>
+        <div id="description" style="display: none;" class="multilineContent">{{.Project.Description}}</div>
+        <div>
+          <input id="searchPageText" type="text" class="numberbox" name="searchText" size="32" i18n-placeholder="searchPhrase" placeholder="Search text"
+          oninput="searchOnPage(event.target.value);">
+          <input id="resetButton" class="sbut smaller" type="button" name="searchButton" i18n-value="reset" value="Reset" onclick="searchOnPageReset(); document.getElementById('searchPageText').value = '';">
+          <!-- <span class="nowrap">
+            <input id="searchButton" class="sbut smaller" type="button" name="searchButton" i18n-value="search" value="Search" onclick="searchOnPage(document.getElementById('searchPageText').value);">
+            <input id="resetButton" class="sbut smaller" type="button" name="searchButton" i18n-value="reset" value="Reset" onclick="searchOnPageReset(); document.getElementById('searchPageText').value = '';">
+          </span> -->
+        </div>
+        <div><a href="/tasks/task/new?project={{.Project.ID}}&projectReturn=true" class="sbut greenish smaller" i18n-text="newTask">+ New task</a> &nbsp; 
+          <span class="nowrap">
+            <label for="taskNum" i18n-text="task">Task</label> <span>#:</span> 
+            <input type="text" id="taskNum" class="numberbox" name="taskNum" placeholder="123" pattern="#?d+" size="15"
+            onkeypress="enterTask(event); function enterTask(event) {if (event.keyCode == 13) wrapperAddTaskToProject()};"> 
+          </span>
+          <span class="nowrap">
+            <input type="button" class="sbut smaller" name="addTask" i18n-value="add" value="Add" onclick="wrapperAddTaskToProject()">
+            <input type="button" class="sbut smaller reddish" name="detachTask" i18n-value="detach" value="Detach" 
+            onclick="if (document.getElementById('taskNum').value) {
+              detachTaskFromProject(+document.getElementById('taskNum').value.replace('#', ''));
+              document.getElementById('taskNum').value = '';}">
+          </span>
+        </div>
+      </div>
+      {{end}}
+  
+      {{if .Editable}}
+        {{if .New}}<div id="create"><form id="createForm" action="/projs/project/new" method="post" onsubmit="sessionStorage.setItem('new', 'project');">
+        {{else}}<div id="edit" style="display: none;"><form id="editForm" action="/projs/project/{{.Project.ID}}" method="post">{{end}}
+        
+        <h2 i18n-text="projName">Project Name*:</h2>
+        <div><input type="text" class="field ofval" name="projName" size="50" maxlength="127" value="{{.Project.ProjName}}" required></div>
+        
+        <h2 i18n-text="description">Description:</h2>
+        <div class="wideelem">
+          {{$textarea := "textAreaMain"}}{{template "bbcode" $textarea}}<br>
+          <textarea class="multiline" id="textAreaMain" name="description" maxlength="8000" style="width: 100%; height: 8em; margin-bottom: 0.4em;">{{.Project.Description}}</textarea>
+        </div>
+
+        {{if not .New}}
+        <h2 i18n-text="creatorOwner">Creator (owner):</h2>
+        <div><span class="nowrap">
+          <select name="owner" id="owner" class="numberbox">
+          <option value="0" i18n-text="no">no</option>
+          {{range .UserList}}<option value="{{.ID}}">{{.Value}}</option>
+          {{end}}
+        </select><span class="dropdown"></span></span></div>
+        {{end}}
+
+        <br>
+        {{if .New}}<input type="submit" class="sbut" name="createButton" i18n-value="create" value="Create">
+                  <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" 
+                  onclick="if (history.length > 1) {history.back()} else {window.location.href = '/projs/'}">
+        </form>{{else}}
+          <input type="submit" class="sbut" name="updateButton" i18n-value="save" value="Save">
+          <input type="button" class="sbut" name="hideButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); showEditForm('view');">
+        </form>{{end}}
+        </div>
+      {{end}}
+
+    <div id="resDisplay"></div>
+  </div>
+
+  <div id="main">
+
+    {{if not .New}}
+    <h2 class="marginbottom center smooth-font" i18n-text="tasks">Tasks</h2>
+    <div class="container-flexbox">
+      <div class="item-col-4" id="col-created">
+        <h3><span i18n-index="taskStatuses-0">Created</span> <span id="num-created"></span></h3>
+      </div>
+      <div class="item-col-4" id="col-inprogress">
+        <h3><span i18n-index="taskStatuses-1">Assigned</span>, <span i18n-index="taskStatuses-2">In progress</span> <span id="num-inprogress"></span></h3>
+      </div>
+      <div class="item-col-4" id="col-attn">
+        <h3><span i18n-index="taskStatuses-6">In review</span>, <span i18n-index="taskStatuses-3">Stuck</span> <span id="num-attn"></span></h3>
+      </div>
+      <div class="item-col-4" id="col-completed">
+        <h3><span i18n-index="taskStatuses-4">Done</span>, <span i18n-index="taskStatuses-5">Canceled</span> <span></span> <span id="num-completed"></span></h3>
+      </div>
+    </div>
+
+
+    <div id="forwardWindow" class="fullscreen semitransparent" style="display: none;">
+      <div class="dialog elem">
+        <h3 i18n-text="forwardToAssignee">Forward to another user</h3>
+          <div class="subelem marginbottom">
+            <div class="marginbottom bigger-font"><span i18n-text="task">Task</span> <span id="taskNoAndTopic"></span></div>
+            <div class="marginbottom" i18n-text="selectAssignee">Select assignee</div>
+            <span class="nowrap"><select id="selectedAssignee" class="numberbox" onchange="
+            document.getElementById('forwardButton').disabled = (this.value) ? false : true;">
+              <option value="" i18n-text="selectNewAssignee">Select new assignee</option>
+              {{range .UserList}}<option value="{{.ID}}">{{.Value}}</option>
+              {{end}}
+            </select><span class="dropdown"></span></span> <span class="nowrap">
+            <input type="hidden" name="selectedTask" id="selectedTask" value="0">
+            <input type="button" class="sbut greenish smaller" i18n-value="forward" value="Forward" id="forwardButton"
+            onclick="document.getElementById('forwardWindow').style.display = 'none';
+            assignTaskToDo(+document.getElementById('selectedTask').value, +document.getElementById('selectedAssignee').value);"
+            disabled>
+            <input type="button" class="sbut smaller" i18n-value="cancel" value="Cancel" onclick="
+            document.getElementById('forwardWindow').style.display = 'none';">
+            </span>
+          </div>
+      </div>
+    </div>
+
+
+    {{end}}
+
+  </div>
+
+{{template "bottom" .AppVersion}}
+
+
+</div>
+
+<script src="/static/functions.js"></script>
+<script src="/static/functionspm.js"></script>
+
+<script>
+/* Page loading function for read */
+(function() {
+  resDisplayUpdate({{.Message}});
+
+  if (document.documentElement.lang != 'en') {
+    getLang(document.documentElement.lang).then(lang => {
+      if (window.location.pathname.endsWith('/new') && lang.newTask) {
+        document.querySelector('h1').innerHTML = lang.newProject;
+        document.title = lang.newProject;
+      } else if (lang.appTitle && lang.project) {
+        let title = '';
+        let name = {{.Project.ProjName}};
+        let id = {{.Project.ID}};
+        if (name) {
+          title += lang.project + ": " + name
+        } else {
+          title = lang.project + " #" + id
+        }
+        document.querySelector('h1').innerHTML = title;
+        document.title = lang.appTitle + ': ' + document.querySelector('h1').innerText;
+      }
+    });
+  }
+
+  if (window.location.pathname.endsWith('/new')) return;
+  const status = {{.Project.ProjStatus}};
+  updateProjStatusIndicatorClass(status);
+  updateProjStatusButtons(status);
+  reCalcTaskNum();
+  buildProjectParticipants();
+  updateMultilines('multilineContent');
+  const loggedinID = {{.LoggedinID}};
+  const loggedinAdmin = {{.LoggedinAdmin}};
+  const projectCreator = {{$ci}};
+  let userRights = {loggedinID: loggedinID, loggedinAdmin: loggedinAdmin, projectCreator: projectCreator};
+  sessionStorage.setItem("userRights", JSON.stringify(userRights));
+  loadTasks(userRights);
+  connectWebSocket();
+})();
+</script>
+
+{{if .Editable}}
+<script>
+/* Page loading function for edit */
+(function() {
+  const ownerSelector = document.getElementById('owner');
+  if (ownerSelector) ownerSelector.value = "{{$ci}}";
+  checkForNewCreated();
+})();
+</script>
+{{end}}
+
+<script>
+/* Wrappers to pass arguments */
+function wrapperSetProjStatus(status) {
+  setProjStatus(status, {{.ProjStatuses}});
+}
+function wrapperAddTaskToProject() {
+  if (document.getElementById('taskNum').value) {
+    const loggedinID = {{.LoggedinID}};
+    const loggedinAdmin = {{.LoggedinAdmin}};
+    const projectCreator = {{$ci}};
+    let userRights = {loggedinID: loggedinID, loggedinAdmin: loggedinAdmin, projectCreator: projectCreator};
+    addTaskToProject(+document.getElementById('taskNum').value.replace('#', ''), userRights);
+    document.getElementById('taskNum').value = '';
+  }
+}
+</script>
+
+</body>
+</html>

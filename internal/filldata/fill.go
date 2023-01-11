@@ -1,22 +1,30 @@
-package main
+package filldata
 
 import (
 	"database/sql"
+	"edm/internal/docs"
+	"edm/internal/projs"
+	"edm/internal/tasks"
+	"edm/internal/team"
 	"edm/pkg/datetime"
+	"log"
 	"math/rand"
 	"strconv"
 	"time"
 )
 
-func fillDBwithTestData(db *sql.DB, DBType byte) {
+// FillDBwithTestData is for showcase or testing
+func FillDBwithTestData(db *sql.DB, DBType byte) {
+
+	log.Println("Populating DB with test data...")
 
 	rand.Seed(time.Now().UnixNano())
 
-	company := Company{
+	company := team.Company{
 		ShortName:   "Example Company",
 		FullName:    "Example Company Corporation",
 		ForeignName: "Example Company Corp.",
-		Contacts: CompanyContacts{
+		Contacts: team.CompanyContacts{
 			AddressReg:  "US, NY, 11 some avenue",
 			AddressFact: "US, NY, 11 some avenue",
 			Phone:       "+1(111)111 02 03",
@@ -28,19 +36,19 @@ func fillDBwithTestData(db *sql.DB, DBType byte) {
 		TaxNo:       "",
 		BankDetails: "",
 	}
-	cid, _ := company.create(db, DBType)
-	unitA := Unit{UnitName: "Archives and Documentation Office", Company: &Company{ID: cid}}
-	archunit, _ := unitA.create(db, DBType)
-	unitB := Unit{UnitName: "Engineering Team", Company: &Company{ID: cid}}
-	unitB.create(db, DBType)
-	unitC := Unit{UnitName: "Research and Development Unit", Company: &Company{ID: cid}}
-	unitC.create(db, DBType)
-	unitD := Unit{UnitName: "Software Developers", Company: &Company{ID: cid}}
-	softunit, _ := unitD.create(db, DBType)
-	unitE := Unit{UnitName: "West Branch Office", Company: &Company{ID: cid}}
-	unitE.create(db, DBType)
+	cid, _ := company.Create(db, DBType)
+	unitA := team.Unit{UnitName: "Archives and Documentation Office", Company: &team.Company{ID: cid}}
+	archunit, _ := unitA.Create(db, DBType)
+	unitB := team.Unit{UnitName: "Engineering Team", Company: &team.Company{ID: cid}}
+	unitB.Create(db, DBType)
+	unitC := team.Unit{UnitName: "Research and Development Unit", Company: &team.Company{ID: cid}}
+	unitC.Create(db, DBType)
+	unitD := team.Unit{UnitName: "Software Developers", Company: &team.Company{ID: cid}}
+	softunit, _ := unitD.Create(db, DBType)
+	unitE := team.Unit{UnitName: "West Branch Office", Company: &team.Company{ID: cid}}
+	unitE.Create(db, DBType)
 
-	defaultUserConfig := UserConfig{
+	defaultUserConfig := team.UserConfig{
 		SystemTheme:          "dark",
 		ElemsOnPage:          20,
 		ElemsOnPageTeam:      500,
@@ -49,36 +57,36 @@ func fillDBwithTestData(db *sql.DB, DBType byte) {
 		UseCalendarInConrols: true,
 		CurrencyBeforeAmount: true,
 	}
-	user1 := Profile{
+	user1 := team.Profile{
 		FirstName: "John",
 		OtherName: "",
 		Surname:   "Smith",
-		Contacts: UserContacts{
+		Contacts: team.UserContacts{
 			TelOffice: "333",
 			TelMobile: "",
 			Email:     "",
 		},
 		BirthDate:  datetime.Date{Year: 1990, Month: 10, Day: 22},
 		JobTitle:   "Software developer",
-		JobUnit:    &Unit{ID: softunit},
+		JobUnit:    &team.Unit{ID: softunit},
 		UserConfig: defaultUserConfig,
 	}
-	user1.create(db, DBType)
-	user2 := Profile{
+	uid1, _ := user1.Create(db, DBType)
+	user2 := team.Profile{
 		FirstName: "Jane",
 		OtherName: "",
 		Surname:   "Anderson",
-		Contacts: UserContacts{
+		Contacts: team.UserContacts{
 			TelOffice: "442",
 			TelMobile: "",
 			Email:     "",
 		},
 		BirthDate:  datetime.Date{Year: 1900, Month: 12, Day: 25},
 		JobTitle:   "Document archivist",
-		JobUnit:    &Unit{ID: archunit},
+		JobUnit:    &team.Unit{ID: archunit},
 		UserConfig: defaultUserConfig,
 	}
-	user2.create(db, DBType)
+	uid2, _ := user2.Create(db, DBType)
 
 	for j := 0; j < 2; j++ {
 		cat := 0
@@ -89,7 +97,7 @@ func fillDBwithTestData(db *sql.DB, DBType byte) {
 			if cat > 3 {
 				cat = 0
 			}
-			d := Document{
+			d := docs.Document{
 				RegNo:     "rno-" + strconv.Itoa(i+1),
 				RegDate:   datetime.Date{Year: 1990 + i, Month: byte(month), Day: byte(i + 1)},
 				IncNo:     "ino-" + strconv.Itoa(i+10),
@@ -102,12 +110,27 @@ func fillDBwithTestData(db *sql.DB, DBType byte) {
 				DocSum:    100 * i,
 				Currency:  840,
 				EndDate:   datetime.Date{Year: 2000 + i, Month: byte(month), Day: byte(i)},
-				Creator:   &Profile{ID: 2},
+				Creator:   &team.Profile{ID: uid2},
 				Note:      "",
 			}
-			d.create(db, DBType)
+			d.Create(db, DBType)
 		}
 	}
+
+	project1 := projs.Project{
+		ProjName:    "Some test project",
+		Description: "Description of the test project",
+		Creator:     &team.Profile{ID: uid1},
+		ProjStatus:  0,
+	}
+	projid1, _ := project1.Create(db, DBType)
+	project2 := projs.Project{
+		ProjName:    "Another test project",
+		Description: "Some text to describe the project",
+		Creator:     &team.Profile{ID: uid2},
+		ProjStatus:  0,
+	}
+	projid2, _ := project2.Create(db, DBType)
 
 	for j := 0; j < 2; j++ {
 		tasktopics := map[int]string{
@@ -135,6 +158,13 @@ func fillDBwithTestData(db *sql.DB, DBType byte) {
 			9: "To do something else.",
 		}
 		for i := 0; i < 27; i++ {
+			project := 0
+			if i < 11 && j == 0 {
+				project = projid1
+			}
+			if i < 11 && j == 1 {
+				project = projid2
+			}
 			month := 1
 			if i > 10 {
 				month = 2
@@ -150,55 +180,77 @@ func fillDBwithTestData(db *sql.DB, DBType byte) {
 				day = 28
 			}
 			v := rand.Intn(9)
-			s := rand.Intn(5) + 1
+			s := rand.Intn(6) + 1
 			hour := i + 1
 			if hour > 23 {
 				hour = 23
 			}
 			minute := rand.Intn(59) + 1
 			minutex := rand.Intn(59) + 1
-			creator := rand.Intn(3) + 1
-			assignee := rand.Intn(3) + 1
+
+			creator := 0
+			assignee := 0
+			creatorRand := rand.Intn(3) + 1
+			switch creatorRand {
+			case 1:
+				creator = 1
+			case 2:
+				creator = uid1
+			case 3:
+				creator = uid2
+			}
+			assigneeRand := rand.Intn(3) + 1
+			switch assigneeRand {
+			case 1:
+				assignee = 1
+			case 2:
+				assignee = uid1
+			case 3:
+				assignee = uid2
+			}
+
 			var tid int
 			if creator == 1 {
-				t := Task{
+				t := tasks.Task{
 					Created:    datetime.DateTime{Year: 2022, Month: 1, Day: byte(day), Hour: byte(hour), Minute: byte(i + 3)},
 					PlanStart:  datetime.DateTime{Year: 2022, Month: byte(month + 1), Day: byte(day), Hour: byte(hour), Minute: byte(minute)},
 					PlanDue:    datetime.DateTime{Year: 2022, Month: byte(month + 2), Day: byte(day), Hour: byte(hour), Minute: byte(minute)},
 					StatusSet:  datetime.DateTime{Year: 2022, Month: 1, Day: byte(day), Hour: byte(hour), Minute: byte(minutex)},
-					Creator:    &Profile{ID: creator},
+					Creator:    &team.Profile{ID: creator},
 					Assignee:   nil,
 					Topic:      tasktopics[v],
 					Content:    taskcontent[v],
 					TaskStatus: 0,
+					Project:    project,
 				}
-				tid, _ = t.create(db, DBType)
+				tid, _ = t.Create(db, DBType)
 			} else {
-				t := Task{
+				t := tasks.Task{
 					Created:    datetime.DateTime{Year: 2022, Month: 1, Day: byte(day), Hour: byte(hour), Minute: byte(i + 3)},
 					PlanStart:  datetime.DateTime{Year: 2022, Month: byte(month + 1), Day: byte(day), Hour: byte(hour), Minute: byte(minute)},
 					PlanDue:    datetime.DateTime{Year: 2022, Month: byte(month + 2), Day: byte(day), Hour: byte(hour), Minute: byte(minute)},
 					StatusSet:  datetime.DateTime{Year: 2022, Month: 1, Day: byte(day), Hour: byte(hour), Minute: byte(minutex)},
-					Creator:    &Profile{ID: creator},
-					Assignee:   &Profile{ID: assignee},
+					Creator:    &team.Profile{ID: creator},
+					Assignee:   &team.Profile{ID: assignee},
 					Topic:      tasktopics[v],
 					Content:    taskcontent[v],
 					TaskStatus: s,
+					Project:    project,
 				}
-				tid, _ = t.create(db, DBType)
+				tid, _ = t.Create(db, DBType)
 			}
 			for x := 0; x < 5; x++ {
 				m := x + 1
 				if m > 12 {
 					m = 12
 				}
-				comment := Comment{
-					Task:    &Task{ID: tid},
-					Creator: &Profile{ID: creator},
+				comment := tasks.Comment{
+					Task:    tid,
+					Creator: &team.Profile{ID: creator},
 					Created: datetime.DateTime{Year: 2022, Month: byte(m), Day: byte(x + 1), Hour: byte(x + 2), Minute: byte(i + 5)},
 					Content: "Test comment iteration: 000" + strconv.Itoa(i) + strconv.Itoa(x),
 				}
-				comment.create(db, DBType)
+				comment.Create(db, DBType)
 			}
 		}
 	}

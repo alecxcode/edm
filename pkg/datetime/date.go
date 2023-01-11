@@ -14,6 +14,7 @@ type Date struct {
 	Day   byte
 }
 
+// DateToInt64 converts date to int64
 func DateToInt64(d Date) int64 {
 	var AD int64 = 1
 	if d.Year < 0 {
@@ -22,6 +23,8 @@ func DateToInt64(d Date) int64 {
 	}
 	return ((int64(d.Year) * 31 * 12) + (int64(d.Month-1) * 31) + int64(d.Day-1)) * AD
 }
+
+// Int64ToDate converts int64 to date
 func Int64ToDate(datestamp int64) Date {
 	var AD int64 = 1
 	if datestamp < 0 {
@@ -34,17 +37,21 @@ func Int64ToDate(datestamp int64) Date {
 		Year:  int(datestamp / (31 * 12) * AD),
 	}
 }
+
+// GetValidDateFromSQL converts NullInt64 to date
 func GetValidDateFromSQL(dateval sql.NullInt64) Date {
 	if dateval.Valid {
 		return Int64ToDate(dateval.Int64)
 	}
 	return Date{0, 0, 0}
 }
+
+// ConvDateStrToInt64 converts date string to int64
 func ConvDateStrToInt64(d string) int64 {
 	return DateToInt64(StringToDate(d))
 }
 
-// Common functions to process date and datetime
+// StringToDate converts string to date
 func StringToDate(idatestring string) Date {
 	BC := false
 	if idatestring == "" {
@@ -87,6 +94,7 @@ func processDateToStrings(idate Date) (y, m, d string) {
 	return y, m, d
 }
 
+// DateToString converts date to string
 func DateToString(idate Date, dateFmt string) string {
 	if idate.Day == 0 {
 		return ""
@@ -154,6 +162,7 @@ func DateToString(idate Date, dateFmt string) string {
 	}
 }
 
+// DateToStringWOY converts date to string without year
 func DateToStringWOY(idate Date, monthBeforeDay bool) string {
 	if idate.Day == 0 {
 		return ""
@@ -196,6 +205,7 @@ func DateToStringWOY(idate Date, monthBeforeDay bool) string {
 	}
 }
 
+// GetCurrentYearMStr returns current year and month in string
 func GetCurrentYearMStr() string {
 	return time.Now().Format("2006-01")
 }

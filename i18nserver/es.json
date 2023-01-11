@@ -40,7 +40,8 @@
         "En curso",
         "Atascado",
         "Hecho",
-        "Cancelado"
+        "Cancelado",
+        "En revisión"
     ],
     "Messages": {
         "MailerName": "Sistema de GDE",

@@ -40,7 +40,8 @@
         "En cours",
         "Coincée",
         "Faite",
-        "Annulée"
+        "Annulée",
+        "En révision"
     ],
     "Messages": {
         "MailerName": "Système GED",

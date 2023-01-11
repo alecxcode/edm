@@ -1,4 +1,4 @@
-package main
+package core
 
 //go:generate python3 sql-gen.py
 
@@ -12,7 +12,8 @@ import (
 	"github.com/alecxcode/sqla"
 )
 
-func getSQLinitScript(DBType byte, scriptsPath string) string {
+// GetSQLinitScript loads SQL file to create tables
+func GetSQLinitScript(DBType byte, scriptsPath string) string {
 	fname := "-create.sql"
 	switch DBType {
 	case sqla.SQLITE:
@@ -34,7 +35,8 @@ func getSQLinitScript(DBType byte, scriptsPath string) string {
 	return string(content)
 }
 
-func postgresqlMakeDatabase(DSN string, DBName string, sqlStmt string) {
+// PostgresqlMakeDatabase should create a Postgresql DB
+func PostgresqlMakeDatabase(DSN string, DBName string, sqlStmt string) {
 	db, err := sql.Open("pgx", DSN)
 	if err != nil {
 		log.Fatal(accs.CurrentFunction()+":", err)

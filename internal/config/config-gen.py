@@ -1,8 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # This generates code for ini reading.
 # Run go generate in project folder.
-
 
 def createFileContent():
     arrFields = []
@@ -51,6 +50,6 @@ def genFile(fname, cont):
     f.write(cont)
     f.close()
 
-
-genFile("config-gen.go", createFileContent())
-print("config-gen.go generated")
+if __name__ == "__main__":
+    genFile("config-gen.go", createFileContent())
+    print("config-gen.go generated")

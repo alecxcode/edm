@@ -1,8 +1,11 @@
-package main
+package docs
 
 import (
 	"database/sql"
+	"edm/internal/core"
+	"edm/internal/team"
 	"edm/pkg/accs"
+	"edm/pkg/currencies"
 	"edm/pkg/datetime"
 	"encoding/json"
 	"log"
@@ -22,7 +25,7 @@ type DocsPage struct {
 	LoggedinAdmin bool
 	Message       string
 	RemoveAllowed bool
-	UserConfig    UserConfig
+	UserConfig    team.UserConfig
 	Docs          []Document //payload
 	SortedBy      string
 	SortedHow     int
@@ -37,14 +40,15 @@ type DocsPage struct {
 	ApprovalSign  []string
 }
 
-func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
+// DocsHandler is http handler for docs page
+func (dd *DocsBase) DocsHandler(w http.ResponseWriter, r *http.Request) {
 
-	allow, id := bs.authVerify(w, r)
+	allow, id := core.AuthVerify(w, r, dd.memorydb)
 	if !allow {
 		return
 	}
 
-	if bs.validURLs.Docs.FindStringSubmatch(r.URL.Path) == nil {
+	if dd.validURLs.FindStringSubmatch(r.URL.Path) == nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -52,13 +56,13 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	var Page = DocsPage{
-		AppTitle:     bs.text.AppTitle,
-		AppVersion:   AppVersion,
-		PageTitle:    bs.text.DocsPageTitle,
-		Categories:   bs.text.Categories,
-		DocTypes:     bs.text.DocTypes,
-		Currencies:   bs.currencies,
-		ApprovalSign: bs.text.ApprovalSign,
+		AppTitle:     dd.text.AppTitle,
+		AppVersion:   core.AppVersion,
+		PageTitle:    dd.text.DocsPageTitle,
+		Categories:   dd.text.Categories,
+		DocTypes:     dd.text.DocTypes,
+		Currencies:   currencies.GetCurrencies(),
+		ApprovalSign: dd.text.ApprovalSign,
 		SortedBy:     "RegDate",
 		SortedHow:    0, // 0 - DESC, 1 - ASC
 		Filters: sqla.Filter{
@@ -84,10 +88,10 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 		LoggedinID: id,
 	}
 
-	Page.RemoveAllowed, _ = strconv.ParseBool(bs.cfg.RemoveAllowed)
-	user := unmarshalToProfile(bs.team.GetByID(Page.LoggedinID))
+	Page.RemoveAllowed = dd.cfg.removeAllowed
+	user := team.UnmarshalToProfile(dd.memorydb.GetByID(Page.LoggedinID))
 	Page.UserConfig = user.UserConfig
-	if user.UserRole == 1 {
+	if user.UserRole == team.ADMIN {
 		Page.LoggedinAdmin = true
 		Page.RemoveAllowed = true
 	}
@@ -130,10 +134,10 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("elemsOnPage") != "" {
 		Page.UserConfig.ElemsOnPage, _ = strconv.Atoi(r.FormValue("elemsOnPage"))
 		if r.FormValue("elemsOnPageChanged") == "true" {
-			p := Profile{ID: Page.LoggedinID, UserConfig: Page.UserConfig}
-			updated := p.updateConfig(bs.db, bs.dbt)
+			p := team.Profile{ID: Page.LoggedinID, UserConfig: Page.UserConfig}
+			updated := p.UpdateConfig(dd.db, dd.dbType)
 			if updated > 0 {
-				memoryUpdateProfile(bs.db, bs.dbt, bs.team, p.ID)
+				team.MemoryUpdateProfile(dd.db, dd.dbType, dd.memorydb, p.ID)
 			}
 		}
 	}
@@ -151,11 +155,11 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 			ids = append(ids, id)
 		}
 		if len(ids) > 0 {
-			allowedToRemove := sqla.VerifyRemovalPermissions(bs.db, bs.dbt, "documents", Page.LoggedinID, Page.LoggedinAdmin, Page.RemoveAllowed, ids)
+			allowedToRemove := sqla.VerifyRemovalPermissions(dd.db, dd.dbType, "documents", Page.LoggedinID, Page.LoggedinAdmin, Page.RemoveAllowed, ids)
 			if allowedToRemove {
-				removed := sqla.DeleteObjects(bs.db, bs.dbt, "documents", "ID", ids)
+				removed := sqla.DeleteObjects(dd.db, dd.dbType, "documents", "ID", ids)
 				if removed > 0 {
-					removeUploadedDirs(filepath.Join(bs.cfg.ServerRoot, "files", "docs"), ids)
+					core.RemoveUploadedDirs(filepath.Join(dd.cfg.serverRoot, "files", "docs"), ids)
 					Page.Message = "removedElems"
 					Page.RemovedNum = removed
 					if removed >= elemsOnCurrentPage && Page.PageNumber > 1 {
@@ -192,7 +196,7 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sq, sqcount, args, argscount := sqla.ConstructSELECTquery(
-		bs.dbt,
+		dd.dbType,
 		"documents",
 		columns,
 		columnsToCount,
@@ -207,7 +211,7 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Loading objects
 	err = func() error {
-		rows, err := bs.db.Query(sq, args...)
+		rows, err := dd.db.Query(sq, args...)
 		if err != nil {
 			return err
 		}
@@ -249,7 +253,7 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 			d.Currency = int(Currency.Int64)
 			d.EndDate = datetime.GetValidDateFromSQL(EndDate)
 			if Creator.Valid == true {
-				d.Creator = &Profile{ID: int(Creator.Int64)}
+				d.Creator = &team.Profile{ID: int(Creator.Int64)}
 			}
 			d.Note = Note.String
 			d.FileList = sqla.UnmarshalNonEmptyJSONList(FileList.String)
@@ -257,7 +261,7 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var FilteredNum sql.NullInt64
-		row := bs.db.QueryRow(sqcount, argscount...)
+		row := dd.db.QueryRow(sqcount, argscount...)
 		err = row.Scan(&FilteredNum)
 		if err != nil {
 			return err
@@ -270,7 +274,6 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
 	}
 
@@ -282,17 +285,14 @@ func (bs *BaseStruct) docsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("api") == "json" || r.FormValue("api") == "json" {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(Page)
-		//jsonOut, _ := json.Marshal(Page)
-		//fmt.Fprintln(w, string(jsonOut))
 		return
 	}
 
 	// HTML output
-	err = bs.templates.ExecuteTemplate(w, "docs.tmpl", Page)
+	err = dd.templates.ExecuteTemplate(w, "docs.tmpl", Page)
 	if err != nil {
 		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
 	}
 }

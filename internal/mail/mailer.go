@@ -25,6 +25,8 @@ type UserToSend struct {
 	Email string
 }
 
+// MailerMonitor reads from channel email messages and sends them using SMTP
+// Undelivered messages are stored in DB
 func MailerMonitor(ch chan EmailMessage, host string, port int, user string, passwd string, from string, fromName string, db *sql.DB, DBType byte, DEBUG bool) {
 	if port == 0 {
 		port = 25

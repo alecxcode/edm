@@ -1,4 +1,4 @@
-package main
+package core
 
 import (
 	"edm/pkg/accs"
@@ -18,7 +18,8 @@ const MAX_FILES_IN_FORM = 100
 // MAX_UPLOAD_SIZE is maximum total size of all files in a form
 const MAX_UPLOAD_SIZE = 1048576 * 100 // 100MB
 
-func uploader(r *http.Request, uploadDest string, inputName string) ([]string, error) {
+// Uploader uploads files
+func Uploader(r *http.Request, uploadDest string, inputName string) ([]string, error) {
 
 	var fileNamesList = make([]string, 0, MAX_FILES_IN_FORM)
 
@@ -96,7 +97,8 @@ func uploader(r *http.Request, uploadDest string, inputName string) ([]string, e
 
 }
 
-func moveUploadedFilesToFinalDest(origDir string, destDir string, fileList []string) {
+// MoveUploadedFilesToFinalDest moves uploaded files from temporary dir to object dir
+func MoveUploadedFilesToFinalDest(origDir string, destDir string, fileList []string) {
 	if len(fileList) == 0 {
 		return
 	}
@@ -116,7 +118,8 @@ func moveUploadedFilesToFinalDest(origDir string, destDir string, fileList []str
 	}
 }
 
-func removeUploadedFiles(dir string, fileList []string) error {
+// RemoveUploadedFiles removes uploaded files
+func RemoveUploadedFiles(dir string, fileList []string) error {
 	if len(fileList) == 0 {
 		return nil
 	}
@@ -134,16 +137,16 @@ func removeUploadedFiles(dir string, fileList []string) error {
 	return nil
 }
 
-func removeUploadedDirs(objectsDir string, ids []int) {
+// RemoveUploadedDirs removes id directories
+func RemoveUploadedDirs(objectsDir string, ids []int) {
 	for _, id := range ids {
 		dir := filepath.Join(objectsDir, strconv.Itoa(id))
 		if _, err := os.Stat(dir); err != nil {
 			if os.IsNotExist(err) {
 				return
-			} else {
-				log.Println(accs.CurrentFunction()+":", err, "dir:"+dir)
-				return
 			}
+			log.Println(accs.CurrentFunction()+":", err, "dir:"+dir)
+			return
 		}
 		err := os.RemoveAll(dir)
 		if err != nil {

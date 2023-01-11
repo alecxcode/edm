@@ -1,7 +1,8 @@
-package main
+package team
 
 import (
 	"database/sql"
+	"edm/internal/core"
 	"edm/pkg/accs"
 	"edm/pkg/datetime"
 	"edm/pkg/memdb"
@@ -34,14 +35,15 @@ type TeamPage struct {
 	CorpList      []memdb.ObjHasID
 }
 
-func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
+// TeamHandler is http handler for docs page
+func (tb *TeamBase) TeamHandler(w http.ResponseWriter, r *http.Request) {
 
-	allow, id := bs.authVerify(w, r)
+	allow, id := core.AuthVerify(w, r, tb.memorydb)
 	if !allow {
 		return
 	}
 
-	if bs.validURLs.Team.FindStringSubmatch(r.URL.Path) == nil {
+	if tb.validURLs.team.FindStringSubmatch(r.URL.Path) == nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -49,14 +51,14 @@ func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	userFullName := "TRIM((COALESCE(profiles.Surname, '') || ' ' || COALESCE(profiles.FirstName, '') || ' ' || COALESCE(profiles.OtherName, '')))"
-	if bs.dbt == sqla.MSSQL {
+	if tb.dbType == sqla.MSSQL {
 		userFullName = "TRIM((COALESCE(profiles.Surname, '') + ' ' + COALESCE(profiles.FirstName, '') + ' ' + COALESCE(profiles.OtherName, '')))"
 	}
 
 	var Page = TeamPage{
-		AppTitle:   bs.text.AppTitle,
-		AppVersion: AppVersion,
-		PageTitle:  bs.text.TeamPageTitle,
+		AppTitle:   tb.text.AppTitle,
+		AppVersion: core.AppVersion,
+		PageTitle:  tb.text.TeamPageTitle,
 		SortedBy:   "FullName",
 		SortedHow:  1, // 0 - DESC, 1 - ASC
 		Filters: sqla.Filter{ClassFilter: []sqla.ClassFilter{
@@ -71,9 +73,9 @@ func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
 		LoggedinID: id,
 	}
 
-	user := unmarshalToProfile(bs.team.GetByID(Page.LoggedinID))
+	user := UnmarshalToProfile(tb.memorydb.GetByID(Page.LoggedinID))
 	Page.UserConfig = user.UserConfig
-	if user.UserRole == 1 {
+	if user.UserRole == ADMIN {
 		Page.LoggedinAdmin = true
 	}
 
@@ -103,9 +105,9 @@ func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
 		Page.UserConfig.ElemsOnPageTeam, _ = strconv.Atoi(r.FormValue("elemsOnPage"))
 		if r.FormValue("elemsOnPageChanged") == "true" {
 			p := Profile{ID: Page.LoggedinID, UserConfig: Page.UserConfig}
-			updated := p.updateConfig(bs.db, bs.dbt)
+			updated := p.UpdateConfig(tb.db, tb.dbType)
 			if updated > 0 {
-				memoryUpdateProfile(bs.db, bs.dbt, bs.team, p.ID)
+				MemoryUpdateProfile(tb.db, tb.dbType, tb.memorydb, p.ID)
 			}
 		}
 	}
@@ -128,24 +130,24 @@ func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
 				allowedToRemove = true
 			}
 			LastAdmins := false
-			LastAdmins, err = areTheyLastAdmins(bs.db, bs.dbt, ids)
+			LastAdmins, err = areTheyLastAdmins(tb.db, tb.dbType, ids)
 			if err != nil {
 				log.Println(accs.CurrentFunction()+":", err)
 			}
 			if allowedToRemove && !LastAdmins {
-				removed := sqla.DeleteObjects(bs.db, bs.dbt, "profiles", "ID", ids)
+				removed := sqla.DeleteObjects(tb.db, tb.dbType, "profiles", "ID", ids)
 				if removed > 0 {
-					if bs.dbt == sqla.MSSQL {
-						sqla.SetToNull(bs.db, bs.dbt, "profiles", "Boss", ids)
-						sqla.SetToNull(bs.db, bs.dbt, "tasks", "Creator", ids)
-						sqla.SetToNull(bs.db, bs.dbt, "tasks", "Assignee", ids)
+					if tb.dbType == sqla.MSSQL {
+						sqla.SetToNull(tb.db, tb.dbType, "profiles", "Boss", ids)
+						sqla.SetToNull(tb.db, tb.dbType, "tasks", "Creator", ids)
+						sqla.SetToNull(tb.db, tb.dbType, "tasks", "Assignee", ids)
 					}
 					Page.Message = "removedElems"
 					Page.RemovedNum = removed
 					for _, eachID := range ids {
-						bs.team.DelObject(eachID)
+						tb.memorydb.DelObject(eachID)
 					}
-					constructUserList(bs.db, bs.dbt, bs.team)
+					core.ConstructUserList(tb.db, tb.dbType, tb.memorydb)
 					if removed >= elemsOnCurrentPage && Page.PageNumber > 1 {
 						Page.PageNumber--
 					}
@@ -170,7 +172,7 @@ func (bs *BaseStruct) teamHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sq, sqcount, args, argscount := sqla.ConstructSELECTquery(
-		bs.dbt,
+		tb.dbType,
 		"profiles",
 		`profiles.ID, profiles.FirstName, profiles.OtherName, profiles.Surname,`+userFullName+` as FullName,
 profiles.JobTitle, profiles.JobUnit, profiles.Contacts,
@@ -189,7 +191,7 @@ LEFT JOIN companies ON companies.ID = units.Company`,
 
 	// Loading objects
 	err = func() error {
-		rows, err := bs.db.Query(sq, args...)
+		rows, err := tb.db.Query(sq, args...)
 		if err != nil {
 			return err
 		}
@@ -233,11 +235,11 @@ LEFT JOIN companies ON companies.ID = units.Company`,
 					UnitName: UnitName.String,
 				}
 			}
-			p.Contacts = unmarshalNonEmptyProfileContacts(Contacts.String)
+			p.Contacts = UnmarshalNonEmptyProfileContacts(Contacts.String)
 			Page.Team = append(Page.Team, p)
 		}
 		var FilteredNum sql.NullInt64
-		row := bs.db.QueryRow(sqcount, argscount...)
+		row := tb.db.QueryRow(sqcount, argscount...)
 		err = row.Scan(&FilteredNum)
 		if err != nil {
 			return err
@@ -249,13 +251,12 @@ LEFT JOIN companies ON companies.ID = units.Company`,
 	if err != nil {
 		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
 	}
 
-	Page.UserList = bs.team.GetObjectArr("UserList")
-	Page.UnitList = bs.team.GetObjectArr("UnitList")
-	Page.CorpList = bs.team.GetObjectArr("CorpList")
+	Page.UserList = tb.memorydb.GetObjectArr("UserList")
+	Page.UnitList = tb.memorydb.GetObjectArr("UnitList")
+	Page.CorpList = tb.memorydb.GetObjectArr("CorpList")
 
 	// Attention! This removes db column lists in outputs like JSON.
 	// Usually columns should not be available to a client.
@@ -265,17 +266,14 @@ LEFT JOIN companies ON companies.ID = units.Company`,
 	if r.URL.Query().Get("api") == "json" || r.FormValue("api") == "json" {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(Page)
-		//jsonOut, _ := json.Marshal(Page)
-		//fmt.Fprintln(w, string(jsonOut))
 		return
 	}
 
 	// HTML output
-	err = bs.templates.ExecuteTemplate(w, "team.tmpl", Page)
+	err = tb.templates.ExecuteTemplate(w, "team.tmpl", Page)
 	if err != nil {
 		log.Println(accs.CurrentFunction()+":", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		//http.Error(w, err.Error(), http.StatusInternalServerError) //Commented to not displayng error details to end user
 		return
 	}
 }
@@ -285,7 +283,7 @@ func areTheyLastAdmins(db *sql.DB, DBType byte, ids []int) (res bool, err error)
 	const LOCKED = 1
 	counter, sq, args := sqla.BuildSQLINNOT(DBType, "SELECT COUNT(*) FROM profiles ", 0, "ID", ids)
 	sq += " AND UserRole = " + sqla.MakeParam(DBType, counter+1) + " AND UserLock <> " + sqla.MakeParam(DBType, counter+2) + " AND Login IS NOT NULL"
-	if DEBUG {
+	if core.DEBUG {
 		log.Println(sq, args)
 	}
 	args = append(args, ADMIN, LOCKED)

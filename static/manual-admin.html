@@ -123,7 +123,7 @@
         <h2 class="margintop">Command line arguments</h2>
         <p>Command-line arguments have higher priority over (overwrite) configuration file values and environment variables.</p>
         <p><code>--createdb</code> - the server will create database table to initialize empty database.</p>
-		<p><code>--filldb</code> - fill database with showcase data. Useful only for presentation and testing.</p>
+        <p><code>--filldb</code> - fill database with showcase data. Useful only for presentation and testing.</p>
         <p><code>--nobrowser</code> - the server should not run a browser on launch.</p>
         <p><code>--consolelog</code> - print messages to console instead of a log file.</p>
 
@@ -132,10 +132,10 @@
         <p>To load a page as JSON use the following key and value in GET or POST request: <code>api=json</code>.</p>
         
         <h2 class="margintop">Building from source</h2>
-        <p>The simplest way to build the software is to run <code>go build</code> command, and then you can run <code>./edm</code> (<code>edm.exe</code> for windows) app in the current directory.</p>
+        <p>The simplest way to build the software is to run <code>build-release.sh</code> (<code>build-release.cmd</code> for Windows) command, and then you can run <code>./edm</code> (<code>edm.exe</code> for windows) app in the current directory. These scripts produce a smaller executable with some flags.</p>
+        <p>You can manually run <code>go build</code> in the <b>cmd/edm</b> directory, then move <b>cmd/edm/edm</b> (<b>cmd\edm\edm.exe</b> for windows) executable two directories up, and then run it from the root project directory.</p>
         <p>You should have Go compiler and C compiler (like one supplied with GCC or MinGW) on your system installed.</p>
         <p><b>Dockerfile</b> and <b>docker-compose.yml</b> files are available to run the software with Docker.</p>
-        <p><b>build-release.cmd</b> and <b>build-release.sh</b> are for building a smaller executable with some flags.</p>
         <p><b>addicon.cmd</b> is for adding the program icon into the exe file in Windows - this requires <a href="http://angusj.com/resourcehacker/">Resource Hacker</a> on your system.</p>
         <p><b>run-unix.sh</b> is a more convenient way to run the software while developing it.</p>
         <p>In order to know some constants and structs of the app read the package documentation available in source files, for example with <code>go doc --all</code> command.</p>
@@ -144,17 +144,17 @@
         <p>All compilers, interpreters, executables which are necessary to build the software should be available in a path variable of you environment.</p>
         <h3 class="margintop">Themes</h3>
         <p>Any theme is a single css file which name starts with <b>theme-</b> prefix and which is located in the <b>static</b> directory.</p>
-        <p>To add a new theme you need to create that file with selectors like in other files. Theme list is defined in <code>main()</code> function of the program. You need to add theme name to the list, and rebuild the application.</p>
+        <p>To add a new theme you just need to create that file with selectors like in other files and place it to the <b>static</b> directory. After server restart new theme will appear on the settings page.</p>
         <h3 class="margintop">Localization</h3>
         <p>There are two JSON files wich contain language-specific strings. Name of these files is two-letter language code and .json extension.
             Server-side files are located in <b>i18nserver</b> directory, and they are relatively small as they are used only for login page and email notifications.
-            Frontend localization files are located in <b>static/i18n</b> directory, and they contain a lot more strings, almost everything user interface language. Users can easily switch their interface language on settings page.
+            Frontend localization files are located in <b>static/i18n</b> directory, and they contain a lot more strings, almost all user interface language. Users can easily switch their interface language on the settings page.
         </p>
-        <p>To add a new language you need to create those two JSON files with the same structure as existing files. Language codes list is defined in <code>main()</code> function of the program. You need to add language code to the list, and rebuild the application. You also need to edit <b>config.tmpl</b> file to add a language name there.</p>
+        <p>To add a new language you need to create those two JSON files with the same structure as existing ones. You need to edit <b>codesui.js</b> file to add a language name there and restart the server.</p>
 
     </div>
     <div id="bottom">
-        <span>© 2022 <a href="https://github.com/alecxcode/edm" target="_blank">EDM Project</a></span>
+        <span>© 2023 <a href="https://edmproject.github.io" target="_blank">EDM Project</a></span>
         <span id="ver">v0.0.0.</span>
         <span><a href="/static/manual.html">Manual</a></span>
     </div>
