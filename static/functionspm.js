@@ -450,7 +450,9 @@ function translateCurrentElementOnly(elem) {
 
 /* WebSocket related functions */
 function connectWebSocket() {
-  let ws = new WebSocket(`ws://${location.host}/projs/ws`);
+  let wsproto = 'ws';
+  if (location.protocol == 'https:' || location.protocol == 'https') wsproto = 'wss';
+  let ws = new WebSocket(`${wsproto}://${location.host}/projs/ws`);
 
   ws.onopen = () => {
     ws.send(JSON.stringify({"project": getCurrentResourceID()}));
