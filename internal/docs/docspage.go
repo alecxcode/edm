@@ -8,6 +8,7 @@ import (
 	"edm/pkg/currencies"
 	"edm/pkg/datetime"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -49,7 +50,7 @@ func (dd *DocsBase) DocsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if dd.validURLs.FindStringSubmatch(r.URL.Path) == nil {
-		http.NotFound(w, r)
+		accs.ThrowObjectNotFound(w, r)
 		return
 	}
 
@@ -272,8 +273,7 @@ func (dd *DocsBase) DocsHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if err != nil {
-		log.Println(accs.CurrentFunction()+":", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		accs.ThrowServerError(w, fmt.Sprintf(accs.CurrentFunction()+":", err), Page.LoggedinID, 0)
 		return
 	}
 

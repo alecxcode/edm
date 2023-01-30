@@ -3,6 +3,7 @@ package main
 import (
 	"edm/internal/config"
 	"edm/pkg/accs"
+	"errors"
 	"html/template"
 	"os"
 	"path/filepath"
@@ -51,8 +52,10 @@ func getTemplates(templatesPath string) *template.Template {
 	))
 }
 
-func processCmdLineArgs(createdb string, filldb bool, runbrowser string, consolelog bool) (string, bool, string, bool) {
-	for _, a := range os.Args {
+func processCmdLineArgs(createdb string, filldb bool, runbrowser string, consolelog bool) (string, bool, string, bool, error) {
+	validArgs := []string{"--createdb", "--filldb", "--nobrowser", "--consolelog"}
+	var err error = nil
+	for i, a := range os.Args {
 		if a == "--createdb" {
 			createdb = "true"
 		}
@@ -65,6 +68,9 @@ func processCmdLineArgs(createdb string, filldb bool, runbrowser string, console
 		if a == "--consolelog" {
 			consolelog = true
 		}
+		if i > 0 && !accs.SliceContainsStr(validArgs, a) {
+			err = errors.New("wrong command line argument: the program finished with no action")
+		}
 	}
-	return createdb, filldb, runbrowser, consolelog
+	return createdb, filldb, runbrowser, consolelog, err
 }

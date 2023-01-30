@@ -14,6 +14,7 @@ import (
 	"edm/pkg/memdb"
 	"edm/pkg/ramdb"
 	"edm/pkg/redisdb"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -61,7 +62,11 @@ func main() {
 	// Reading command-line arguments
 	filldb := false
 	consolelog := false
-	cfg.CreateDB, filldb, cfg.RunBrowser, consolelog = processCmdLineArgs(cfg.CreateDB, filldb, cfg.RunBrowser, consolelog)
+	cfg.CreateDB, filldb, cfg.RunBrowser, consolelog, err = processCmdLineArgs(cfg.CreateDB, filldb, cfg.RunBrowser, consolelog)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	// Server root path:
 	if accs.FileExists(cfg.ServerRoot) != true {
@@ -262,8 +267,8 @@ func main() {
 
 	if accs.StrToBool(cfg.UseTLS) {
 		log.Fatal(http.ListenAndServeTLS(cfg.ServerHost+":"+cfg.ServerPort,
-			filepath.Join(cfg.ServerRoot, cfg.SSLCertFile),
-			filepath.Join(cfg.ServerRoot, cfg.SSLKeyFile),
+			accs.GetAbsoluteOrRelativePath(cfg.ServerRoot, cfg.SSLCertFile),
+			accs.GetAbsoluteOrRelativePath(cfg.ServerRoot, cfg.SSLKeyFile),
 			nil))
 	} else {
 		log.Fatal(http.ListenAndServe(cfg.ServerHost+":"+cfg.ServerPort, nil))

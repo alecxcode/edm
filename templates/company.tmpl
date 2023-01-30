@@ -65,7 +65,7 @@
           <input type="button" class="sbut reddish" name="deleteUnit" i18n-value="delete" value="Delete" onclick="
           this.parentNode.parentNode.lastElementChild.style.display = 'block';">
         </span>
-        <form class="subelem removalform" action="/companies/company/{{$.Company.ID}}" method="POST" style="display: none;">
+        <form class="subelem removalform" action="/companies/company/{{$.Company.ID}}" method="post" style="display: none;">
           <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
           <input type="hidden" name="unitID" value="{{.ID}}">
           <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="this.parentNode.reset(); this.parentNode.style.display = 'none';">
@@ -86,8 +86,8 @@
     {{end}}
 
   {{if .Editable}}
-    {{if .New}}<div id="create"><form id="createForm" action="/companies/company/new" method="POST" onsubmit="checkAndCorrectForm(); sessionStorage.setItem('new', 'company');">
-    {{else}}<div id="edit" style="display: none;"><form id="editForm" action="/companies/company/{{.Company.ID}}" method="POST" onsubmit="checkAndCorrectForm();">{{end}}
+    {{if .New}}<div id="create"><form id="createForm" action="/companies/company/new" method="post" onsubmit="checkAndCorrectForm(); sessionStorage.setItem('new', 'company');">
+    {{else}}<div id="edit" style="display: none;"><form id="editForm" action="/companies/company/{{.Company.ID}}" method="post" onsubmit="checkAndCorrectForm();">{{end}}
       <h2 i18n-text="nameEntity">Name:</h2>
       <p><span class="ofname" i18n-text="companyShort">Short*:</span> <input type="text" class="field ofval" name="shortName" size="30" maxlength="127" value="{{.Company.ShortName}}" required></p>
       <p><span class="ofname" i18n-text="companyFull">Full:</span> <input type="text" class="field ofval" name="fullName" size="30" maxlength="255" value="{{.Company.FullName}}"></p>
@@ -125,7 +125,7 @@
 
 </div>
 
-<script src="/static/functions.js"></script>
+
 
 <script>
 /* Page loading function for read */

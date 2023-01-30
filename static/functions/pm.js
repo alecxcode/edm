@@ -1,44 +1,3 @@
-/* Common functions */
-
-/* Function to make any request and call a callbackFn on data */
-async function makeRequest(reqObj, apiURL, callbackFn) {
-  const req = new Request(apiURL, {
-    method: 'post',
-    body: JSON.stringify(reqObj),
-    headers: { 'Content-Type': 'application/json' }
-  });
-  fetch(req).then((response) => response.json())
-  .catch((err) => {return {"error": 801, "description": err}})
-  .then((data) => {
-    if (!data) {
-      return;
-    } else if (data.error) {
-      console.log(data);
-      resDisplayUpdate(data);
-    } else if (data && callbackFn) {
-      callbackFn(data);
-    }
-  });
-}
-
-function getCurrentResourceID() {
-  return +window.location.pathname.split('/').slice(-1)[0];
-}
-
-function makeProfileName(p) {
-  if (!p) return '';
-  let n = (p.FirstName + " " + p.Surname).trim();
-  if (!n) {
-    n = "ID: " + String(p.ID);
-  }
-  if (p.JobTitle) {
-    n += ", " + p.JobTitle;
-  }
-  return n;
-}
-
-
-
 /* Project management functions */
 function setProjStatus(status, projStatusesNamesList) {
   makeRequest({proj: getCurrentResourceID(), status: status},
@@ -64,15 +23,26 @@ function giveStatus(project, projStatusesNamesList) {
 	}
 }
 
-function updateProjStatusIndicatorClass(status) {
-  const statusIndicator = document.getElementById('statusIndicator');
+function updateProjStatusIndicatorClass(status, elem) {
+  let statusIndicator;
+  if (elem){
+    statusIndicator = elem;
+  } else {
+    statusIndicator = document.getElementById('statusIndicator');
+  }
   if (!statusIndicator) return;
   const ACTIVE = 0, DONE = 1, CANCELED = 2;
   let className = '';
   if (status == ACTIVE) className = 'txtblue';
   if (status == DONE) className = 'txtgreen';
   if (status == CANCELED) className = 'txtbw';
-  if (className) statusIndicator.className = className;
+  if (className) {
+    if (statusIndicator.className.includes('txt')) {
+      statusIndicator.className = className;
+    } else {
+      statusIndicator.classList.add(className);
+    }
+  }
 }
 
 function updateProjStatusButtons(status) {
@@ -400,114 +370,7 @@ function buildProjectParticipants() {
 }
 
 
-
-/* Other functions */
-function resDisplayUpdate(message) {
-  const oldResDisplay = document.getElementById('resDisplay');
-  const controlDiv = document.getElementById('control');
-  controlDiv.removeChild(oldResDisplay);
-  const resDisplay = makeElem('div', controlDiv, '', '', false);
-  resDisplay.id = 'resDisplay';
-
-  if (message.error) {
-    resDisplay.className = 'msgred';
-  }
-  if (message.error && message.error == 804) {
-    resDisplay.setAttribute('i18n-text', 'objectNotFound');
-    resDisplay.innerHTML = 'Object not found.';
-  } else if (message.error && message.error == 403) {
-    resDisplay.setAttribute('i18n-text', 'noPerms');
-    resDisplay.innerHTML = 'Action rejected: no permissions for all or some of objects.';
-  } else if (message.error && message.error == 500) {
-    resDisplay.setAttribute('i18n-text', 'serverError');
-    resDisplay.innerHTML = 'Internal server error.';
-  } else if (message.error) {
-    resDisplay.setAttribute('i18n-text', 'unknownError');
-    resDisplay.innerHTML = 'Unknown error.';
-  } else if (message == "dataWritten") {
-    resDisplay.setAttribute('i18n-text', message);
-    resDisplay.className = 'msgok';
-    resDisplay.innerHTML = 'Data has been written successfully.';
-  } else if (message == "dataNotWritten") {
-    resDisplay.setAttribute('i18n-text', message);
-    resDisplay.className = 'msgred';
-    resDisplay.innerHTML = 'Error writing data.';
-  } else {
-    resDisplay.className = ''
-    resDisplay.innerHTML = '<br>';
-  }
-
-  translateCurrentElementOnly(resDisplay);
-}
-
-function translateCurrentElementOnly(elem) {
-  if (document.documentElement.lang != 'en' && elem.getAttribute('i18n-text')) {
-    getLang(document.documentElement.lang).then(lang => {if (lang[elem.getAttribute('i18n-text')]) elem.innerHTML = lang[elem.getAttribute('i18n-text')]});
-  }
-}
-
-
-
-/* WebSocket related functions */
-function connectWebSocket() {
-  let wsproto = 'ws';
-  if (location.protocol == 'https:' || location.protocol == 'https') wsproto = 'wss';
-  let ws = new WebSocket(`${wsproto}://${location.host}/projs/ws`);
-
-  ws.onopen = () => {
-    ws.send(JSON.stringify({"project": getCurrentResourceID()}));
-  }
-
-  ws.onmessage = (event) => {
-    if (event.data) processArrivedTask(JSON.parse(event.data));
-  }
-
-  var retriesCounter = 0;
-
-  ws.onclose = () => {
-    ws = null;
-    var intervalID = setInterval(() => {
-      retriesCounter++
-      if (retriesCounter > 100000) clearInterval(intervalID);
-      tryToConnect(intervalID);
-    }, 8000);
-  }
-
-  ws.onerror = () => {
-    ws = null;
-    var intervalID = setInterval(() => {
-      retriesCounter++
-      if (retriesCounter > 100000) clearInterval(intervalID);
-      tryToConnect(intervalID);
-    }, 8000);
-  }
-}
-
-async function tryToConnect(intervalID) {
-  req = new Request('/tasks/loadtasks', {
-    method: 'post',
-    body: JSON.stringify({name: "project", id: getCurrentResourceID()}),
-    headers: { 'Content-Type': 'application/json' }
-  });
-  await fetch(req).then((response) => response.json())
-  .catch((err) => {return {"error": 801, "description": err}})
-  .then((data) => {
-    if (!data.error) {
-      console.log(data);
-      let userRights = JSON.parse(sessionStorage.getItem("userRights"));
-      data.forEach((task) => {
-        putTaskIntoCol(task, false, userRights);
-      });
-      reCalcTaskNum();
-      buildProjectParticipants();
-      clearInterval(intervalID);
-      connectWebSocket();
-    } else {
-      console.log(data);
-    }
-  });
-}
-
+/* Process WS PM arrived data */
 function processArrivedTask(task) {
 
   if (!task.ID) {
@@ -559,6 +422,27 @@ function processArrivedTask(task) {
   }
 }
 
-function processOtherWSData(data) {
-  if (data.error) console.log(data);
+/* onError WS PM handler */
+async function tryToReConnectPM(intervalID) {
+  req = new Request('/tasks/loadtasks', {
+    method: 'post',
+    body: JSON.stringify({ name: "project", id: getCurrentResourceID() }),
+    headers: { 'Content-Type': 'application/json' }
+  });
+  await fetch(req).then((response) => response.json())
+  .catch((err) => { return { "error": 801, "description": err } })
+  .then((data) => {
+    if (!data.error) {
+      let userRights = JSON.parse(sessionStorage.getItem("userRights"));
+      data.forEach((task) => {
+        putTaskIntoCol(task, false, userRights);
+      });
+      reCalcTaskNum();
+      buildProjectParticipants();
+      clearInterval(intervalID);
+      connectWebSocket();
+    } else {
+      console.log(data);
+    }
+  });
 }

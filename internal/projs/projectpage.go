@@ -41,7 +41,7 @@ func (pb *ProjsBase) ProjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if pb.validURLs.FindStringSubmatch(r.URL.Path) == nil {
-		http.NotFound(w, r)
+		accs.ThrowObjectNotFound(w, r)
 		return
 	}
 
@@ -66,7 +66,7 @@ func (pb *ProjsBase) ProjectHandler(w http.ResponseWriter, r *http.Request) {
 		err = Page.Project.load(pb.db, pb.dbType)
 		if err != nil {
 			log.Println(accs.CurrentFunction()+":", err)
-			http.NotFound(w, r)
+			accs.ThrowObjectNotFound(w, r)
 			return
 		}
 		if err != nil {
@@ -110,9 +110,9 @@ func (pb *ProjsBase) ProjectHandler(w http.ResponseWriter, r *http.Request) {
 			p.ID, created = p.Create(pb.db, pb.dbType)
 			if created > 0 {
 				if Page.UserConfig.ReturnAfterCreation {
-					http.Redirect(w, r, "/projs/", http.StatusSeeOther)
+					http.Redirect(w, r, "/projs/?projstatuses=0"+core.IfAddJSON(r), http.StatusSeeOther)
 				} else {
-					http.Redirect(w, r, fmt.Sprintf("/projs/project/%d", p.ID), http.StatusSeeOther)
+					http.Redirect(w, r, fmt.Sprintf("/projs/project/%d"+core.IfAddJSON(r), p.ID), http.StatusSeeOther)
 				}
 				return
 			} else {

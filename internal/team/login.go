@@ -46,7 +46,7 @@ func getLoginTemplate() *template.Template {
 <link rel="shortcut icon" href="/static/favicon.png">
 <link rel="icon" href="/static/favicon.png">
 <link rel="stylesheet" href="/static/fonts.css">
-<link rel="stylesheet" href="/static/system-rust.css">
+<link rel="stylesheet" href="/static/themes/system-rust.css">
 </head>
 <body><div id="container"><div id="control">
 <h1>{{.LoginPageTitle}}</h1><br>
@@ -166,7 +166,7 @@ func writeBruteForceStub(w http.ResponseWriter) {
 	<link rel="shortcut icon" href="/static/favicon.png">
 	<link rel="icon" href="/static/favicon.png">
 	<link rel="stylesheet" href="/static/fonts.css">
-	<link rel="stylesheet" href="/static/system-dark.css">
+	<link rel="stylesheet" href="/static/themes/system-dark.css">
 	</head>
 	<body><div id="container"><div id="control"><h1>System Bruteforce Attack Shield</h1>
 	<br><p class="msgredfx">System login function is temporarily locked due to bruteforce attack. Normally, this should not happen. Please, contact system admin.</p><br><br><br>

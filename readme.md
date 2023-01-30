@@ -9,7 +9,7 @@ The application has the following functions:
 * Approval list for documents
 * User profiles, companies, departments: create, edit, delete
 * Tasks: create, edit, upload files, assign, forward, delete, change status (mark as done, cancel, etc.), add comments with files attached
-* Projects: create, edit, add and detach tasks, view tasks by their progress, take or assign tasks
+* Projects: create, edit, add and detach tasks, view tasks by their progress (kanban board), take or assign tasks
 * Notifications by e-mail: about user creation to that user, about approvals, about changes and comments in a task to related users
 * Themes and localization support
 * UX/UI features: bb-code, search results highlighting, etc.
@@ -35,5 +35,5 @@ The application supports the following RDBMS:
 
 The application runs on modern browsers: Chrome, Firefox, Safari, and does not support Internet Explorer.  
 Config file, logs, uploads, sqlite database are stored in `.edm` directory of a user home directory. See the config file to modify the server configuration.  
-Themes are located in the `static` directory.  
+Themes are located in the `static/themes` directory.  
 Language files are located in `i18nserver` (backend) and `static/i18n` (frontend) directories.

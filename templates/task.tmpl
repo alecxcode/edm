@@ -13,11 +13,11 @@
 
   <div id="control">
     <h1>{{.PageTitle}}</h1>
-    <p class="breadcrumbs"><a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-text="allTasks">all tasks</a> / <span i18n-text="taskPage">task page</span></p>
+    <p class="breadcrumbs"><a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3&taskstatuses=6{{end}}" i18n-text="allTasks">all tasks</a> / <span i18n-text="taskPage">task page</span></p>
     {{if not .New}}{{template "formatOutput"}}{{end}}
 
     {{if and (not .New) (or .Editable .IamAssignee)}}
-    <form id="statuses" action="/tasks/task/{{.Task.ID}}" method="POST">
+    <form id="statuses" action="/tasks/task/{{.Task.ID}}" method="post">
       <input type="hidden" name="taskStatus" value="" id="taskStatus">
       <input type="submit" class="sbut" id="inprogress" name="statusButton" i18n-many="inProgressOne" value="In progress" title="Set task status - in progress" onclick="document.getElementById('taskStatus').value = 'inprogress';">
       <input type="submit" class="sbut" id="stuck" name="statusButton" i18n-many="stuckOne" value="Stuck" title="Suspend due to some problem" onclick="document.getElementById('taskStatus').value = 'stuck';">
@@ -33,7 +33,7 @@
     {{if and .Editable (not .New)}}
       <input type="button" class="sbut" name="showButton" i18n-value="edit" value="Edit" onclick="showEditForm('edit');">
       <input type="button"{{if not .RemoveAllowed}}style="display: none;"{{end}} class="sbut reddish" name="showDelete" i18n-value="delete" value="Delete" onclick="showEditForm('removal');">
-      <form id="removal" action="/tasks/" method="POST" style="display: none;">
+      <form id="removal" action="/tasks/" method="post" style="display: none;">
       <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
       <input type="hidden" name="ids" value="{{.Task.ID}}">
       <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="showEditForm('view');">
@@ -101,7 +101,7 @@
       {{end}}
       {{if and .Editable .Task.FileList (not .New)}}
         <span i18n-text="selectedFiles">Selected files:</span> <input type="button" class="sbut reddish" name="showDeleteFiles" i18n-value="delete" value="Delete" onclick="showEditForm('removalFiles');">
-        <form id="removalFiles" action="/tasks/task/{{.Task.ID}}" method="POST" onsubmit="addFileElems(this);" style="display: none;">
+        <form id="removalFiles" action="/tasks/task/{{.Task.ID}}" method="post" onsubmit="addFileElems(this);" style="display: none;">
         <div class="msgredfx" i18n-text="confirmRemoval">This action can not be undone! Confirm deletion?</div>
         <input type="button" class="sbut" name="cancelButton" i18n-value="cancel" value="Cancel" onclick="showEditForm('view');">
         <input type="submit" class="sbut reddish" name="deleteFiles" i18n-value="yesDelete" value="Yes, delete">
@@ -129,7 +129,7 @@
       {{if or .Editable .IamAssignee .IamParticipant}}
       <br><br><br>
       <div class="elem" id="newComment"><h3 i18n-text="newComment">New comment</h3>
-        <form id="taskCreateComment" action="/tasks/task/{{.Task.ID}}" method="POST" enctype="multipart/form-data">
+        <form id="taskCreateComment" action="/tasks/task/{{.Task.ID}}" method="post" enctype="multipart/form-data">
           <div class="subelem"><div class="nowrap">
             {{$textarea := "textAreaComm"}}{{template "bbcode" $textarea}}
           </div>
@@ -145,8 +145,8 @@
   {{end}}
 
   {{if .Editable}}
-    {{if .New}}<div id="create"><form id="createForm" action="/tasks/task/new" method="POST" enctype="multipart/form-data" onsubmit="sessionStorage.setItem('new', 'task');">
-    {{else}}<div id="edit" style="display: none;"><form id="editForm" action="/tasks/task/{{.Task.ID}}" method="POST" enctype="multipart/form-data">{{end}}
+    {{if .New}}<div id="create"><form id="createForm" action="/tasks/task/new" method="post" enctype="multipart/form-data" onsubmit="sessionStorage.setItem('new', 'task');">
+    {{else}}<div id="edit" style="display: none;"><form id="editForm" action="/tasks/task/{{.Task.ID}}" method="post" enctype="multipart/form-data">{{end}}
      
       <h2 i18n-text="parameters">Parameters:</h2>
       <p><span class="ofname" i18n-text="plannedStartDue">Planned start and due:</span>
@@ -195,8 +195,7 @@
 
 </div>
 
-<script src="/static/functions.js"></script>
-<script src="/static/functionspm.js"></script>
+
 
 <script>
 /* Some variables for messages */

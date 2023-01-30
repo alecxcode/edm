@@ -80,9 +80,9 @@
   <p id="appliedFilters" i18n-text="noFiltersApplied">No filters applied.</p>
   
   <div id="controlButtons">
-    <span class="panel smaller"><a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="myTasks" title="Tasks for which I am a creator or am assignee or a participant">My tasks</a></span>
-    <span class="panel smaller"><a href="/tasks/?creators=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="myTasksCreated" title="Tasks for which I am creator">Created by me</a></span>
-    <span class="panel smaller"><a href="/tasks/?assignees=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="myTasksAssigned" title="Tasks for which I am assignee">Assigned to me</a></span>
+    <span class="panel smaller"><a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3&taskstatuses=6{{end}}" i18n-many="myTasks" title="Tasks for which I am a creator or am assignee or a participant">My tasks</a></span>
+    <span class="panel smaller"><a href="/tasks/?creators=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3&taskstatuses=6{{end}}" i18n-many="myTasksCreated" title="Tasks for which I am creator">Created by me</a></span>
+    <span class="panel smaller"><a href="/tasks/?assignees=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3&taskstatuses=6{{end}}" i18n-many="myTasksAssigned" title="Tasks for which I am assignee">Assigned to me</a></span>
     <span class="panel smaller"><a href="/tasks/{{if not .UserConfig.ShowFinishedTasks}}?taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="anyTasks" title="Tasks related to any users">All tasks</a></span><br>
 
     <a href="/tasks/task/new" class="sbut greenish" i18n-text="newTask">+ New task</a>
@@ -131,7 +131,7 @@
     {{template "formatOutput"}}
     {{if not .Tasks}}<div class="center somemargins" i18n-text="noElemsFound">Objects matching the specified criteria were not found, or there are no objects.</div>
     {{else}}{{template "pagination" .PageNumber}}
-    <form id="datagridForm" name="datagridForm" action="/tasks/" method="POST" onsubmit="addSortingOnSubmut('datagridForm');
+    <form id="datagridForm" name="datagridForm" action="/tasks/" method="post" onsubmit="addSortingOnSubmut('datagridForm');
     addFiltersOnSubmut('datagridForm'); addPaginationOnSubmut('datagridForm'); removeEmptyInputs(this);
     sessionStorage.setItem('lastQuery', location.search);">
     <div id="mainTable" style="grid-template-columns: repeat(2, min-content) auto repeat(3, min-content) repeat(2, auto) repeat(2, min-content);">
@@ -173,8 +173,7 @@
 
 </div>
 
-<script src="/static/functions.js"></script>
-<script src="/static/functionspm.js"></script>
+
 
 <script>
 

@@ -82,7 +82,7 @@
 
     {{if .Editable}}
     {{if .New}}<div id="create"><form id="createForm" action="/team/profile/new" method="post" onsubmit="sessionStorage.setItem('new', 'profile');">{{else}}
-      <div id="edit" style="display: none;"><form id="editForm" action="/team/profile/{{.Profile.ID}}" method="POST">{{end}}
+      <div id="edit" style="display: none;"><form id="editForm" action="/team/profile/{{.Profile.ID}}" method="post">{{end}}
       <h2 i18n-text="name">Name:</h2>
       <p><span class="ofname" i18n-text="firstName">First name*:</span> <input type="text" class="field ofval" name="firstName" size="30" maxlength="127" value="{{.Profile.FirstName}}" required></p>
       <p><span class="ofname" i18n-text="otherName">Other name:</span> <input type="text" class="field ofval" name="otherName" size="30" maxlength="127" value="{{.Profile.OtherName}}"></p>
@@ -158,7 +158,7 @@
 
 </div>
 
-<script src="/static/functions.js"></script>
+
 
 <script>
 (function() {

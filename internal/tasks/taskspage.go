@@ -9,6 +9,7 @@ import (
 	"edm/pkg/datetime"
 	"edm/pkg/memdb"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -49,7 +50,7 @@ func (tb *TasksBase) TasksHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if tb.validURLs.FindStringSubmatch(r.URL.Path) == nil {
-		http.NotFound(w, r)
+		accs.ThrowObjectNotFound(w, r)
 		return
 	}
 
@@ -95,6 +96,11 @@ func (tb *TasksBase) TasksHandler(w http.ResponseWriter, r *http.Request) {
 	if user.UserRole == team.ADMIN {
 		Page.LoggedinAdmin = true
 		Page.RemoveAllowed = true
+	}
+
+	if r.FormValue("from") == "core" && !Page.UserConfig.ShowFinishedTasks {
+		http.Redirect(w, r, "/tasks/?anyparticipants=my&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3&taskstatuses=6", http.StatusSeeOther)
+		return
 	}
 
 	Page.Filters.GetFilterFromForm(r,
@@ -428,8 +434,7 @@ assignee.ID, assignee.FirstName, assignee.Surname, assignee.JobTitle`
 	}()
 
 	if err != nil {
-		log.Println(accs.CurrentFunction()+":", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		accs.ThrowServerError(w, fmt.Sprintf(accs.CurrentFunction()+":", err), Page.LoggedinID, 0)
 		return
 	}
 

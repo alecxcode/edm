@@ -7,6 +7,7 @@ import (
 	"edm/pkg/datetime"
 	"edm/pkg/memdb"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -44,7 +45,7 @@ func (tb *TeamBase) TeamHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if tb.validURLs.team.FindStringSubmatch(r.URL.Path) == nil {
-		http.NotFound(w, r)
+		accs.ThrowObjectNotFound(w, r)
 		return
 	}
 
@@ -249,8 +250,7 @@ LEFT JOIN companies ON companies.ID = units.Company`,
 	}()
 
 	if err != nil {
-		log.Println(accs.CurrentFunction()+":", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		accs.ThrowServerError(w, fmt.Sprintf(accs.CurrentFunction()+":", err), Page.LoggedinID, 0)
 		return
 	}
 

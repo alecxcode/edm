@@ -57,12 +57,12 @@ func AuthVerify(w http.ResponseWriter, r *http.Request, memorydb memdb.ObjectsIn
 func AuthVerifyAPI(w http.ResponseWriter, r *http.Request, memorydb memdb.ObjectsInMemory) (res bool, id int) {
 	thecookie, err := r.Cookie("sessionid")
 	if err == http.ErrNoCookie {
-		accs.ThrowAccessDeniedAPI(w, r.URL.Path, 0)
+		accs.ThrowAccessDenied(w, r.URL.Path, 0, 0)
 		return
 	}
 	allow, id := memorydb.CheckSession(thecookie.Value)
 	if !allow {
-		accs.ThrowAccessDeniedAPI(w, r.URL.Path, id)
+		accs.ThrowAccessDenied(w, r.URL.Path, id, 0)
 		return
 	}
 	return true, id
@@ -75,16 +75,18 @@ func (cb *CoreBase) IndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if cb.validURLs.FindStringSubmatch(r.URL.Path) == nil {
-		http.NotFound(w, r)
+		accs.ThrowObjectNotFound(w, r)
 		return
 	}
 	switch cb.cfg.startPage {
 	case "docs":
 		http.Redirect(w, r, "/docs/", http.StatusSeeOther)
 	case "tasks":
-		http.Redirect(w, r, "/tasks/", http.StatusSeeOther)
+		http.Redirect(w, r, "/tasks/?anyparticipants=my&from=core", http.StatusSeeOther)
 	case "team":
 		http.Redirect(w, r, "/team/", http.StatusSeeOther)
+	case "projs":
+		http.Redirect(w, r, "/projs/?projstatuses=0&from=core", http.StatusSeeOther)
 	case "portal":
 		http.Redirect(w, r, "/portal/", http.StatusSeeOther)
 	default:
@@ -118,4 +120,11 @@ func (cb *CoreBase) ServeUploads(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cb.uploads.ServeHTTP(w, r)
+}
+
+func IfAddJSON(r *http.Request) string {
+	if r.URL.Query().Get("api") == "json" || r.FormValue("api") == "json" {
+		return "?api=json"
+	}
+	return ""
 }

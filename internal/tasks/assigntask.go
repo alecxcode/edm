@@ -30,7 +30,7 @@ func (tb *TasksBase) AssignTaskAPI(w http.ResponseWriter, r *http.Request) {
 	var reqObj reqAssignTask
 	err = json.NewDecoder(r.Body).Decode(&reqObj)
 	if err != nil {
-		accs.ThrowServerErrorAPI(w, accs.CurrentFunction()+": decoding json request", loggedinID, reqObj.Task)
+		accs.ThrowServerError(w, accs.CurrentFunction()+": decoding json request", loggedinID, reqObj.Task)
 		return
 	}
 	task := Task{ID: reqObj.Task}
@@ -40,7 +40,7 @@ func (tb *TasksBase) AssignTaskAPI(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{"error":804,"description":"object not found"}`)
 		return
 	} else if err != nil {
-		accs.ThrowServerErrorAPI(w, accs.CurrentFunction()+": loading task before", loggedinID, reqObj.Task)
+		accs.ThrowServerError(w, accs.CurrentFunction()+": loading task before", loggedinID, reqObj.Task)
 		return
 	}
 	user := team.UnmarshalToProfile(tb.memorydb.GetByID(loggedinID))
@@ -75,6 +75,6 @@ func (tb *TasksBase) AssignTaskAPI(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(task)
 		return
 	}
-	accs.ThrowAccessDeniedAPI(w, r.URL.Path, loggedinID)
+	accs.ThrowAccessDenied(w, r.URL.Path, loggedinID, reqObj.Task)
 	return
 }

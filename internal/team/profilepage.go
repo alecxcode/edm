@@ -41,7 +41,7 @@ func (tb *TeamBase) ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if tb.validURLs.team.FindStringSubmatch(r.URL.Path) == nil {
-		http.NotFound(w, r)
+		accs.ThrowObjectNotFound(w, r)
 		return
 	}
 
@@ -136,9 +136,9 @@ func (tb *TeamBase) ProfileHandler(w http.ResponseWriter, r *http.Request) {
 				}
 				core.ConstructUserList(tb.db, tb.dbType, tb.memorydb)
 				if Page.UserConfig.ReturnAfterCreation {
-					http.Redirect(w, r, "/team/", http.StatusSeeOther)
+					http.Redirect(w, r, "/team/"+core.IfAddJSON(r), http.StatusSeeOther)
 				} else {
-					http.Redirect(w, r, fmt.Sprintf("/team/profile/%d", p.ID), http.StatusSeeOther)
+					http.Redirect(w, r, fmt.Sprintf("/team/profile/%d"+core.IfAddJSON(r), p.ID), http.StatusSeeOther)
 				}
 				return
 			} else {
@@ -290,7 +290,7 @@ func (tb *TeamBase) ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		err = Page.Profile.Load(tb.db, tb.dbType)
 		if err != nil {
 			log.Println(accs.CurrentFunction()+":", err)
-			http.NotFound(w, r)
+			accs.ThrowObjectNotFound(w, r)
 			return
 		}
 		if Page.Editable {

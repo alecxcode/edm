@@ -57,7 +57,7 @@ func (tb *TeamBase) UserConfigHandler(w http.ResponseWriter, r *http.Request) {
 		updated = p.UpdateConfig(tb.db, tb.dbType)
 		if updated > 0 {
 			MemoryUpdateProfile(tb.db, tb.dbType, tb.memorydb, p.ID)
-			Page.Message = "dataWritten"
+			Page.Message = "configSaved"
 		}
 	}
 
@@ -82,7 +82,7 @@ func (tb *TeamBase) UserConfigHandler(w http.ResponseWriter, r *http.Request) {
 	err = tb.templates.ExecuteTemplate(w, "config.tmpl", Page)
 	if err != nil {
 		log.Println(accs.CurrentFunction()+":", err)
-		accs.ThrowServerError(w, "executing profile template", Page.LoggedinID, Page.LoggedinID)
+		accs.ThrowServerError(w, "executing config template", Page.LoggedinID, Page.LoggedinID)
 		return
 	}
 

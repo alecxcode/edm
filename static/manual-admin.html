@@ -6,7 +6,7 @@
 <link rel="shortcut icon" href="favicon.png">
 <link rel="icon" href="favicon.png">
 <link rel="stylesheet" href="fonts.css">
-<link rel="stylesheet" href="system-rust.css">
+<link rel="stylesheet" href="themes/system-rust.css">
 </head>
 <body><div id="container">
     <div id="control">
@@ -139,11 +139,11 @@
         <p><b>addicon.cmd</b> is for adding the program icon into the exe file in Windows - this requires <a href="http://angusj.com/resourcehacker/">Resource Hacker</a> on your system.</p>
         <p><b>run-unix.sh</b> is a more convenient way to run the software while developing it.</p>
         <p>In order to know some constants and structs of the app read the package documentation available in source files, for example with <code>go doc --all</code> command.</p>
-        <p>If you add some structs which requires creating tables in a database, you can use <code>go generate</code> command to run <b>sql-gen.py</b> python script to create sql scripts. This runs python3 and requires it to be installed on your system.</p>
+        <p>If you add some structs which requires creating tables in a database, you can use <code>go generate</code> command from <b>internal/core</b> directory to run <b>sql-gen.py</b> python script to create sql scripts. This runs python3 and requires it to be installed on your system.</p>
         <p>If you modify server config code, you can use <code>go generate</code> command from <b>internal/config</b> directory to run <b>config-gen.py</b> and <b>config-env.py</b> python scripts to rewrite config loading and saving functions. This runs python3 and requires it to be installed on your system.</p>
         <p>All compilers, interpreters, executables which are necessary to build the software should be available in a path variable of you environment.</p>
         <h3 class="margintop">Themes</h3>
-        <p>Any theme is a single css file which name starts with <b>theme-</b> prefix and which is located in the <b>static</b> directory.</p>
+        <p>Any theme is a single css file (except which name starts with <b>system-</b> prefix) and which is located in the <b>static/themes</b> directory.</p>
         <p>To add a new theme you just need to create that file with selectors like in other files and place it to the <b>static</b> directory. After server restart new theme will appear on the settings page.</p>
         <h3 class="margintop">Localization</h3>
         <p>There are two JSON files wich contain language-specific strings. Name of these files is two-letter language code and .json extension.

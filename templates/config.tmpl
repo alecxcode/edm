@@ -10,10 +10,7 @@
 
   <div id="control">
   <h1 i18n-text="config">{{.PageTitle}}</h1>
-
-  {{if eq .Message "dataWritten"}}<div class="msgok" i18n-text="configSaved">Settings saved.</div>{{end}}
-  {{if eq .Message "dataNotWritten"}}<div class="msgred" i18n-text="dataNotWritten">Error writing data.</div>{{end}}
-
+  <div id="resDisplay"><br></div>
   </div>
 
   <div id="main">
@@ -25,13 +22,13 @@
 
         <h2 i18n-text="appearance">Appearance:</h2>
         <p><span class="ofname" i18n-text="systemTheme">System theme:</span> <select name="systemTheme" id="systemTheme" class="numberbox" 
-          onchange="document.getElementById('configUser').submit();">
+          onchange="updateConfig();">
           {{range .Themes}}<option value="{{.}}">{{.}}</option>
           {{end}}
         </select><span class="dropdown"></span></p>
 
         <p><span class="ofname" i18n-text="elemsOnPage">Elements on page:</span> <select name="elemsOnPage" id="elemsOnPage" class="numberbox"
-          onchange="document.getElementById('configUser').submit();">
+          onchange="updateConfig();">
           <option value="20">20</option>
           <option value="50">50</option>
           <option value="100">100</option>
@@ -40,7 +37,7 @@
         </select><span class="dropdown"></span></p>
 
         <p><span class="ofname" i18n-text="elemsOnTeamPage">Elements on team page:</span> <select name="elemsOnPageTeam" id="elemsOnPageTeam" class="numberbox"
-          onchange="document.getElementById('configUser').submit();">
+          onchange="updateConfig();">
           <option value="20">20</option>
           <option value="50">50</option>
           <option value="100">100</option>
@@ -49,19 +46,19 @@
         </select><span class="dropdown"></span></p>
 
         <p><span class="ofname" i18n-text="dateFormat">Date format in tables:</span> <select name="dateFormat" id="dateFormat" class="numberbox"
-          onchange="document.getElementById('configUser').submit();">
+          onchange="updateConfig();">
           {{range .DateFormats}}<option value="{{.}}">{{.}}</option>
           {{end}}
         </select><span class="dropdown"></span></p>
 
         <p><span class="ofname" i18n-text="timeFormat">Time format in tables:</span> <select name="timeFormat" id="timeFormat" class="numberbox"
-          onchange="document.getElementById('configUser').submit();">
+          onchange="updateConfig();">
           {{range .TimeFormats}}<option value="{{.}}">{{.}}</option>
           {{end}}
         </select><span class="dropdown"></span></p>
 
         <p><span class="ofname" i18n-text="interfaceLang">Interface Language:</span> <select name="langCode" id="langCode" class="numberbox"
-          onchange="document.getElementById('configUser').submit();">
+          onchange="updateConfig();">
           {{range .LangCodes}}<option value="{{.}}">{{.}}</option>
           {{end}}
         </select><span class="dropdown"></span></p>
@@ -71,13 +68,13 @@
           title="If disabled, these inputs will become text fields." i18n-text="useCalendarInConrols">Use calendar inputs for date and time:</label>
           <label class="switch"><input type="checkbox" class="hidden" 
           id="useCalendarInConrols" name="useCalendarInConrols" value="true"
-          onchange="document.getElementById('configUser').submit();">
+          onchange="updateConfig();">
         <span class="slider"></span></label></p>
 
         <p><label for="currencyBeforeAmount" class="ofname" i18n-text="currencyBeforeAmount">Show currency before amount:</label>
           <label class="switch"><input type="checkbox" class="hidden" 
           id="currencyBeforeAmount" name="currencyBeforeAmount" value="true"
-          onchange="document.getElementById('configUser').submit();">
+          onchange="updateConfig();">
         <span class="slider"></span></label></p>
 
 
@@ -87,13 +84,13 @@
         <p><label for="showFinishedTasks" class="ofname" i18n-text="showFinishedTasks">Show completed and canceled tasks with default filter:</label>
           <label class="switch"><input type="checkbox" class="hidden" 
           id="showFinishedTasks" name="showFinishedTasks" value="true"
-          onchange="document.getElementById('configUser').submit();">
+          onchange="updateConfig();">
         <span class="slider"></span></label></p>
 
         <p><label for="returnAfterCreation" class="ofname" i18n-text="returnAfterCreation">Return to elements list page after element creation:</label>
           <label class="switch"><input type="checkbox" class="hidden" 
           id="returnAfterCreation" name="returnAfterCreation" value="true"
-          onchange="document.getElementById('configUser').submit();">
+          onchange="updateConfig();">
         <span class="slider"></span></label></p>
 
 
@@ -111,24 +108,48 @@
 
 </div>
 
-<script src="/static/functions.js"></script>
+
 
 <script>
+
+  function updatePageView(config) {
+    if (document.getElementById('systemTheme').value != getTheme()) {
+      changeTheme(config.SystemTheme);
+    }
+    if (document.documentElement.lang != config.LangCode) {
+      document.documentElement.setAttribute("lang", config.LangCode);
+      getLang(config.LangCode).then(lang => translateAll(null, lang));
+    }
+    /* Appearance */
+    document.getElementById('systemTheme').value = config.SystemTheme;
+    document.getElementById('elemsOnPage').value = config.ElemsOnPage;
+    document.getElementById('elemsOnPageTeam').value = config.ElemsOnPageTeam;
+    document.getElementById('dateFormat').value = config.DateFormat;
+    document.getElementById('timeFormat').value = config.TimeFormat;
+    document.getElementById('langCode').value = config.LangCode;
+    document.getElementById('useCalendarInConrols').checked = config.UseCalendarInConrols;
+    document.getElementById('currencyBeforeAmount').checked = config.CurrencyBeforeAmount;
+    /* Functionality */
+    document.getElementById('showFinishedTasks').checked = config.ShowFinishedTasks;
+    let taskLink = document.querySelector(`#textmenu a[href^='/tasks']`);
+    if (taskLink && !config.ShowFinishedTasks) {
+      taskLink.href = "/tasks/?anyparticipants=my&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3&taskstatuses=6";
+    } else if (taskLink) {
+      taskLink.href = "/tasks/?anyparticipants=my";
+    }
+    document.getElementById('returnAfterCreation').checked = config.ReturnAfterCreation;
+  }
+
+  function updateConfig() {
+    let reqObj = new FormData(document.getElementById('configUser'));
+    makeDataRequest(reqObj, window.location.pathname, updatePageView, 'UserConfig');
+  }
+
   /* Main page loading function */
   (function() {
-    /* Appearance */
-    document.getElementById('systemTheme').value = "{{.UserConfig.SystemTheme}}";
-    document.getElementById('elemsOnPage').value = {{.UserConfig.ElemsOnPage}};
-    document.getElementById('elemsOnPageTeam').value = {{.UserConfig.ElemsOnPageTeam}};
-    document.getElementById('dateFormat').value = "{{.UserConfig.DateFormat}}";
-    document.getElementById('timeFormat').value = "{{.UserConfig.TimeFormat}}";
-    document.getElementById('langCode').value = "{{.UserConfig.LangCode}}";
-    document.getElementById('useCalendarInConrols').checked = {{.UserConfig.UseCalendarInConrols}};
-    document.getElementById('currencyBeforeAmount').checked = {{.UserConfig.CurrencyBeforeAmount}};
-    /* Functionality */
-    document.getElementById('showFinishedTasks').checked = {{.UserConfig.ShowFinishedTasks}};
-    document.getElementById('returnAfterCreation').checked = {{.UserConfig.ReturnAfterCreation}};
+    updatePageView({{.UserConfig}});
   })();
+
 </script>
 
 </body>

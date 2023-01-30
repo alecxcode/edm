@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -153,21 +154,16 @@ func GetTextIDfromURL(path string) string {
 	return res
 }
 
-// ThrowAccessDenied writes http.StatusForbidden to responce writer
+func GetAbsoluteOrRelativePath(defaultPath string, targetPath string) string {
+	if strings.HasPrefix(targetPath, "/") || strings.HasPrefix(targetPath, "C:") {
+		return targetPath
+	}
+	return filepath.Join(defaultPath, targetPath)
+}
+
+// ThrowAccessDenied writes http.StatusForbidden to responce writer and JSON
 func ThrowAccessDenied(w http.ResponseWriter, logmsg string, userID int, resourceID int) {
 	log.Printf("Wrong credentials while: %s, user ID:%d, resource ID:%d\n", logmsg, userID, resourceID)
-	http.Error(w, "Wrong credentials write or access attempt detected", http.StatusForbidden)
-}
-
-// ThrowServerError writes http.StatusInternalServerError to responce writer
-func ThrowServerError(w http.ResponseWriter, logmsg string, userID int, resourceID int) {
-	log.Printf("Internal server error while: %s, user ID:%d, resource ID:%d\n", logmsg, userID, resourceID)
-	http.Error(w, "Internal server error", http.StatusInternalServerError)
-}
-
-// ThrowAccessDeniedAPI writes http.StatusForbidden to responce writer and JSON
-func ThrowAccessDeniedAPI(w http.ResponseWriter, logmsg string, userID int) {
-	log.Printf("Wrong credentials error: %s, user ID:%d\n", logmsg, userID)
 	w.WriteHeader(http.StatusForbidden)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(struct {
@@ -175,8 +171,21 @@ func ThrowAccessDeniedAPI(w http.ResponseWriter, logmsg string, userID int) {
 	}{403})
 }
 
-// ThrowServerErrorAPI writes http.StatusInternalServerError to responce writer and JSON
-func ThrowServerErrorAPI(w http.ResponseWriter, logmsg string, userID int, resourceID int) {
+// ThrowObjectNotFound writes http.StatusNotFound to responce writer and JSON is request was in JSON
+func ThrowObjectNotFound(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Query().Get("api") == "json" || r.FormValue("api") == "json" {
+		w.WriteHeader(http.StatusNotFound)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(struct {
+			Error int `json:"error"`
+		}{404})
+	} else {
+		http.NotFound(w, r)
+	}
+}
+
+// ThrowServerError writes http.StatusInternalServerError to responce writer and JSON
+func ThrowServerError(w http.ResponseWriter, logmsg string, userID int, resourceID int) {
 	log.Printf("Internal server error: %s, user ID:%d, resource ID:%d\n", logmsg, userID, resourceID)
 	w.WriteHeader(http.StatusInternalServerError)
 	w.Header().Set("Content-Type", "application/json")

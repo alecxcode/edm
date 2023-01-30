@@ -5,6 +5,7 @@ import (
 	"edm/internal/core"
 	"edm/internal/team"
 	"edm/pkg/accs"
+	"edm/pkg/datetime"
 	"encoding/json"
 	"net/http"
 
@@ -26,12 +27,12 @@ func (tb *TasksBase) LoadTasksAPI(w http.ResponseWriter, r *http.Request) {
 	var reqObj reqByID
 	err := json.NewDecoder(r.Body).Decode(&reqObj)
 	if err != nil {
-		accs.ThrowServerErrorAPI(w, accs.CurrentFunction()+": decoding json request", uid, reqObj.ID)
+		accs.ThrowServerError(w, accs.CurrentFunction()+": decoding json request", uid, reqObj.ID)
 		return
 	}
 	taskList, err := reqObj.loadTasksByProj(tb.db, tb.dbType)
 	if err != nil {
-		accs.ThrowServerErrorAPI(w, accs.CurrentFunction()+": loading task list", uid, reqObj.ID)
+		accs.ThrowServerError(w, accs.CurrentFunction()+": loading task list", uid, reqObj.ID)
 		return
 	}
 	json.NewEncoder(w).Encode(taskList)
@@ -39,7 +40,7 @@ func (tb *TasksBase) LoadTasksAPI(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p reqByID) loadTasksByProj(db *sql.DB, DBType byte) (TaskList []Task, err error) {
-	rows, err := db.Query(`SELECT t.ID, t.Creator, t.Assignee, t.Topic, t.TaskStatus,
+	rows, err := db.Query(`SELECT t.ID, t.Creator, t.Assignee, t.Topic, t.Created, t.PlanStart,  t.PlanDue, t.TaskStatus,
 c.ID, c.FirstName, c.Surname,  c.JobTitle,
 a.ID, a.FirstName, a.Surname,  a.JobTitle
 FROM tasks t
@@ -54,6 +55,9 @@ WHERE t.Project = `+sqla.MakeParam(DBType, 1)+` ORDER BY t.ID ASC`, p.ID)
 	var Creator sql.NullInt64
 	var Assignee sql.NullInt64
 	var Topic sql.NullString
+	var Created sql.NullInt64
+	var PlanStart sql.NullInt64
+	var PlanDue sql.NullInt64
 	var TaskStatus sql.NullInt64
 
 	var CreatorID sql.NullInt64
@@ -68,12 +72,17 @@ WHERE t.Project = `+sqla.MakeParam(DBType, 1)+` ORDER BY t.ID ASC`, p.ID)
 
 	for rows.Next() {
 		var t Task
-		err = rows.Scan(&t.ID, &Creator, &Assignee, &Topic, &TaskStatus,
+		err = rows.Scan(&t.ID, &Creator, &Assignee, &Topic, &Created, &PlanStart, &PlanDue, &TaskStatus,
 			&CreatorID, &CreatorFirstName, &CreatorSurname, &CreatorJobTitle,
 			&AssigneeID, &AssigneeFirstName, &AssigneeSurname, &AssigneeJobTitle)
 		if err != nil {
 			return TaskList, err
 		}
+		t.Topic = Topic.String
+		t.TaskStatus = int(TaskStatus.Int64)
+		t.Created = datetime.Int64ToDateTime(Created.Int64)
+		t.PlanStart = datetime.Int64ToDateTime(PlanStart.Int64)
+		t.PlanDue = datetime.Int64ToDateTime(PlanDue.Int64)
 		if Creator.Valid {
 			t.Creator = &team.Profile{
 				ID:        int(CreatorID.Int64),
@@ -90,8 +99,6 @@ WHERE t.Project = `+sqla.MakeParam(DBType, 1)+` ORDER BY t.ID ASC`, p.ID)
 				JobTitle:  AssigneeJobTitle.String,
 			}
 		}
-		t.Topic = Topic.String
-		t.TaskStatus = int(TaskStatus.Int64)
 		TaskList = append(TaskList, t)
 	}
 	return TaskList, nil

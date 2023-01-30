@@ -46,7 +46,7 @@ func (tb *TasksBase) TaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if tb.validURLs.FindStringSubmatch(r.URL.Path) == nil {
-		http.NotFound(w, r)
+		accs.ThrowObjectNotFound(w, r)
 		return
 	}
 
@@ -72,7 +72,7 @@ func (tb *TasksBase) TaskHandler(w http.ResponseWriter, r *http.Request) {
 		err = Page.Task.load(tb.db, tb.dbType)
 		if err != nil {
 			log.Println(accs.CurrentFunction()+":", err)
-			http.NotFound(w, r)
+			accs.ThrowObjectNotFound(w, r)
 			return
 		}
 	}
@@ -167,14 +167,14 @@ func (tb *TasksBase) TaskHandler(w http.ResponseWriter, r *http.Request) {
 				if Page.UserConfig.ReturnAfterCreation {
 					redirAddr = "/tasks/?anyparticipants=my"
 					if !Page.UserConfig.ShowFinishedTasks {
-						redirAddr += "&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3"
+						redirAddr += "&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3&taskstatuses=6"
 					}
 				}
 				if r.FormValue("projectFrom") != "" {
 					redirAddr = "/projs/project/" + r.FormValue("projectFrom")
 				}
 				putTaskIntoMsg(tb.memorydb, t)
-				http.Redirect(w, r, redirAddr, http.StatusSeeOther)
+				http.Redirect(w, r, redirAddr+core.IfAddJSON(r), http.StatusSeeOther)
 				return
 			} else {
 				Page.Message = "dataNotWritten"

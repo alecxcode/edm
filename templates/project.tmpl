@@ -180,8 +180,7 @@
 
 </div>
 
-<script src="/static/functions.js"></script>
-<script src="/static/functionspm.js"></script>
+
 
 <script>
 /* Page loading function for read */
@@ -221,7 +220,7 @@
   let userRights = {loggedinID: loggedinID, loggedinAdmin: loggedinAdmin, projectCreator: projectCreator};
   sessionStorage.setItem("userRights", JSON.stringify(userRights));
   loadTasks(userRights);
-  connectWebSocket();
+  connectWebSocket({"project": getCurrentResourceID()}, '/projs/ws', processArrivedTask, tryToReConnectPM);
 })();
 </script>
 

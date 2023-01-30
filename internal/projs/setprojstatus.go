@@ -28,7 +28,7 @@ func (pb *ProjsBase) SetProjStatusAPI(w http.ResponseWriter, r *http.Request) {
 	var reqObj reqProjStatus
 	err = json.NewDecoder(r.Body).Decode(&reqObj)
 	if err != nil {
-		accs.ThrowServerErrorAPI(w, accs.CurrentFunction()+": decoding json request", loggedinID, reqObj.Proj)
+		accs.ThrowServerError(w, accs.CurrentFunction()+": decoding json request", loggedinID, reqObj.Proj)
 		return
 	}
 	proj := Project{ID: reqObj.Proj}
@@ -37,15 +37,15 @@ func (pb *ProjsBase) SetProjStatusAPI(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{"error":804,"description":"object not found"}`)
 		return
 	} else if err != nil {
-		accs.ThrowServerErrorAPI(w, accs.CurrentFunction()+": loading project", loggedinID, reqObj.Proj)
+		accs.ThrowServerError(w, accs.CurrentFunction()+": loading project", loggedinID, reqObj.Proj)
 		return
 	}
 	user := team.UnmarshalToProfile(pb.memorydb.GetByID(loggedinID))
 	var res int
 	if user.UserRole == team.ADMIN || proj.GiveCreatorID() == loggedinID {
-		res = sqla.UpdateSingleInt(pb.db, pb.dbType, "projects", "ProjStatus", reqObj.Status, proj.ID)
+		res = sqla.UpdateSingleInt(pb.db, pb.dbType, "projects", "ProjStatus", reqObj.Status, reqObj.Proj)
 	} else {
-		accs.ThrowAccessDeniedAPI(w, r.URL.Path, loggedinID)
+		accs.ThrowAccessDenied(w, r.URL.Path, loggedinID, reqObj.Proj)
 		return
 	}
 	if res > 0 {
@@ -53,6 +53,6 @@ func (pb *ProjsBase) SetProjStatusAPI(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(proj)
 		return
 	}
-	accs.ThrowServerErrorAPI(w, accs.CurrentFunction()+": updating project", loggedinID, proj.ID)
+	accs.ThrowServerError(w, accs.CurrentFunction()+": updating project", loggedinID, reqObj.Proj)
 	return
 }

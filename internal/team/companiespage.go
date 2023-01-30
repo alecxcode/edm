@@ -5,6 +5,7 @@ import (
 	"edm/internal/core"
 	"edm/pkg/accs"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -35,7 +36,7 @@ func (tb *TeamBase) CompaniesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if tb.validURLs.comp.FindStringSubmatch(r.URL.Path) == nil {
-		http.NotFound(w, r)
+		accs.ThrowObjectNotFound(w, r)
 		return
 	}
 
@@ -142,8 +143,7 @@ ORDER BY c.ShortName ASC, c.FullName ASC, c.ForeignName ASC`)
 	}()
 
 	if err != nil {
-		log.Println(accs.CurrentFunction()+":", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		accs.ThrowServerError(w, fmt.Sprintf(accs.CurrentFunction()+":", err), Page.LoggedinID, 0)
 		return
 	}
 

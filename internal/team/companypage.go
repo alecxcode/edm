@@ -37,7 +37,7 @@ func (tb *TeamBase) CompanyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if tb.validURLs.comp.FindStringSubmatch(r.URL.Path) == nil {
-		http.NotFound(w, r)
+		accs.ThrowObjectNotFound(w, r)
 		return
 	}
 
@@ -95,9 +95,9 @@ func (tb *TeamBase) CompanyHandler(w http.ResponseWriter, r *http.Request) {
 			if created > 0 {
 				core.ConstructCorpList(tb.db, tb.dbType, tb.memorydb)
 				if Page.UserConfig.ReturnAfterCreation {
-					http.Redirect(w, r, "/companies/", http.StatusSeeOther)
+					http.Redirect(w, r, "/companies/"+core.IfAddJSON(r), http.StatusSeeOther)
 				} else {
-					http.Redirect(w, r, fmt.Sprintf("/companies/company/%d", c.ID), http.StatusSeeOther)
+					http.Redirect(w, r, fmt.Sprintf("/companies/company/%d"+core.IfAddJSON(r), c.ID), http.StatusSeeOther)
 				}
 				return
 			} else {
@@ -177,13 +177,13 @@ func (tb *TeamBase) CompanyHandler(w http.ResponseWriter, r *http.Request) {
 		err = Page.Company.load(tb.db, tb.dbType)
 		if err != nil {
 			log.Println(accs.CurrentFunction()+":", err)
-			http.NotFound(w, r)
+			accs.ThrowObjectNotFound(w, r)
 			return
 		}
 		Page.Units, err = Page.Company.loadUnits(tb.db, tb.dbType)
 		if err != nil {
 			log.Println(accs.CurrentFunction()+":", err)
-			http.NotFound(w, r)
+			accs.ThrowObjectNotFound(w, r)
 			return
 		}
 		Page.PageTitle = Page.Company.ShortName

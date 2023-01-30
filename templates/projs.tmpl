@@ -65,7 +65,7 @@
         <div class="row-{{.ID}} {{$seq}} center select"><input type="checkbox" class="chbox" id="{{.ID}}" name="ids" value="{{.ID}}"></div>
         <div class="row-{{.ID}} {{$seq}} textsearch firstcell"><span class="mobile" i18n-text="nameAndDescription">Name and description: </span><a href="/projs/project/{{.ID}}">{{.ProjName}}</a> <div class="clamp description">{{.Description}}</div></div>
         <div class="row-{{.ID}} {{$seq}}"><span class="mobile" i18n-text="creatorOwner">Creator (owner): </span>{{if $ci}}<a href="/team/profile/{{$ci}}">{{.Creator.GiveSelfNameJob}}</a>{{end}}</div>
-        <div class="row-{{.ID}} {{$seq}} lastcell"><span class="mobile" i18n-text="status">Status: </span><span class="statusIndicator nowrap" i18n-index="projStatuses-{{.ProjStatus}}">{{.GiveStatus $.ProjStatuses "Unknown"}}</span></div>
+        <div class="row-{{.ID}} {{$seq}} lastcell"><span class="mobile" i18n-text="status">Status: </span><span class="statusIndicator nowrap" data-status="{{.ProjStatus}}" i18n-index="projStatuses-{{.ProjStatus}}">{{.GiveStatus $.ProjStatuses "Unknown"}}</span></div>
       {{if eq $seq "grideven"}}{{$seq = "gridodd"}}{{else}}{{$seq = "grideven"}}{{end}}
       {{end}}
     </div>
@@ -81,7 +81,7 @@
 
 </div>
 
-<script src="/static/functions.js"></script>
+
 
 <script>
 
@@ -136,18 +136,10 @@
       applySortingSelection();
       processPagesCalculations({{.UserConfig.ElemsOnPage}}, {{.FilteredNum}});
 
-
-      let projStatusesArr = {{.ProjStatuses}};
       let statusesArr = document.getElementsByClassName('statusIndicator');
-      Array.prototype.forEach.call(statusesArr, elem => {
-        const ACTIVE = 0, DONE = 1, CANCELED = 2;
-        let className = '';
-        let status = projStatusesArr.indexOf(elem.innerText);
-        if (status == ACTIVE) className = 'txtblue';
-        if (status == DONE) className = 'txtgreen';
-        if (status == CANCELED) className = 'txtbw';
-        elem.classList.add(className);
-      });
+      for (elem of statusesArr) {
+        updateProjStatusIndicatorClass(Number(elem.getAttribute('data-status')), elem);
+      }
 
       clearBBCode('div.description');
 

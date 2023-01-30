@@ -8,7 +8,7 @@
   <link rel="icon" href="/static/favicon.png">
   {{if not (eq .LangCode "en")}}<link rel="preload" href="/static/i18n/{{.LangCode}}.json" as="fetch">{{end}}
   <link rel="stylesheet" href="/static/fonts.css">
-  <link rel="stylesheet" href="/static/{{if isThemeSystem .SystemTheme}}{{.SystemTheme}}{{else}}theme-{{.SystemTheme}}{{end}}.css">
+  <link rel="stylesheet" href="/static/themes/{{if isThemeSystem .SystemTheme}}{{.SystemTheme}}{{else}}{{.SystemTheme}}{{end}}.css">
 </head>
 {{end}}
 
@@ -30,7 +30,7 @@
       <div class="mobileMenuButton" id="mobileMenuButtonMenu" onclick="showMobileMenu();"><img class="vector" src="/static/menu.svg" i18n-alt="menu" alt="Menu"></div>
       <div class="textmenu" id="textmenu">
       <a href="/docs/" i18n-text="docs">Documents</a>
-      <a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-text="tasks">Tasks</a>
+      <a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3&taskstatuses=6{{end}}" i18n-text="tasks">Tasks</a>
       <a href="/projs/?projstatuses=0" i18n-text="projects">Projects</a>
       <a href="/team/" i18n-text="team">Team</a>
       </div>
@@ -51,6 +51,18 @@
   <span>v{{.}}.</span>
   <span><a href="/static/manual.html">Manual</a></span>
 </div>
+<script src="/static/functions/common.js"></script>
+<script src="/static/functions/csv.js"></script>
+<script src="/static/functions/dom.js"></script>
+<script src="/static/functions/fetch.js"></script>
+<script src="/static/functions/filters.js"></script>
+<script src="/static/functions/grid.js"></script>
+<script src="/static/functions/i18n.js"></script>
+<script src="/static/functions/paginate.js"></script>
+<script src="/static/functions/pm.js"></script>
+<script src="/static/functions/textformat.js"></script>
+<script src="/static/functions/upload.js"></script>
+<script src="/static/functions/ws.js"></script>
 {{end}}
 
 {{define "pagination"}}
@@ -81,7 +93,8 @@
 {{define "formatOutput"}}
 <div style="float: right; padding-top: 5px;">
   <input type="button" class="sbut pg smaller" i18n-value="print" value="Print" onclick="window.print()">
-  <input type="button" class="sbut pg smaller" value="JSON" onclick="window.location.assign(addGetArg(window.location.href, 'api', 'json'))">
+  <input type="button" class="sbut pg smaller" value="CSV" id="makeCSV" onclick="makeCSV();">
+  <!-- <input type="button" class="sbut pg smaller" value="JSON" onclick="window.location.assign(addGetArg(window.location.href, 'api', 'json'))"> -->
 </div>
 {{end}}
 

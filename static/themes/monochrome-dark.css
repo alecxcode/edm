@@ -166,7 +166,8 @@ a:hover, a:focus {
 .msgred {color: #fff; opacity: 0; animation: 8s linear fadeout;}
 .msgok {color: #fff; opacity: 0; animation: 8s linear fadeout;}
 @keyframes fadeout {
-  0% {opacity: 1; transform: scale(1, 1);}
+  0% {opacity: 0;}
+  5% {opacity: 1; transform: scale(1, 1);}
   80% {opacity: 1; transform: scale(1, 1);}
   99% {opacity: 0; transform: scale(1, 0.1);}
 }

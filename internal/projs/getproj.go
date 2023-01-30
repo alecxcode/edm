@@ -24,7 +24,7 @@ func (pb *ProjsBase) GetProjAPI(w http.ResponseWriter, r *http.Request) {
 	var reqObj reqProj
 	err = json.NewDecoder(r.Body).Decode(&reqObj)
 	if err != nil {
-		accs.ThrowServerErrorAPI(w, accs.CurrentFunction()+": decoding json request", loggedinID, reqObj.Proj)
+		accs.ThrowServerError(w, accs.CurrentFunction()+": decoding json request", loggedinID, reqObj.Proj)
 		return
 	}
 	proj := Project{ID: reqObj.Proj}
@@ -33,7 +33,7 @@ func (pb *ProjsBase) GetProjAPI(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{"error":804,"description":"object not found"}`)
 		return
 	} else if err != nil {
-		accs.ThrowServerErrorAPI(w, accs.CurrentFunction()+": loading project", loggedinID, reqObj.Proj)
+		accs.ThrowServerError(w, accs.CurrentFunction()+": loading project", loggedinID, reqObj.Proj)
 		return
 	}
 	json.NewEncoder(w).Encode(proj)

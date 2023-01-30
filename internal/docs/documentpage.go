@@ -51,7 +51,7 @@ func (dd *DocsBase) DocumentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if dd.validURLs.FindStringSubmatch(r.URL.Path) == nil {
-		http.NotFound(w, r)
+		accs.ThrowObjectNotFound(w, r)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (dd *DocsBase) DocumentHandler(w http.ResponseWriter, r *http.Request) {
 		err = Page.Document.load(dd.db, dd.dbType)
 		if err != nil {
 			log.Println(accs.CurrentFunction()+":", err)
-			http.NotFound(w, r)
+			accs.ThrowObjectNotFound(w, r)
 			return
 		}
 		Page.Approvals, err = Page.Document.loadApprovals(dd.db, dd.dbType)
@@ -152,9 +152,9 @@ func (dd *DocsBase) DocumentHandler(w http.ResponseWriter, r *http.Request) {
 					filepath.Join(dd.cfg.serverRoot, "files", "docs", strconv.Itoa(d.ID)),
 					d.FileList)
 				if Page.UserConfig.ReturnAfterCreation {
-					http.Redirect(w, r, "/docs/", http.StatusSeeOther)
+					http.Redirect(w, r, "/docs/"+core.IfAddJSON(r), http.StatusSeeOther)
 				} else {
-					http.Redirect(w, r, fmt.Sprintf("/docs/document/%d", d.ID), http.StatusSeeOther)
+					http.Redirect(w, r, fmt.Sprintf("/docs/document/%d"+core.IfAddJSON(r), d.ID), http.StatusSeeOther)
 				}
 				return
 			} else {
