@@ -347,7 +347,7 @@ h2 {
   min-height: 60px;
   padding: 0;
   margin: 0;
-  background-color: #f3f4f5;
+  background-color: #ecedee;
   border-radius: calc(1px + var(--elements-radius));
 }
 .item-col-4 h3 {border-radius: calc(1px + var(--elements-radius)) calc(1px + var(--elements-radius)) 0 0;}
@@ -364,7 +364,7 @@ h2 {
   border-radius: var(--elements-radius);
   background-color: #fff;
   margin: 5px 5px 0px 5px;
-  box-shadow: 0px 0px 2px 1px #ccc;
+  box-shadow: 0px 0px 4px 0px #ccc;
 }
 .elem-inside-item:last-child {margin-bottom: 5px;}
 .bigger-font {font-size: 15px;}
@@ -421,16 +421,8 @@ select {
   transition: .1s;
   border-radius: 50%;
 }
-input:checked + .slider {
-  background-color: #003858;
-}
-input:focus + .slider {
-  box-shadow: 0 0 1px 0px #555;
-}
+input:checked + .slider {background-color: #003858;}
 input:focus-visible + .slider {outline-style: auto;}
-input:hover + .slider:before, input:focus + .slider:before {
-  box-shadow: 0 0 1px 0px #555;
-}
 input:checked + .slider:before {
   -webkit-transform: translateX(18px);
   -ms-transform: translateX(18px);
@@ -458,14 +450,11 @@ input:disabled {
   border: 1px solid #999;
   border-radius: var(--elements-radius);
   padding: 5px 8px;
-  box-shadow: inset 1px 1px 2px 0px #eee, 1px 1px 2px 0px #eee;
 }
 .field:hover {
-  box-shadow: inset 1px 1px 2px 0px #ddd, 1px 1px 2px 0px #eee;
   border: 1px solid #444;
 }
 .field:focus, .field:active {
-  box-shadow: inset 1px 1px 2px 0px #e0e0e0, 1px 1px 2px 0px #eee;
   border: 1px solid #444;
   outline: 0;
 }
@@ -478,22 +467,19 @@ input:disabled {
   border-radius: var(--elements-radius);
   font: inherit;
   padding: 3px 6px 3px 6px;
-  box-shadow: inset 1px 1px 2px 0px #eee, 1px 1px 2px 0px #eee;
 }
 .multiline:hover {
   border: 1px solid #444;
-  box-shadow: inset 1px 1px 2px 0px #ddd, 1px 1px 2px 0px #eee;
 }
 .multiline:focus, .multiline:active {
   border: 1px solid #444;
   outline: 0;
-  box-shadow: inset 1px 1px 2px 0px #ddd, 1px 1px 2px 0px #eee;
 }
 
 /* styled button */
 a.sbut, a.sbut:active, a.sbut:visited {
   text-decoration: none;
-  color: #eee;
+  color: #fff;
   display: inline-block;
   box-sizing: border-box;
   -webkit-box-sizing: border-box;
@@ -505,46 +491,38 @@ a.sbut, a.sbut:active, a.sbut:visited {
   text-decoration: none;
   margin: 2px 0;
   display: inline-block;
-  background-color: #258;
-  color: #eee;
-  border: 1px solid #333;
+  background-color: #00609e;
+  color: #fff;
+  border: 1px solid transparent;
   border-radius: var(--elements-radius);
   padding: 5px 8px;
-  box-shadow: 1px 1px 2px 0px #888;
 }
 .sbut:hover, .sbut:focus, a.sbut:hover, a.sbut:focus {
-  background-color: #48e;
+  background-color: #004c80;
   color: #fff;
-  box-shadow: 1px 1px 2px 0px #999;
-  border: 1px solid #004;
   outline: 0;
 }
 .greenish, a.greenish:visited {
-  color: #fff;
   background-color: #0a0;
 }
 .greenish:hover, .greenish:focus, a.greenish:hover, a.greenish:focus {
-  color: #fff;
-  background-color: #2c2;
-  border: 1px solid #050;
+  background-color: #080;
 }
 .reddish, a.reddish:visited {
-  background-color: #a00;
+  background-color: #b00;
 }
 .reddish:hover, .reddish:focus, a.reddish:hover, a.reddish:focus {
-  color: #fff;
-  background-color: #e00;
-  border: 1px solid #500;
+  background-color: #900;
 }
 .pg {
-  color: #444;
-  background-color: #ddd;
+  color: #111;
+  background-color: var(--defaultBackgroundColor);
+  border: 1px solid #456;
   padding: 5px 2px;
 }
 .pg:hover, .pg:focus, a.pg:hover, a.pg:focus {
-  color: #000;
-  background-color: #fff;
-  border: 1px solid #400;
+  color: #fff;
+  background-color: #456;
 }
 
 /* panel */
@@ -557,7 +535,6 @@ a.sbut, a.sbut:active, a.sbut:visited {
   border: 1px solid #999;
   border-radius: var(--elements-radius);
   padding: 5px 8px;
-  box-shadow: 1px 1px 2px 0px #888;
 }
 
 /* other things */
@@ -571,7 +548,6 @@ a.sbut, a.sbut:active, a.sbut:visited {
   font: inherit;
   border: 1px solid #aaa;
   border-radius: var(--smaller-radius);
-  box-shadow: inset 1px 1px 2px 0px #eee, 1px 1px 2px 0px #eee;
 }
 .numberbox:hover, .numberbox:focus {
   border: 1px solid #444;
@@ -626,8 +602,8 @@ input:disabled, .numberbox:disabled, .sbut:disabled {
 }
 .wideelem {
   margin-bottom: 6px;
-  border: 1px solid #eeeeee;
-  background-color: #f8f8f8;
+  border: 1px solid #ecedee;
+  background-color: #ecedee;
   border-radius: var(--elements-radius);
   width: 100%;
   padding-left: 2px;
@@ -636,7 +612,6 @@ input:disabled, .numberbox:disabled, .sbut:disabled {
 .elem {
   border: 1px solid #888;
   border-radius: var(--elements-radius);
-  box-shadow: 2px 2px 4px 0px #888;
   margin-bottom: 18px;
 }
 .subelem {

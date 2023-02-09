@@ -147,18 +147,15 @@ input, button {
   margin: 2px 0;
   color: #000;
   display: inline-block;
-  background-color: #a98;
-  border: 1px solid #444;
+  background-color: #ffe;
+  border: 1px solid #aaa;
   border-radius: var(--elements-radius);
   padding: 5px 8px;
-  box-shadow: inset 1px 1px 3px 0px #987, 1px 1px 3px 0px #987;
 }
 .field:hover {
-  box-shadow: inset 1px 1px 4px 0px #544, 1px 1px 4px 0px #544;
   border: 1px solid #fd0;
 }
 .field:focus, .field:active {
-  box-shadow: inset 1px 1px 4px 0px #544, 1px 1px 4px 0px #544;
   border: 1px solid #fd0;
   outline: 0;
 }
@@ -178,18 +175,15 @@ a.sbut, a.sbut:active, a.sbut:visited {
   text-decoration: none;
   margin: 2px 0;
   display: inline-block;
-  color: #000;
-  background-color: #d60;
-  border: 1px solid #111;
+  color: #d60;
+  background-color: #ffe;
+  border: 1px solid #d60;
   border-radius: var(--elements-radius);
   padding: 5px 8px;
-  box-shadow: 1px 1px 2px 0px #444;
 }
 .sbut:hover, .sbut:focus, a.sbut:hover, a.sbut:focus {
-  color: #111;
-  background-color: #f80;
-  box-shadow: 1px 1px 2px 0px #222;
-  border: 1px solid #400;
+  color: #fff;
+  background-color: #d60;
   outline: 0;
 }
 .greenish, a.greenish:visited {
@@ -222,7 +216,6 @@ a.sbut, a.sbut:active, a.sbut:visited {
   border: 1px solid #999;
   border-radius: var(--elements-radius);
   padding: 5px 8px;
-  box-shadow: 1px 1px 2px 0px #444;
 }
 .inline-block {
   display: inline-block;
