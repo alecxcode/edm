@@ -4,7 +4,9 @@ package config
 //go:generate python3 config-env.py
 
 import (
+	"edm/internal/core"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -58,7 +60,13 @@ func (cfg *Config) ReadConfig(configPath string, serverRoot string) error {
 	} else {
 		cfg.ServerRoot = serverRoot
 	}
-	ConfigFile := filepath.Join(configPath, defaultiniFname)
+	ConfigFile := configPath
+	if !strings.HasSuffix(configPath, "cfg") || !strings.HasSuffix(configPath, "conf") || !strings.HasSuffix(configPath, "ini") {
+		ConfigFile = filepath.Join(configPath, defaultiniFname)
+	}
+	if core.DEBUG {
+		log.Println("Using config file: ", ConfigFile)
+	}
 	if _, err := os.Stat(configPath); err != nil {
 		if os.IsNotExist(err) {
 			err := os.Mkdir(configPath, 0700)

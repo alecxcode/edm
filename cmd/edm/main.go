@@ -54,19 +54,27 @@ func main() {
 		dbType         byte
 	)
 
-	err := cfg.ReadConfig(CONFIGPATH, cfg.ServerRoot)
-	if err != nil {
-		log.Println(accs.CurrentFunction()+":", err)
-	}
+	var err error
 
 	// Reading command-line arguments
 	filldb := false
 	consolelog := false
-	cfg.CreateDB, filldb, cfg.RunBrowser, consolelog, err = processCmdLineArgs(cfg.CreateDB, filldb, cfg.RunBrowser, consolelog)
+	createdb := "false"
+	runbrowser := "false"
+	onlybrowser := false
+	config := CONFIGPATH
+	createdb, filldb, runbrowser, onlybrowser, consolelog, config, err = processCmdLineArgs(cfg.CreateDB, filldb, cfg.RunBrowser, onlybrowser, consolelog)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	err = cfg.ReadConfig(config, cfg.ServerRoot)
+	if err != nil {
+		log.Println(accs.CurrentFunction()+":", err)
+	}
+	cfg.CreateDB = createdb
+	cfg.RunBrowser = runbrowser
 
 	// Server root path:
 	if accs.FileExists(cfg.ServerRoot) != true {
@@ -193,7 +201,11 @@ func main() {
 		return
 	}
 
-	// Server code:
+	// Launching browser:
+	if onlybrowser {
+		accs.RunClient(cfg.UseTLS, "127.0.0.1:"+cfg.ServerPort, 1, 2)
+		return
+	}
 	if accs.IsPrevInstanceRunning(cfg.ServerHost + ":" + cfg.ServerPort) {
 		log.Println("server is already running, quiting")
 		if accs.StrToBool(cfg.RunBrowser) {
@@ -201,7 +213,11 @@ func main() {
 		}
 		return
 	}
+	if accs.StrToBool(cfg.RunBrowser) && !onlybrowser {
+		go accs.RunClient(cfg.UseTLS, "127.0.0.1:"+cfg.ServerPort, 100, 2)
+	}
 
+	// Server code:
 	log.Println("running server")
 
 	// Launching mailer monitor:
@@ -210,11 +226,6 @@ func main() {
 	go mail.MailerMonitor(mailchan, cfg.SMTPHost, accs.StrToInt(cfg.SMTPPort), cfg.SMTPUser, cfg.SMTPPassword, cfg.SMTPEmail, i18n.Messages.MailerName, db, dbType, core.DEBUG)
 	if cfg.SMTPHost != "" {
 		go mail.ReadMailFromDB(mailchan, 30, db, dbType, core.DEBUG)
-	}
-
-	// Launching browser:
-	if accs.StrToBool(cfg.RunBrowser) {
-		go accs.RunClient(cfg.UseTLS, "127.0.0.1:"+cfg.ServerPort, 100, 2)
 	}
 
 	// Static files handler:

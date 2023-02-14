@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func defaultConfig(ServerSystem string, ServerRoot string) config.Config {
@@ -52,9 +53,12 @@ func getTemplates(templatesPath string) *template.Template {
 	))
 }
 
-func processCmdLineArgs(createdb string, filldb bool, runbrowser string, consolelog bool) (string, bool, string, bool, error) {
-	validArgs := []string{"--createdb", "--filldb", "--nobrowser", "--consolelog"}
+func processCmdLineArgs(createdb string, filldb bool, runbrowser string, onlybrowser bool, consolelog bool) (string, bool, string, bool, bool, string, error) {
+	validArgs := []string{"--createdb", "--filldb", "--nobrowser", "--onlybrowser", "--consolelog", "--config"}
 	var err error = nil
+	var preva string
+	var config string
+	var useconfig bool
 	for i, a := range os.Args {
 		if a == "--createdb" {
 			createdb = "true"
@@ -65,12 +69,24 @@ func processCmdLineArgs(createdb string, filldb bool, runbrowser string, console
 		if a == "--nobrowser" {
 			runbrowser = "false"
 		}
+		if a == "--onlybrowser" {
+			onlybrowser = true
+		}
 		if a == "--consolelog" {
 			consolelog = true
 		}
-		if i > 0 && !accs.SliceContainsStr(validArgs, a) {
+		if a == "--config" {
+			useconfig = true
+		}
+		if preva == "--config" && !accs.SliceContainsStr(validArgs, a) && !strings.HasPrefix(a, "--") {
+			config = a
+		} else if i > 0 && !accs.SliceContainsStr(validArgs, a) {
 			err = errors.New("wrong command line argument: the program finished with no action")
 		}
+		preva = a
 	}
-	return createdb, filldb, runbrowser, consolelog, err
+	if useconfig && (config == "" || config == " ") {
+		err = errors.New("wrong command line argument: config path is not specified")
+	}
+	return createdb, filldb, runbrowser, onlybrowser, consolelog, config, err
 }
