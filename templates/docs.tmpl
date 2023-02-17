@@ -228,7 +228,7 @@
 
     let removeAllowed = {{.RemoveAllowed}};
     if (!removeAllowed) {
-      disableControlButtons(mainTablePresent);
+      document.getElementById('deleteButton').style.display = 'none';
     }
 
     let showIncNo = {{.ShowIncNo}};

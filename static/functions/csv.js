@@ -8,8 +8,8 @@
 
 /* CSV make and download */
 async function makeCSV(fileName) {
-  let delim = ',';
-  if (document.documentElement.lang == 'ru') delim = ';';
+  let delim = ';';
+  /* if (document.documentElement.lang != 'en') delim = ';'; */
   if (!fileName) {
     let pathArr = location.pathname.split('/');
     fileName = (pathArr.length > 0) ? pathArr[1] : 'export';

@@ -584,7 +584,7 @@ a.sbut, a.sbut:active, a.sbut:visited {
   display: inline-block;
   background-color: var(--defaultBackgroundColor);
   color: #bcbcbc;
-  border: 1px solid #151515;
+  border: 1px solid #555;
   border-radius: var(--elements-radius);
   padding: 5px 8px;
 }
