@@ -14,6 +14,7 @@
         <a class="sbut smaller inline-block" href="/">EDM System Home</a>
         <a class="sbut smaller inline-block" href="manual.html">User documentation</a>
         <strong class="panel smaller inline-block">Administrator documentation</strong>
+        <a class="sbut smaller inline-block" href="manual-dev.html">Developer documentation</a>
     </div>
     <h1>Administrator documentation</h1>
     </div>
@@ -33,17 +34,17 @@
             <li>Oracle</li>
             <li>PostgreSQL</li>
         </ul>
-        <p>On the client-side it is necessary to use modern web browsers like Chrome, Firefox, Safari with enabled JavaScript. Internet Exprorer is not supported.</p>
-        <h3 class="margintop">Basic bruteforce protection</h3>
-        <p>This bruteforce protection by default blocks login capability for any users from any IP addresses for 60 minutes after 100 attempts to enter with wrong login or password.</p>
+        <p>On the client-side, it is necessary to use modern web browsers like Chrome, Firefox, Safari with enabled JavaScript. Internet Explorer is not supported.</p>
+        <h3 class="margintop">Basic brute-force protection</h3>
+        <p>This brute-force protection by default blocks login capability for any users from any IP addresses for 60 minutes after 100 attempts to enter with a wrong login or password.</p>
         <h3 class="margintop">Redis in-memory data store</h3>
-        <p>By default the server process keeps in its memory user sessions, user lists, and some other data, which are shared among all HTTP requests.</p>
+        <p>By default, the server process keeps in its memory user sessions, user lists, and some other data, which are shared among all HTTP requests.</p>
         <p>If Redis options are configured in the config file or environment variables, the server will use the Redis database to keep user sessions, user lists and some other shared data. This should make it possible to use multiple instances of the server process.</p>
 
         <h2 class="margintop">Installation of a release package</h2>
         <p>Installing in Windows is easy: run the downloaded distribution file, select a folder to install, and then it runs automatically. This way of installation is more for presentation purposes.</p>
-        <p>On Linux/Mac/BSD: unpack the app somewhere and run <code>./edm</code> executable. If there is no build for your system or it does not work, you need to build it yourself. It is recommended to create a separate user for the server (e.g. with the name <code>edm</code>), like for other servers and configure the software as a service on your system. You should refer to your system administration guides or manuals about how to do that.</p>
-        <p>In order to connect to a database server instead of using SQLite, create database on your server, fill the requred data in config file, and run <code>./edm --createdb --consolelog</code> before the first launch. After that you can launch <code>./edm</code> server.</p>
+        <p>On Linux/Mac/BSD: unpack the app somewhere and run <code>./edm</code> executable. If there is no build for your system or it does not work, you need to <a href="manual-dev.html">build it yourself</a>. It is recommended to create a separate user for the server (e.g. with the name <code>edm</code>), like for other servers and configure the software as a service on your system. You should refer to your system administration guides or manuals about how to do that.</p>
+        <p>In order to connect to a database server instead of using SQLite, create a database on your server, provide the required data in the config file, and run <code>./edm --createdb --consolelog</code> before the first launch. After that you can launch <code>./edm</code> server.</p>
         <p>Default login after installation: <b>admin</b>, and the password is empty (there is no password).</p>
 
         <h2 class="margintop">Upgrading to a new version</h2>
@@ -61,7 +62,7 @@
         <p><code>ServerHost</code> - ip address to bind the server process. Default is <code>127.0.0.1</code>. To bind the server to all interfaces make this option empty.</p>
         <p><code>ServerPort</code> - server process port. Default is <code>8090</code>.</p>
         <p><code>DomainName</code> - domain name of your system. It is used in email notifications.</p>
-        <p><code>DefaultLang</code> - default server language which is used on login page, in emails, by newly created user profiles. Use one of these two-letter codes:
+        <p><code>DefaultLang</code> - default server language which is used on the login page, in emails, by newly created user profiles. Use one of these two-letter codes:
             <code>en</code>,
             <code>es</code>,
             <code>fr</code>,
@@ -75,7 +76,7 @@
         <p><code>UseTLS</code> - whether or not to use https: <code>true</code> or <code>false</code>.</p>
         <p><code>SSLCertFile</code> - specify certificate file path if UseTLS is set to true.</p>
         <p><code>SSLKeyFile</code> - specify key file path if UseTLS is set to true.</p>
-        <p><code>CreateDB</code> - if set to true the server will create database tables to initialize empty database. Usually should not be used.</p>
+        <p><code>CreateDB</code> - if set to true the server will create database tables to initialize an empty database. Should not normally be used.</p>
         <p><code>DBType</code> - specifies RDBMS type. Might be one of these:
             <code>sqlite</code>,
             <code>mssql</code> or <code>sqlserver</code>,
@@ -97,7 +98,7 @@
         <p><code>SMTPPassword</code> - SMTP server password. Should be specified in order to make notifications work properly.</p>
         
         <h2 class="margintop">Environment variables</h2>
-        <p>After reading configuration file the server tries to read environment variables, which, if present, override corresponding configuration file values.</p>
+        <p>After reading the configuration file, the server tries to read environment variables, which, if present, override corresponding configuration file values.</p>
         <p>This might be useful when deploying on a system where you should not store your sensitive data in a configuration file.</p>
         <p>The following variables are available (values are the same as for configuration file):</p>
         
@@ -118,39 +119,14 @@
         <p><code>EDM_SMTP_USER</code> - SMTP server user.</p>
         <p><code>EDM_SMTP_PASSWORD</code> - SMTP server password.</p>
        
-        <p>If you require to use other configuration options as environment variables you can edit <b>config-env.py</b> from <b>internal/config</b> directory. The file has predefined list of prefixes for environment variables. For instance, you can set it to <code>[""]</code> in order to make all config options available as environment variables.</p>
-
         <h2 class="margintop">Command line arguments</h2>
         <p>Command-line arguments have higher priority over (overwrite) configuration file values and environment variables.</p>
-        <p><code>--createdb</code> - the server will create database table to initialize empty database.</p>
-        <p><code>--filldb</code> - fill database with showcase data. Useful only for presentation and testing.</p>
+        <p><code>--config path_to_file[file_name]</code> - use the config file specified as an argument, e.g. <code>./edm --config /etc/edm-system.cfg</code>.</p>
+        <p><code>--createdb</code> - the server will create database tables to initialize an empty database.</p>
+        <p><code>--filldb</code> - fill the database with showcase data. Useful only for presentation and testing.</p>
         <p><code>--nobrowser</code> - the server should not run a browser on launch.</p>
-        <p><code>--consolelog</code> - print messages to console instead of a log file.</p>
-
-        <h2 class="margintop">View pages as JSON</h2>
-        <p>The program can display a responce in JSON format. It is applicable for almost any page. This might be useful for connecting this server to other services.</p>
-        <p>To load a page as JSON use the following key and value in GET or POST request: <code>api=json</code>.</p>
-        
-        <h2 class="margintop">Building from source</h2>
-        <p>The simplest way to build the software is to run <code>build-release.sh</code> (<code>build-release.cmd</code> for Windows) command, and then you can run <code>./edm</code> (<code>edm.exe</code> for windows) app in the current directory. These scripts produce a smaller executable with some flags.</p>
-        <p>You can manually run <code>go build</code> in the <b>cmd/edm</b> directory, then move <b>cmd/edm/edm</b> (<b>cmd\edm\edm.exe</b> for windows) executable two directories up, and then run it from the root project directory.</p>
-        <p>You should have Go compiler and C compiler (like one supplied with GCC or MinGW) on your system installed.</p>
-        <p><b>Dockerfile</b> and <b>docker-compose.yml</b> files are available to run the software with Docker.</p>
-        <p><b>addicon.cmd</b> is for adding the program icon into the exe file in Windows - this requires <a href="http://angusj.com/resourcehacker/">Resource Hacker</a> on your system.</p>
-        <p><b>run-unix.sh</b> is a more convenient way to run the software while developing it.</p>
-        <p>In order to know some constants and structs of the app read the package documentation available in source files, for example with <code>go doc --all</code> command.</p>
-        <p>If you add some structs which requires creating tables in a database, you can use <code>go generate</code> command from <b>internal/core</b> directory to run <b>sql-gen.py</b> python script to create sql scripts. This runs python3 and requires it to be installed on your system.</p>
-        <p>If you modify server config code, you can use <code>go generate</code> command from <b>internal/config</b> directory to run <b>config-gen.py</b> and <b>config-env.py</b> python scripts to rewrite config loading and saving functions. This runs python3 and requires it to be installed on your system.</p>
-        <p>All compilers, interpreters, executables which are necessary to build the software should be available in a path variable of you environment.</p>
-        <h3 class="margintop">Themes</h3>
-        <p>Any theme is a single css file (except which name starts with <b>system-</b> prefix) and which is located in the <b>static/themes</b> directory.</p>
-        <p>To add a new theme you just need to create that file with selectors like in other files and place it to the <b>static</b> directory. After server restart new theme will appear on the settings page.</p>
-        <h3 class="margintop">Localization</h3>
-        <p>There are two JSON files wich contain language-specific strings. Name of these files is two-letter language code and .json extension.
-            Server-side files are located in <b>i18nserver</b> directory, and they are relatively small as they are used only for login page and email notifications.
-            Frontend localization files are located in <b>static/i18n</b> directory, and they contain a lot more strings, almost all user interface language. Users can easily switch their interface language on the settings page.
-        </p>
-        <p>To add a new language you need to create those two JSON files with the same structure as existing ones. You need to edit <b>codesui.js</b> file to add a language name there and restart the server.</p>
+        <p><code>--onlybrowser</code> - the program only runs a browser and opens the url derived from config; the server itself then quits.</p>
+        <p><code>--consolelog</code> - print messages to console instead of a log file; this does not work in Windows with standard builds of the program.</p>
 
     </div>
     <div id="bottom">

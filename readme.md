@@ -13,7 +13,7 @@ The application has the following functions:
 * Notifications by e-mail: about user creation to that user, about approvals, about changes and comments in a task to related users
 * Themes and localization support
 * UX/UI features: bb-code, search results highlighting, etc.
-* Some basic bruteforce protection
+* Some basic brute-force protection
 * Redis support to store sessions and other shared data
 * Other functions, not mentioned in this list
 
