@@ -43,16 +43,16 @@ func (tb *TeamBase) UserConfigHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" && r.FormValue("updateButton") != "" {
 		p := Profile{ID: Page.LoggedinID}
 		p.UserConfig = UserConfig{
-			SystemTheme:          r.FormValue("systemTheme"),
-			ElemsOnPage:          accs.StrToInt(r.FormValue("elemsOnPage")),
-			ElemsOnPageTeam:      accs.StrToInt(r.FormValue("elemsOnPageTeam")),
-			DateFormat:           r.FormValue("dateFormat"),
-			TimeFormat:           r.FormValue("timeFormat"),
-			LangCode:             r.FormValue("langCode"),
-			UseCalendarInConrols: accs.StrToBool(r.FormValue("useCalendarInConrols")),
-			CurrencyBeforeAmount: accs.StrToBool(r.FormValue("currencyBeforeAmount")),
-			ShowFinishedTasks:    accs.StrToBool(r.FormValue("showFinishedTasks")),
-			ReturnAfterCreation:  accs.StrToBool(r.FormValue("returnAfterCreation")),
+			SystemTheme:           r.FormValue("systemTheme"),
+			ElemsOnPage:           accs.StrToInt(r.FormValue("elemsOnPage")),
+			ElemsOnPageTeam:       accs.StrToInt(r.FormValue("elemsOnPageTeam")),
+			DateFormat:            r.FormValue("dateFormat"),
+			TimeFormat:            r.FormValue("timeFormat"),
+			LangCode:              r.FormValue("langCode"),
+			UseCalendarInControls: accs.StrToBool(r.FormValue("useCalendarInControls")),
+			CurrencyBeforeAmount:  accs.StrToBool(r.FormValue("currencyBeforeAmount")),
+			ShowFinishedTasks:     accs.StrToBool(r.FormValue("showFinishedTasks")),
+			ReturnAfterCreation:   accs.StrToBool(r.FormValue("returnAfterCreation")),
 		}
 		updated = p.UpdateConfig(tb.db, tb.dbType)
 		if updated > 0 {

@@ -160,6 +160,8 @@ func main() {
 	}
 	defer memorydb.Close()
 
+	core.CheckOldVersionDB(db, dbType, memorydb)
+
 	protocol := "http"
 	if accs.StrToBool(cfg.UseTLS) {
 		protocol = "https"

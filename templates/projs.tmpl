@@ -42,7 +42,7 @@
       {{template "deleteButton"}}
     </div>
 
-    {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred"><span i18n-text="noPerms">Action rejected: no permissions for all or some of objects.</span>{{end}}
+    {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred"><span i18n-text="noPerms">Action rejected: no permissions for all or some objects.</span>{{end}}
     {{if eq .Message "removedElems"}}<p class="msgok"><span i18n-text="removedElems">Deleted objects:</span> {{.RemovedNum}}.</p>{{end}}
     {{if eq .Message "removalError"}}<p class="msgred" i18n-text="removalError">Error deleting objects.</p>{{end}}
   </div>

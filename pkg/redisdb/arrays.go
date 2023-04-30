@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -32,6 +33,25 @@ func (m *ObjectsInMemory) GetRaw(key string) []byte {
 func (m *ObjectsInMemory) DelRaw(key string) {
 	err := m.rdb.Del(key).Err()
 	if err != nil {
+		log.Println(accs.CurrentFunction(), err)
+	}
+}
+
+// ReplaceRawMany replaces matching pattern for all keys which have prefix in their name
+func (m *ObjectsInMemory) ReplaceRawMany(prefix, oldPattern, newPattern string) {
+	var cursor uint64
+	iter := m.rdb.Scan(cursor, prefix+":*", 0).Iterator()
+	for iter.Next() {
+		s, err := m.rdb.Get(iter.Val()).Result()
+		if err != nil && err != redis.Nil {
+			log.Println(accs.CurrentFunction(), err)
+		}
+		err = m.rdb.Set(iter.Val(), strings.Replace(s, oldPattern, newPattern, 1), 0).Err()
+		if err != nil {
+			log.Println(accs.CurrentFunction(), err)
+		}
+	}
+	if err := iter.Err(); err != nil {
 		log.Println(accs.CurrentFunction(), err)
 	}
 }

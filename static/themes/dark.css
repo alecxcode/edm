@@ -260,10 +260,10 @@ h2 {
   background-color: #505050;
   border: 1px solid #505050;
   border-radius: calc(1px + var(--elements-radius));
-  overflow: scroll;
+  overflow-x: auto;
 }
-.grideven, .gridodd {background-color: #323232; padding: 0px 1px;}
-.gridheader {background-color: #10100c !important; color: #bba; font-weight: bold;}
+.grideven, .gridodd {background-color: #323232; padding: 5px 4px;}
+.gridheader {background-color: #10100c !important; color: #bba; font-weight: bold; padding: 5px 4px;}
 .grideven {background-color: var(--defaultBackgroundColor);}
 .gridodd {background-color: var(--tableOddRowBkgColor);}
 .mobile {display: none;}

@@ -49,13 +49,13 @@ func FillDBwithTestData(db *sql.DB, DBType byte) {
 	unitE.Create(db, DBType)
 
 	defaultUserConfig := team.UserConfig{
-		SystemTheme:          "dark",
-		ElemsOnPage:          20,
-		ElemsOnPageTeam:      500,
-		DateFormat:           "dd.mm.yyyy",
-		TimeFormat:           "24h",
-		UseCalendarInConrols: true,
-		CurrencyBeforeAmount: true,
+		SystemTheme:           "dark",
+		ElemsOnPage:           20,
+		ElemsOnPageTeam:       500,
+		DateFormat:            "dd.mm.yyyy",
+		TimeFormat:            "24h",
+		UseCalendarInControls: true,
+		CurrencyBeforeAmount:  true,
 	}
 	user1 := team.Profile{
 		FirstName: "John",

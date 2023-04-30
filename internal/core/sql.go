@@ -5,9 +5,11 @@ package core
 import (
 	"database/sql"
 	"edm/pkg/accs"
+	"edm/pkg/memdb"
 	"io/ioutil"
 	"log"
 	"path/filepath"
+	"strings"
 
 	"github.com/alecxcode/sqla"
 )
@@ -71,4 +73,40 @@ func PostgresqlMakeDatabase(DSN string, DBName string, sqlStmt string) {
 			return
 		}
 	}
+}
+
+func CheckOldVersionDB(db *sql.DB, dbType byte, memorydb memdb.ObjectsInMemory) {
+
+	var sqck = "SELECT UserConfig FROM profiles ORDER BY ID ASC LIMIT 1"
+	var sqexec = "UPDATE profiles SET UserConfig = REPLACE(UserConfig, 'UseCalendarInConrols', 'UseCalendarInControls')"
+	var SomeUserConfig sql.NullString
+	var err error
+	if dbType == sqla.ORACLE {
+		sqck = "SELECT UserConfig FROM profiles ORDER BY ID ASC FETCH FIRST 1 ROWS ONLY"
+	} else if dbType == sqla.MSSQL {
+		sqck = "SELECT UserConfig FROM profiles ORDER BY ID ASC"
+	}
+	if DEBUG {
+		log.Println(sqck)
+	}
+
+	err = db.QueryRow(sqck).Scan(&SomeUserConfig)
+	if err != nil && err != sql.ErrNoRows {
+		log.Println(accs.CurrentFunction()+":", err)
+		return
+	} else if err == sql.ErrNoRows {
+		return
+	}
+
+	if strings.Contains(SomeUserConfig.String, "UseCalendarInConrols") {
+		log.Println("Flawed old UserConfig. Replacing...")
+		if DEBUG {
+			log.Println(sqexec)
+		}
+		if _, err = db.Exec(sqexec); err != nil {
+			log.Println(accs.CurrentFunction()+":", err)
+		}
+		memorydb.ReplaceRawMany("Aarr", "UseCalendarInConrols", "UseCalendarInControls")
+	}
+
 }

@@ -91,10 +91,10 @@
       <p><span class="ofname" i18n-text="officePhone">Office phone:</span> <input type="text" class="field ofval" name="telOffice" size="30" maxlength="127" value="{{.Profile.Contacts.TelOffice}}"></p>
       <p><span class="ofname" i18n-text="mobilePhone">Mobile phone:</span> <input type="text" class="field ofval" name="telMobile" size="30" maxlength="127" value="{{.Profile.Contacts.TelMobile}}"></p>
       <p><span class="ofname" i18n-text="email">E-mail:</span> <input type="text" class="field ofval" pattern=".+@.+" name="email" size="30" maxlength="127" value="{{.Profile.Contacts.Email}}"></p>
-      {{if .New}}<p> <input type="checkbox" id="notifyCreatedUser" name="notifyCreatedUser" value="true" checked> <label for="notifyCreatedUser" i18n-many="notifyCreatedUser" title="In order notification to happen the login and e-mail should be specified.">Notify the user about creating user profile.</label></p>{{end}}
+      {{if .New}}<p> <input type="checkbox" id="notifyCreatedUser" name="notifyCreatedUser" value="true" checked> <label for="notifyCreatedUser" i18n-many="notifyCreatedUser" title="In order notification to happen the login and e-mail should be specified.">Notify the user about creating the user profile.</label></p>{{end}}
       <p><span class="ofname" i18n-text="otherContacts">Other contacts:</span> <input type="text" class="field ofval" name="otherContacts" size="30" maxlength="255" value="{{.Profile.Contacts.Other}}"></p>
       <h2 i18n-text="other">Other:</h2>
-      <p><span class="ofname" i18n-text="birthday">Birthday:</span> <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} class="numberbox" 
+      <p><span class="ofname" i18n-text="birthday">Birthday:</span> <input {{if .UserConfig.UseCalendarInControls}}type="date"{{else}}}type="text"{{end}} class="numberbox" 
         name="birthDate" value="{{.Profile.GiveBirthDate}}" placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" maxlength="32"></p>
       <p><span class="ofname" i18n-text="jobTitle">Job title:</span> <input type="text" class="field ofval" name="jobTitle" size="30" maxlength="255" value="{{.Profile.JobTitle}}"></p>
       <p><span class="ofname" i18n-text="unit">Unit:</span> <select name="jobUnit" id="jobUnit" class="numberbox">

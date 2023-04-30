@@ -41,16 +41,16 @@ const (
 
 // UserConfig stores person-related settings; it should not include data for query filters
 type UserConfig struct {
-	SystemTheme          string
-	ElemsOnPage          int
-	ElemsOnPageTeam      int
-	DateFormat           string
-	TimeFormat           string
-	LangCode             string
-	UseCalendarInConrols bool
-	CurrencyBeforeAmount bool
-	ShowFinishedTasks    bool
-	ReturnAfterCreation  bool
+	SystemTheme           string
+	ElemsOnPage           int
+	ElemsOnPageTeam       int
+	DateFormat            string
+	TimeFormat            string
+	LangCode              string
+	UseCalendarInControls bool
+	CurrencyBeforeAmount  bool
+	ShowFinishedTasks     bool
+	ReturnAfterCreation   bool
 }
 
 // UserContacts contains user contact data

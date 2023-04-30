@@ -138,7 +138,7 @@
     <option value="lteq" i18n-text="relBefore">Before (incl.)</option>
     <option value="noteq" i18n-text="relExcept">Except</option>
   </select><span class="dropdown"></span><br>
-  <input {{if .UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="{{.Name}}Single" class="numberbox" name="{{.Name}}" value=""
+  <input {{if .UseCalendarInControls}}type="date"{{else}}}type="text"{{end}} id="{{.Name}}Single" class="numberbox" name="{{.Name}}" value=""
   placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12"><br><br>
   <label for="{{.Name}}Diapason" i18n-text="diapason">Interval:</label>
   <label class="switch"><input type="checkbox" class="hidden" 
@@ -146,10 +146,10 @@
     onchange="handleNumericFilterChkBox(this, '{{.Name}}');
     handleNumericOption(this, '{{.Name}}')"><div class="slider"></div></label><br>
   <label for="{{.Name}}Start" i18n-text="diapasonStart">From:</label><br>
-  <input {{if .UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="{{.Name}}Start" class="numberbox" name="{{.Name}}" 
+  <input {{if .UseCalendarInControls}}type="date"{{else}}}type="text"{{end}} id="{{.Name}}Start" class="numberbox" name="{{.Name}}" 
   placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" disabled><br>
   <label for="{{.Name}}Finish" i18n-text="diapasonEnd">To:</label><br>
-  <input {{if .UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} id="{{.Name}}Finish" class="numberbox" name="{{.Name}}" 
+  <input {{if .UseCalendarInControls}}type="date"{{else}}}type="text"{{end}} id="{{.Name}}Finish" class="numberbox" name="{{.Name}}" 
   placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" disabled><br>
 </div>
 {{end}}
@@ -163,7 +163,7 @@
     <option value="lteq" i18n-text="relBefore">Before (incl.)</option>
     <option value="noteq" i18n-text="relExcept">Except</option>
   </select><span class="dropdown"></span><br>
-  <input {{if .UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="{{.Name}}Single" class="numberbox" name="{{.Name}}" value=""
+  <input {{if .UseCalendarInControls}}type="datetime-local"{{else}}}type="text"{{end}} id="{{.Name}}Single" class="numberbox" name="{{.Name}}" value=""
   placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18"><br><br>
   <label for="{{.Name}}Diapason"i18n-text="diapason">Interval:</label>
   <label class="switch"><input type="checkbox" class="hidden" 
@@ -171,10 +171,10 @@
     onchange="handleNumericFilterChkBox(this, '{{.Name}}');
     handleNumericOption(this, '{{.Name}}')"><div class="slider"></div></label><br>
   <label for="{{.Name}}Start" i18n-text="diapasonStart">Start:</label><br>
-  <input {{if .UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="{{.Name}}Start" class="numberbox" name="{{.Name}}" 
+  <input {{if .UseCalendarInControls}}type="datetime-local"{{else}}}type="text"{{end}} id="{{.Name}}Start" class="numberbox" name="{{.Name}}" 
   placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" disabled><br>
   <label for="{{.Name}}Finish" i18n-text="diapasonEnd">End:</label><br>
-  <input {{if .UseCalendarInConrols}}type="datetime-local"{{else}}}type="text"{{end}} id="{{.Name}}Finish" class="numberbox" name="{{.Name}}" 
+  <input {{if .UseCalendarInControls}}type="datetime-local"{{else}}}type="text"{{end}} id="{{.Name}}Finish" class="numberbox" name="{{.Name}}" 
   placeholder="yyyy-mm-dd hh:mm" pattern="-?\d+-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}" size="18" disabled><br>
 </div>
 {{end}}

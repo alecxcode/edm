@@ -38,10 +38,10 @@
         </script>
       </div>
 
-      {{template "dateTimeFilter" returnFilterRender "createdDates" "timeCreated" "Time created:" .UserConfig.UseCalendarInConrols nil}}
-      {{template "dateTimeFilter" returnFilterRender "planStartDates" "planStart" "Start (plan):" .UserConfig.UseCalendarInConrols nil}}
-      {{template "dateTimeFilter" returnFilterRender "planDueDates" "planDue" "Due (plan):" .UserConfig.UseCalendarInConrols nil}}
-      {{template "dateTimeFilter" returnFilterRender "statusSetDates" "statusSet" "Status set:" .UserConfig.UseCalendarInConrols nil}}
+      {{template "dateTimeFilter" returnFilterRender "createdDates" "timeCreated" "Time created:" .UserConfig.UseCalendarInControls nil}}
+      {{template "dateTimeFilter" returnFilterRender "planStartDates" "planStart" "Start (plan):" .UserConfig.UseCalendarInControls nil}}
+      {{template "dateTimeFilter" returnFilterRender "planDueDates" "planDue" "Due (plan):" .UserConfig.UseCalendarInControls nil}}
+      {{template "dateTimeFilter" returnFilterRender "statusSetDates" "statusSet" "Status set:" .UserConfig.UseCalendarInControls nil}}
 
       <div class="margintop"><strong id="userSelectorDisplay" i18n-text="userFilter">Filter by user:</strong><br>
        <select id="userSelector" class="numberbox">
@@ -80,9 +80,9 @@
   <p id="appliedFilters" i18n-text="noFiltersApplied">No filters applied.</p>
   
   <div id="controlButtons">
-    <span class="panel smaller"><a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3&taskstatuses=6{{end}}" i18n-many="myTasks" title="Tasks for which I am a creator or am assignee or a participant">My tasks</a></span>
-    <span class="panel smaller"><a href="/tasks/?creators=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3&taskstatuses=6{{end}}" i18n-many="myTasksCreated" title="Tasks for which I am creator">Created by me</a></span>
-    <span class="panel smaller"><a href="/tasks/?assignees=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3&taskstatuses=6{{end}}" i18n-many="myTasksAssigned" title="Tasks for which I am assignee">Assigned to me</a></span>
+    <span class="panel smaller"><a href="/tasks/?anyparticipants=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3&taskstatuses=6{{end}}" i18n-many="myTasks" title="Tasks for which I am a creator or an assignee or a participant">My tasks</a></span>
+    <span class="panel smaller"><a href="/tasks/?creators=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3&taskstatuses=6{{end}}" i18n-many="myTasksCreated" title="Tasks for which I am a creator">Created by me</a></span>
+    <span class="panel smaller"><a href="/tasks/?assignees=my{{if not .UserConfig.ShowFinishedTasks}}&taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3&taskstatuses=6{{end}}" i18n-many="myTasksAssigned" title="Tasks for which I am an assignee">Assigned to me</a></span>
     <span class="panel smaller"><a href="/tasks/{{if not .UserConfig.ShowFinishedTasks}}?taskstatuses=0&taskstatuses=1&taskstatuses=2&taskstatuses=3{{end}}" i18n-many="anyTasks" title="Tasks related to any users">All tasks</a></span><br>
 
     <a href="/tasks/task/new" class="sbut greenish" i18n-text="newTask">+ New task</a>
@@ -94,11 +94,11 @@
     {{template "deleteButton"}}
   </div>
 
-  {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred"><span i18n-text="noPerms">Action rejected: no permissions for all or some of objects.</span> {{if .RemoveAllowed}}<span i18n-text="removalPermsCreator">Only creator or administrator can delete.</span>{{else}}<span i18n-text="removalPermsAdmin">Only administrator can delete.</span>{{end}}</p>{{end}}
+  {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred"><span i18n-text="noPerms">Action rejected: no permissions for all or some objects.</span> {{if .RemoveAllowed}}<span i18n-text="removalPermsCreator">Only creator or administrator can delete.</span>{{else}}<span i18n-text="removalPermsAdmin">Only administrator can delete.</span>{{end}}</p>{{end}}
   {{if eq .Message "removedElems"}}<p class="msgok"><span i18n-text="removedElems">Deleted objects:</span> {{.RemovedNum}}.</p>{{end}}
   {{if eq .Message "removalError"}}<p class="msgred" i18n-text="removalError">Error deleting objects.</p>{{end}}
   
-  {{if eq .Message "notAllorSomeElemsAllowedtoModify"}}<p class="msgred" i18n-text="noPerms">Action rejected: no permissions for all or some of objects.</p>{{end}}
+  {{if eq .Message "notAllorSomeElemsAllowedtoModify"}}<p class="msgred" i18n-text="noPerms">Action rejected: no permissions for all or some objects.</p>{{end}}
   {{if eq .Message "statusUpdated"}}<p class="msgok"><span i18n-text="updatedElems">Updated objects:</span> {{.UpdatedNum}}.</p>{{end}}
   {{if eq .Message "statusUpdateError"}}<p class="msgred" i18n-text="updateError">Error updating objects.</p>{{end}}
 

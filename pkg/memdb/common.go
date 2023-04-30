@@ -11,6 +11,7 @@ type ObjectsInMemory interface {
 	SetRaw(key string, data []byte, durationMSec int)
 	GetRaw(key string) []byte
 	DelRaw(key string)
+	ReplaceRawMany(prefix, oldPattern, newPattern string)
 	Set(cookie string, obj ObjHasID)
 	Update(obj ObjHasID, delete bool)
 	GetByID(id int) string

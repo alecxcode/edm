@@ -17,16 +17,16 @@ import (
 
 // FilterRender is for rendering frontend for filters in templates
 type FilterRender struct {
-	Name                 string
-	Attri18n             string
-	DisplayName          string
-	UseCalendarInConrols bool
-	Currencies           map[int]string
+	Name                  string
+	Attri18n              string
+	DisplayName           string
+	UseCalendarInControls bool
+	Currencies            map[int]string
 }
 
 // ReturnFilterRender provides the function to render filter component to run in a template
-func ReturnFilterRender(Name string, Attri18n string, DisplayName string, UseCalendarInConrols bool, Currencies map[int]string) FilterRender {
-	return FilterRender{Name, Attri18n, DisplayName, UseCalendarInConrols, Currencies}
+func ReturnFilterRender(Name string, Attri18n string, DisplayName string, UseCalendarInControls bool, Currencies map[int]string) FilterRender {
+	return FilterRender{Name, Attri18n, DisplayName, UseCalendarInControls, Currencies}
 }
 
 // HeadRender is for rendering frontend for head block in templates

@@ -3,6 +3,7 @@ package ramdb
 import (
 	"edm/pkg/memdb"
 	"encoding/json"
+	"strings"
 	"time"
 )
 
@@ -11,7 +12,9 @@ func (m *ObjectsInMemory) SetRaw(key string, data []byte, durationMSec int) {
 	m.Lock()
 	m.Rarr[key] = data
 	m.Unlock()
-	go m.clearOldObject(key, durationMSec)
+	if durationMSec > 0 {
+		go m.clearOldObject(key, durationMSec)
+	}
 }
 
 // GetRaw gets any data in the memory storage
@@ -26,6 +29,17 @@ func (m *ObjectsInMemory) GetRaw(key string) []byte {
 func (m *ObjectsInMemory) DelRaw(key string) {
 	m.Lock()
 	delete(m.Rarr, key)
+	m.Unlock()
+}
+
+// ReplaceRawMany replaces matching pattern for all keys which have prefix in their name
+func (m *ObjectsInMemory) ReplaceRawMany(prefix, oldPattern, newPattern string) {
+	m.Lock()
+	for key, val := range m.Rarr {
+		if strings.HasPrefix(key, prefix) {
+			m.Rarr[key] = []byte(strings.Replace(string(val), oldPattern, newPattern, 1))
+		}
+	}
 	m.Unlock()
 }
 

@@ -18,7 +18,7 @@
       {{if .LoggedinAdmin}}<a href="/companies/company/new" class="sbut greenish" i18n-text="newCompany">+ New company</a>{{end}}
     </div>
     
-    {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred" i18n-text="noPermsOnlyAdmin">Action rejected: no permissions for all or some of objects. Only administrator can delete.</p>{{end}}
+    {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred" i18n-text="noPermsOnlyAdmin">Action rejected: no permissions for all or some objects. Only administrator can delete.</p>{{end}}
     {{if eq .Message "removedElems"}}<p class="msgok"><span i18n-text="removedElems">Deleted objects:</span> {{.RemovedNum}}.</p>{{end}}
     {{if eq .Message "removalError"}}<p class="msgred" i18n-text="removalError">Error deleting objects.</p>{{end}}
 

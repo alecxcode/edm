@@ -115,7 +115,7 @@ func MailerMonitor(ch chan EmailMessage, host string, port int, user string, pas
 				open = false
 			}
 			// Wait a bit.
-			time.Sleep(time.Duration(100) * time.Millisecond)
+			time.Sleep(time.Duration(10) * time.Millisecond)
 		}
 
 	}

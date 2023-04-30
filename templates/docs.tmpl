@@ -41,13 +41,13 @@
         <label for="cr{{.LoggedinID}}" i18n-text="myDocuments">My documents</label><br>
       </div>
 
-      {{template "dateFilter" returnFilterRender "regDates" "regDate" "Reg.Date:" .UserConfig.UseCalendarInConrols nil}}
-      {{template "dateFilter" returnFilterRender "incDates" "incDate" "Inc.Date:" .UserConfig.UseCalendarInConrols nil}}
-      {{template "dateFilter" returnFilterRender "endDates" "endDate" "Term (Exp.):" .UserConfig.UseCalendarInConrols nil}}
-      {{template "sumFilter" returnFilterRender "sums" "docSum" "Sum:" .UserConfig.UseCalendarInConrols .Currencies}}
+      {{template "dateFilter" returnFilterRender "regDates" "regDate" "Reg.Date:" .UserConfig.UseCalendarInControls nil}}
+      {{template "dateFilter" returnFilterRender "incDates" "incDate" "Inc.Date:" .UserConfig.UseCalendarInControls nil}}
+      {{template "dateFilter" returnFilterRender "endDates" "endDate" "Term (Exp.):" .UserConfig.UseCalendarInControls nil}}
+      {{template "sumFilter" returnFilterRender "sums" "docSum" "Sum:" .UserConfig.UseCalendarInControls .Currencies}}
 
       <div class="somemargins">
-      <label for="showIncNo" i18n-many="showIncoming" title="Show incoming date and number in the table instead of registration date and number">Incoming No., date in table</label>
+      <label for="showIncNo" i18n-many="showIncoming" title="Show incoming date and number in the table instead of registration date and number">Incoming No., date in the table</label>
       <label class="switch"><input type="checkbox" class="hidden" 
         id="showIncNo" name="showIncNo" value="true" onchange="handleIncChkBox(this)">
         <div class="slider"></div></label>
@@ -65,7 +65,7 @@
     <span class="panel smaller"><a href="/docs/?categories=3" i18n-index="categories-3">Internal</a></span>
     <span class="panel smaller"><a href="/docs/?doctypes=4" i18n-index="docTypes-4">Contract, addendum to it</a></span>
     <span class="panel smaller"><a href="/docs/?doctypes=13" i18n-index="docTypes-13">Template</a></span>
-    <span class="panel smaller"><a href="/docs/?creator=my" i18n-many="myDocsCreated" title="Documents for which I am creator">My documents</a></span>
+    <span class="panel smaller"><a href="/docs/?creator=my" i18n-many="myDocsCreated" title="Documents for which I am a creator">My documents</a></span>
     <span class="panel smaller"><a href="/docs/?approver=my&approved=0" i18n-index="approvalSignMy-0">For my approval</a></span>
     <span class="panel smaller"><a href="/docs/?approver=my&approved=1" i18n-index="approvalSignMy-1">Approved by me</a></span>
     <span class="panel smaller"><a href="/docs/?approver=my&approved=2" i18n-index="approvalSignMy-2">Rejected by me</a></span>
@@ -75,7 +75,7 @@
     {{template "deleteButton"}}
   </div>
 
-  {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred"><span i18n-text="noPerms">Action rejected: no permissions for all or some of objects.</span> {{if .RemoveAllowed}}<span i18n-text="removalPermsCreator">Only creator or administrator can delete.</span>{{else}}<span i18n-text="removalPermsAdmin">Only administrator can delete.</span>{{end}}</p>{{end}}
+  {{if eq .Message "notAllorSomeElemsAllowedtoRemove"}}<p class="msgred"><span i18n-text="noPerms">Action rejected: no permissions for all or some objects.</span> {{if .RemoveAllowed}}<span i18n-text="removalPermsCreator">Only creator or administrator can delete.</span>{{else}}<span i18n-text="removalPermsAdmin">Only administrator can delete.</span>{{end}}</p>{{end}}
   {{if eq .Message "removedElems"}}<p class="msgok"><span i18n-text="removedElems">Deleted objects:</span> {{.RemovedNum}}.</p>{{end}}
   {{if eq .Message "removalError"}}<p class="msgred" i18n-text="removalError">Error deleting objects.</p>{{end}}
 

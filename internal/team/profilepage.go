@@ -100,16 +100,16 @@ func (tb *TeamBase) ProfileHandler(w http.ResponseWriter, r *http.Request) {
 			p.Boss = &Profile{ID: accs.StrToInt(r.FormValue("boss"))}
 		}
 		p.UserConfig = UserConfig{
-			SystemTheme:          "dark",
-			ElemsOnPage:          20,
-			ElemsOnPageTeam:      500,
-			DateFormat:           "dd.mm.yyyy",
-			TimeFormat:           "24h",
-			LangCode:             tb.cfg.defaultLang,
-			UseCalendarInConrols: true,
-			CurrencyBeforeAmount: true,
-			ShowFinishedTasks:    true,
-			ReturnAfterCreation:  true,
+			SystemTheme:           "dark",
+			ElemsOnPage:           20,
+			ElemsOnPageTeam:       500,
+			DateFormat:            "dd.mm.yyyy",
+			TimeFormat:            "24h",
+			LangCode:              tb.cfg.defaultLang,
+			UseCalendarInControls: true,
+			CurrencyBeforeAmount:  true,
+			ShowFinishedTasks:     true,
+			ReturnAfterCreation:   true,
 		}
 		p.Login = r.FormValue("login")
 		if r.FormValue("loginSameEmail") == "true" {

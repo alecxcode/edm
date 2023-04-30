@@ -64,14 +64,14 @@
         </select><span class="dropdown"></span></p>
         <script src="/static/i18n/codesui.js"></script>
 
-        <p><label for="useCalendarInConrols" class="ofname" i18n-title="useCalendarInConrolsHint"
-          title="If disabled, these inputs will become text fields." i18n-text="useCalendarInConrols">Use calendar inputs for date and time:</label>
+        <p><label for="useCalendarInControls" class="ofname" i18n-title="useCalendarInControlsHint"
+          title="If disabled, these inputs will become text fields." i18n-text="useCalendarInControls">Use calendar inputs for date and time:</label>
           <label class="switch"><input type="checkbox" class="hidden" 
-          id="useCalendarInConrols" name="useCalendarInConrols" value="true"
+          id="useCalendarInControls" name="useCalendarInControls" value="true"
           onchange="updateConfig();">
         <span class="slider"></span></label></p>
 
-        <p><label for="currencyBeforeAmount" class="ofname" i18n-text="currencyBeforeAmount">Show currency before amount:</label>
+        <p><label for="currencyBeforeAmount" class="ofname" i18n-text="currencyBeforeAmount">Show currency before the amount:</label>
           <label class="switch"><input type="checkbox" class="hidden" 
           id="currencyBeforeAmount" name="currencyBeforeAmount" value="true"
           onchange="updateConfig();">
@@ -127,7 +127,7 @@
     document.getElementById('dateFormat').value = config.DateFormat;
     document.getElementById('timeFormat').value = config.TimeFormat;
     document.getElementById('langCode').value = config.LangCode;
-    document.getElementById('useCalendarInConrols').checked = config.UseCalendarInConrols;
+    document.getElementById('useCalendarInControls').checked = config.UseCalendarInControls;
     document.getElementById('currencyBeforeAmount').checked = config.CurrencyBeforeAmount;
     /* Functionality */
     document.getElementById('showFinishedTasks').checked = config.ShowFinishedTasks;

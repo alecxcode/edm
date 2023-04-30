@@ -16,8 +16,28 @@ function displaySelectedFiles(fileInput, fileDisplay, fileDisplayMsg,
   } else {
     clearInputFiles(fileInput, fileDisplay, fileDisplayMsg, '');
     fileDisplay.innerHTML = '<span class="msgred">' + exceedSizeMessage + '</span>';
+    return;
   }
-
+  const parentNode = fileInput.parentNode;
+  const fiid = fileInput.id;
+  if (fileInput.value) {
+    const oldtmp = document.getElementById('tmp'+fiid);
+    if (oldtmp) parentNode.removeChild(oldtmp);
+    const tmp = fileInput.cloneNode(true);
+    tmp.id = 'tmp'+fiid;
+    tmp.disabled = true;
+    tmp.style.display = 'none';
+    parentNode.insertBefore(tmp, fileInput.nextSibling);
+  } else {
+    parentNode.removeChild(fileInput);
+    const tmp = document.getElementById('tmp'+fiid);
+    if (!tmp || !tmp.value) return;
+    tmp.id = fiid;
+    tmp.disabled = false;
+    tmp.style.display = 'unset';
+    displaySelectedFiles(tmp, fileDisplay, fileDisplayMsg,
+    exceedQuantityMessage, exceedSizeMessage);
+  }
 }
 
 function clearInputFiles(fileInput, fileDisplay, fileDisplayMsg, clearedMessage) {

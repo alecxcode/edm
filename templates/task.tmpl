@@ -152,7 +152,7 @@
       <p><span class="ofname" i18n-text="plannedStartDue">Planned start and due:</span>
         {{$tsep := " "}}
         {{$inpt := "text"}}
-        {{if .UserConfig.UseCalendarInConrols}}
+        {{if .UserConfig.UseCalendarInControls}}
           {{$tsep = "T"}}
           {{$inpt = "datetime-local"}}
         {{end}}

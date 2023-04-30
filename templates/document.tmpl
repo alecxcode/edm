@@ -130,11 +130,11 @@
       <h2 i18n-text="detailsType">Document details, type:</h2>
       <p><span class="ofname" i18n-text="registration">Registration:</span> 
         <span class="nowrap"><span i18n-text="num">No.</span> <input type="text" class="numberbox" name="regNo" size="18" maxlength="127" value="{{.Document.RegNo}}"></span>
-        <span class="nowrap"><span i18n-text="dated">dated</span> <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} class="numberbox" name="regDate" value="{{.Document.GiveDate "Reg" "yyyy-mm-dd"}}" placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" maxlength="32"></span>
+        <span class="nowrap"><span i18n-text="dated">dated</span> <input {{if .UserConfig.UseCalendarInControls}}type="date"{{else}}}type="text"{{end}} class="numberbox" name="regDate" value="{{.Document.GiveDate "Reg" "yyyy-mm-dd"}}" placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" maxlength="32"></span>
       </p>
       <p><span class="ofname" i18n-text="incoming">Incoming:</span>
         <span class="nowrap"><span i18n-text="num">No.</span> <input type="text" class="numberbox" name="incNo" size="18" maxlength="127" value="{{.Document.IncNo}}"></span>
-        <span class="nowrap"><span i18n-text="dated">dated</span> <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} class="numberbox" name="incDate" value="{{.Document.GiveDate "Inc" "yyyy-mm-dd"}}" placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" maxlength="32"></span>
+        <span class="nowrap"><span i18n-text="dated">dated</span> <input {{if .UserConfig.UseCalendarInControls}}type="date"{{else}}}type="text"{{end}} class="numberbox" name="incDate" value="{{.Document.GiveDate "Inc" "yyyy-mm-dd"}}" placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" maxlength="32"></span>
       </p>
       <p><span class="ofname" i18n-text="docType">Type:</span>
         <select name="docType" id="docType" class="numberbox">
@@ -149,7 +149,7 @@
       <h2 i18n-text="content">Content:</h2>
       <p><span class="ofname" style="vertical-align: top;" i18n-text="docAbout">About:</span> <textarea class="multiline ofval" name="about" maxlength="2000" rows="2" cols="30">{{.Document.About}}</textarea></p>
       <p><span class="ofname" i18n-text="endDate">Term (Exp.):</span><span class="ofval">
-        <input {{if .UserConfig.UseCalendarInConrols}}type="date"{{else}}}type="text"{{end}} class="numberbox" name="endDate" value="{{.Document.GiveDate "End" "yyyy-mm-dd"}}" placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" maxlength="32"></span></p>
+        <input {{if .UserConfig.UseCalendarInControls}}type="date"{{else}}}type="text"{{end}} class="numberbox" name="endDate" value="{{.Document.GiveDate "End" "yyyy-mm-dd"}}" placeholder="yyyy-mm-dd" pattern="-?\d+-\d{1,2}-\d{1,2}" size="12" maxlength="32"></span></p>
 
       <p><span class="ofname" i18n-text="docSum">Sum:</span><span class="ofval">
         <span class="nowrap"><label for="currency" i18n-text="currencyLabel">currency: </label>

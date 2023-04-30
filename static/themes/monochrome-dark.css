@@ -257,10 +257,10 @@ h2 {
   background-color: #999;
   border: 1px solid #999;
   border-radius: calc(1px + var(--elements-radius));
-  overflow: scroll;
+  overflow-x: auto;
 }
-.grideven, .gridodd {background-color: #000; padding: 0px 1px;}
-.gridheader {background-color: #000 !important; color: #999; font-weight: bold;}
+.grideven, .gridodd {background-color: #000; padding: 5px 4px;}
+.gridheader {background-color: #000 !important; color: #999; font-weight: bold; padding: 5px 4px;}
 .grideven {background-color: var(--defaultBackgroundColor);}
 .gridodd {background-color: var(--tableOddRowBkgColor);}
 .mobile {display: none;}
