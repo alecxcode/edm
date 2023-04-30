@@ -59,11 +59,11 @@ func main() {
 	// Reading command-line arguments
 	filldb := false
 	consolelog := false
-	createdb := "false"
-	runbrowser := "false"
+	createdb := ""
+	runbrowser := ""
 	onlybrowser := false
 	config := CONFIGPATH
-	createdb, filldb, runbrowser, onlybrowser, consolelog, config, err = processCmdLineArgs(cfg.CreateDB, filldb, cfg.RunBrowser, onlybrowser, consolelog)
+	createdb, filldb, runbrowser, onlybrowser, consolelog, config, err = processCmdLineArgs(createdb, filldb, runbrowser, onlybrowser, consolelog)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -73,8 +73,12 @@ func main() {
 	if err != nil {
 		log.Println(accs.CurrentFunction()+":", err)
 	}
-	cfg.CreateDB = createdb
-	cfg.RunBrowser = runbrowser
+	if createdb != "" {
+		cfg.CreateDB = createdb
+	}
+	if runbrowser != "" {
+		cfg.RunBrowser = runbrowser
+	}
 
 	// Server root path:
 	if accs.FileExists(cfg.ServerRoot) != true {

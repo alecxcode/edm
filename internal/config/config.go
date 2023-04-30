@@ -53,31 +53,39 @@ func (cfg *Config) ReadConfig(configPath string, serverRoot string) error {
 		homeDir = "." // trying to write to the current dir if getting homedir failed
 	}
 	if configPath == "" {
-		configPath = filepath.Join(homeDir, appDir) //default config path
+		configPath = filepath.Join(homeDir, appDir, defaultiniFname) //default config path
 	}
 	if serverRoot == "" {
 		cfg.ServerRoot = filepath.Join(homeDir, appDir) //default server root path
 	} else {
 		cfg.ServerRoot = serverRoot
 	}
-	ConfigFile := configPath
-	if !strings.HasSuffix(configPath, "cfg") || !strings.HasSuffix(configPath, "conf") || !strings.HasSuffix(configPath, "ini") {
-		ConfigFile = filepath.Join(configPath, defaultiniFname)
+	ConfigFileFull := configPath
+	fileInfo, _ := os.Stat(ConfigFileFull)
+	isDir := false
+	if fileInfo != nil {
+		isDir = fileInfo.IsDir()
+	}
+	if strings.HasSuffix(configPath, "\\") || strings.HasSuffix(configPath, "/") || isDir {
+		ConfigFileFull = filepath.Join(configPath, defaultiniFname)
 	}
 	if core.DEBUG {
-		log.Println("Using config file: ", ConfigFile)
+		log.Println("Using config file:", ConfigFileFull)
 	}
-	if _, err := os.Stat(configPath); err != nil {
-		if os.IsNotExist(err) {
-			err := os.Mkdir(configPath, 0700)
-			if err != nil {
-				return err
+	path, _ := filepath.Split(ConfigFileFull)
+	if path != "." && path != "" {
+		if _, err := os.Stat(path); err != nil {
+			if os.IsNotExist(err) {
+				err := os.Mkdir(path, 0700)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
-	if _, err := os.Stat(ConfigFile); err != nil {
+	if _, err := os.Stat(ConfigFileFull); err != nil {
 		if os.IsNotExist(err) {
-			f, err := os.Create(ConfigFile)
+			f, err := os.Create(ConfigFileFull)
 			if err != nil {
 				return err
 			}
@@ -88,16 +96,9 @@ func (cfg *Config) ReadConfig(configPath string, serverRoot string) error {
 			f.Sync()
 		}
 	} else {
-		mapOfConfig, err := readini(ConfigFile)
+		mapOfConfig, err := readini(ConfigFileFull)
 		if err != nil {
 			return err
-		}
-		// If Config file has no valid config lines, then remove the file
-		if len(mapOfConfig) == 0 {
-			err := os.Remove(ConfigFile)
-			if err != nil {
-				return err
-			}
 		}
 
 		// Reading Config from a map to a struct

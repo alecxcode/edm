@@ -155,7 +155,7 @@ func GetTextIDfromURL(path string) string {
 }
 
 func GetAbsoluteOrRelativePath(defaultPath string, targetPath string) string {
-	if strings.HasPrefix(targetPath, "/") || strings.HasPrefix(targetPath, "C:") {
+	if filepath.IsAbs(targetPath) {
 		return targetPath
 	}
 	return filepath.Join(defaultPath, targetPath)
