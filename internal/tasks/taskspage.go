@@ -226,6 +226,7 @@ WHERE tasks.TaskStatus <> ` + sqla.MakeParam(tb.dbType, 1) + " "
 	}
 
 	// Processing removal
+	var removed int
 	if r.Method == "POST" && r.FormValue("deleteButton") != "" {
 		elemsOnCurrentPage, _ := strconv.Atoi(r.FormValue("elemsOnCurrentPage"))
 		r.ParseForm()
@@ -237,7 +238,7 @@ WHERE tasks.TaskStatus <> ` + sqla.MakeParam(tb.dbType, 1) + " "
 		if len(ids) > 0 {
 			allowedToRemove := sqla.VerifyRemovalPermissions(tb.db, tb.dbType, "tasks", Page.LoggedinID, Page.LoggedinAdmin, Page.RemoveAllowed, ids)
 			if allowedToRemove {
-				removed := sqla.DeleteObjects(tb.db, tb.dbType, "tasks", "ID", ids)
+				removed = sqla.DeleteObjects(tb.db, tb.dbType, "tasks", "ID", ids)
 				if removed > 0 {
 					core.RemoveUploadedDirs(filepath.Join(tb.cfg.serverRoot, "files", "tasks"), ids)
 					Page.Message = "removedElems"
@@ -293,7 +294,7 @@ LEFT JOIN profiles assignee ON assignee.ID = Assignee`
 		pageDifference := Page.PageNumber - previousPageNumber
 
 		if Page.PageNumber == accs.CalcMaxPages(Page.UserConfig.ElemsOnPage, filteredNum) {
-			remainder := filteredNum - OFFSET
+			remainder := filteredNum - OFFSET - removed
 			SEEK.UseSeek = false
 			sortedHowReverse = true
 			if Page.SortedHow == 0 {
